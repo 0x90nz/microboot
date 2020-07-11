@@ -101,13 +101,16 @@ putc:
 	mov	$SER, %dx
 	add	$5, %dx
 
+	# Loop until the port is ready
 1:
 	inb	%dx, %al
 	and	$0x20, %al
 	jz	1b
 
+	# Get back to the actual port addr
 	sub	$5, %dx
 	
+	# Spit out the character
 	mov	%cx, %ax
 	outb	%al, %dx
 
@@ -120,16 +123,22 @@ putstr:
 1:
 	mov	(%ecx,%edx), %eax
 
+	# Check we're not at the null terminator
 	test	%al, %al
 	jz	2f
 
+	# Save our precious registers
 	push	%ecx
 	push	%edx
+
+	# arg 1, character
 	push	%eax
 	call	putc
 	add	$4, %esp
+
 	pop	%edx
 	pop	%ecx
+
 	inc	%edx
 	jmp	1b
 
