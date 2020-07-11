@@ -31,7 +31,7 @@ _start:
 
 	push	$msg
 	call	putstr
-	sub	$4, %esp
+	add	$4, %esp
 
 	cli	
 1:
@@ -97,7 +97,7 @@ serial_init:
 
 putc:
 	# Get the argument off the stack (char to print)
-	mov	4(%esp), %cx
+	mov	4(%esp), %ecx
 	mov	$SER, %dx
 	add	$5, %dx
 
@@ -119,21 +119,27 @@ putstr:
 
 1:
 	mov	(%ecx,%edx), %eax
-	test	%eax, %eax
-	jz 	2f
 
+	test	%al, %al
+	jz	2f
+
+	push	%ecx
+	push	%edx
 	push	%eax
 	call	putc
-	sub	$4, %esp
+	add	$4, %esp
+	pop	%edx
+	pop	%ecx
 	inc	%edx
 	jmp	1b
+
 2:
 	ret
 
 .equ SER, 0x3f8
 
 msg:
-.string "Loading OS"
+.string "Hello World!\n"
 
 .align 8
 gdt:
