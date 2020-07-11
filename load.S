@@ -15,6 +15,10 @@ _start:
 	mov	sp, 0xf000
 	sti
 
+	push	verinfo
+	call	puts
+	add	esp, 2
+
 	push	msg
 	call	puts
 	add	esp, 2
@@ -46,7 +50,7 @@ _start:
 	push	ax		; num sectors
 	push	02h		; start index
 	call	read_sector
-	add	esp, 2
+	add	esp, 4
 
 xfer:
 	push	s2msg
@@ -111,6 +115,7 @@ kern_start equ 07e02h
 disk_num: db 0
 
 msg db `Loading binary\r\n`, 0
+verinfo db `\xe6boot v0.1.0\r\n`,0
 s2msg db `Entering second stage\r\n`, 0
 
 ; Boot signature and padding
