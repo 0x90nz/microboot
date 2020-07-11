@@ -1,164 +1,118 @@
-.code16
-.global _start
+; It might seem odd to mix nasm and gas, but gas is really
+; absolute garbage at producing 16 bit code, so here we are.
+
+bits 16
+org 0x7c00
 _start:
-	# Load our minimal GDT
-	lgdt	gdt_desc
-
-	# Set the PE bit
-	mov	%cr0, %eax
-	or	$1, %eax
-	mov	%eax, %cr0
-
-	call	enable_a20
-
+	mov	[disk_num], dl
+	
+	; Set sp to be 0007:f000 so it doesn't mess with our stuff
+	; We disable interrupts while doing this because apparently they can
+	; mess with it in a bad way.
 	cli
+	mov	ax, 07h
+	mov	ss, ax
+	mov	sp, 0xf000
+	sti
 
-	# Perform a far jump
-	data32 ljmp	$0x08, $1f
-.code32
-1:
-	mov	$0x10, %ax
-	mov	%ax, %ds
-	mov	%ax, %es
-	mov	%ax, %fs
-	mov 	%ax, %gs
-	mov	%ax, %ss
+	push	msg
+	call	puts
+	add	esp, 2
 
-	# Setup the stack
-	mov	$0x7ffff, %esp
+	push	01h		; num sectors
+	push	02h		; start index
+	call	read_sector
+	add	esp, 2
 
-	call	serial_init
+	; Get the size and figure out how many more sectors
+	; we need to load from disk
+	mov	ax, [buffer]
+	mov 	bx, 512
+	div	bx
 
-	push	$msg
-	call	putstr
-	add	$4, %esp
+	; ax now contains file size / 512, which is the number of extra
+	; sectors that we need to load
 
-	cli	
-1:
+	; skip over loading additional sectors if we don't need to
+	test	ax, ax
+	jz	xfer
+
+	; While it's not really efficient, it's easy. We just take the performance hit
+	; that comes from reloading the first sector
+
+	; Add 1 to ax so we get _all_ the sectors we need to load
+	add	ax, 1
+
+	push	ax		; num sectors
+	push	02h		; start index
+	call	read_sector
+	add	esp, 2
+
+xfer:
+	push	s2msg
+	call	puts
+	add	esp, 2
+
+	jmp 	kern_start
+
+	; If for some reason we get back here, just hang
+	cli
+loop:
 	hlt
-	jmp	1b
+	jmp	loop
 
+puts:
+	push	bx
+	mov	bx, [esp + 4]
 
-enable_a20:
-1:
-	inb	$0x64, %al
-	testb	$0x02, %al
-	jnz	1b
+puts_loop:
+	mov	al, [bx]
+	test	al, al
+	jz	puts_done
 
-	movb	$0xd1, %al
-	outb	%al, $0x64
+	push	ax
+	call	putc
+	add	esp, 2 
+	inc	bx
+	jmp	puts_loop
 
-1:
-	inb	$0x64, %al
-	testb	$0x02, %al
-	jnz	1b
-
-	movb	$0xdf, %al
-	outb	%al, $0x60
-
-1:
-	inb	$0x64, %al
-	testb	$0x02, %al
-	jnz 1b
-	ret
-
-serial_init:
-	mov	$SER, %dx
-
-	add	$1, %dx		# PORT + 1
-	mov	$0x00, %al
-	outb	%al, %dx	# Disable interrupts
-
-	add	$2, %dx		# PORT + 3
-	mov	$0x80, %al
-	outb	%al, %dx	# Enable DLAB
-
-	sub	$3, %dx		# PORT
-	mov	$0x0c, %al
-	outb	%al, %dx	# Baud rate divisor = 12, for 9600 baud
-
-	add	$1, %dx		# PORT + 1
-	mov	$0x00, %al
-	outb	%al, %dx	# Divisor high byte
-
-	add	$2, %dx		# PORT + 3
-	mov	$0x03, %al
-	outb	%al, %dx	# 8N1
-
-	sub	$1, %dx		# PORT + 2
-	mov	$0xc7, %al
-	outb	%al, %dx	# Enable FIFO with 14 byte thresh
-
-	add	$2, %dx		# PORT + 4
-	mov	$0x0b, %al
-	outb	%al, %dx	# Enable IRQs
-
+puts_done:
+	pop	bx
 	ret
 
 putc:
-	# Get the argument off the stack (char to print)
-	mov	4(%esp), %ecx
-	mov	$SER, %dx
-	add	$5, %dx
-
-	# Loop until the port is ready
-1:
-	inb	%dx, %al
-	and	$0x20, %al
-	jz	1b
-
-	# Get back to the actual port addr
-	sub	$5, %dx
-	
-	# Spit out the character
-	mov	%cx, %ax
-	outb	%al, %dx
-
+	push	bx
+	mov	al, [esp + 4]	; char to print
+	mov	ah, 0eh		; function (write text)
+	mov	bx, 0		; zero out page number
+	int	10h
+	pop	bx
 	ret
 
-putstr:
-	mov	4(%esp), %ecx	# string
-	xor	%edx, %edx	# index
+; Read a n sectors
+read_sector:
+	mov	al, [esp + 4]
+	mov	cx, [esp + 2]
+	pusha
+	mov	ah, 02h		; function code
+	mov	dl, [disk_num]	; disk number
+	mov	dh, 00h		; head number
+	mov	bx, buffer
 
-1:
-	mov	(%ecx,%edx), %eax
+	int	13h
 
-	# Check we're not at the null terminator
-	test	%al, %al
-	jz	2f
-
-	# Save our precious registers
-	push	%ecx
-	push	%edx
-
-	# arg 1, character
-	push	%eax
-	call	putc
-	add	$4, %esp
-
-	pop	%edx
-	pop	%ecx
-
-	inc	%edx
-	jmp	1b
-
-2:
+	popa
 	ret
 
-.equ SER, 0x3f8
 
-msg:
-.string "Hello World!\n"
+; Disk stuff
+buffer equ 07e00h
+kern_start equ 07e02h
+disk_num: db 0
 
-.align 8
-gdt:
-.quad 0x0000000000000000	# Null segment, because we have to
-.quad 0x00cf9a000000ffff	# Code segment, 0x08
-.quad 0x00cf92000000ffff	# Data segment, 0x10
+msg db `Loading binary\r\n`, 0
+s2msg db `Entering second stage\r\n`, 0
 
-gdt_desc:
-.word gdt_desc - gdt - 1	# Size
-.long gdt			# Address
-
-.org 510
-.word 0xAA55
+; Boot signature and padding
+times	510-($-$$) db 0
+dw 0xaa55
