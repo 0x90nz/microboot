@@ -6,6 +6,7 @@ void vga_putc(unsigned char c);
 void vga_pad(int n);
 void vga_init(uint16_t colour);
 uint8_t vga_colour(uint8_t fg, uint8_t bg);
+uint16_t vga_get_default();
 
 #define VGA_BLACK           0
 #define VGA_BLUE            1
