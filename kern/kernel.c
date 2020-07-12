@@ -49,19 +49,8 @@ int kernel_main()
 
     display_logo();
 
-    char temp[64];
-
-    while (1)
-    {
-        puts(">>> ");
-        gets(temp);
-        
-        if (*temp)
-        {
-            puts(temp);
-            puts("\n");
-        }
-    }
+    extern int main();
+    main();
 
     hang();
 }
