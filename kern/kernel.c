@@ -32,7 +32,8 @@ void display_logo()
 
 int kernel_main()
 {
-    vga_init();
+    vga_init(vga_colour(VGA_GREEN, VGA_BLACK));
     display_logo();
+    vga_puts(" >>> ");
     hang();
 }

@@ -1,9 +1,10 @@
 #pragma once
 #include <stdint.h>
 
-void vga_init();
 void vga_puts(const char* str);
 void vga_pad(int n);
+void vga_init(uint16_t colour);
+uint8_t vga_colour(uint8_t fg, uint8_t bg);
 
 #define VGA_BLACK           0
 #define VGA_BLUE            1
