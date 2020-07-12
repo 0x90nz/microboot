@@ -5,6 +5,17 @@ jmp	_start
 .code16
 .global _start
 _start:
+	# Store the memory info we got from stage1 somewhere
+	# we can get to it easier
+	pop	%ax
+	mov	%ax, memory_config
+	pop	%ax
+	mov	%ax, memory_config + 2
+	pop	%ax
+	mov	%ax, memory_config + 4
+	pop	%ax
+	mov	%ax, memory_config + 6
+
 	# Load our minimal GDT
 	lgdt	gdt_desc
 
@@ -31,6 +42,7 @@ _start:
 	# Setup the stack
 	mov	$0x70000, %esp
 
+	push	$memory_config
 	call	kernel_main
 
 	# We should never get here. If we do, just hang
@@ -72,3 +84,10 @@ gdt:
 gdt_desc:
 .word gdt_desc - gdt - 1	# Size
 .long gdt			# Address
+
+.global memory_config
+memory_config:
+.word 0
+.word 0
+.word 0
+.word 0
