@@ -43,6 +43,24 @@ void vga_scroll()
     vga_clear_row(y_pos);
 }
 
+void vga_erase()
+{
+    if (x_pos == 0)
+    {
+        if (y_pos > 0)
+        {
+            y_pos--;
+            x_pos = 0;
+        }
+    }
+    else if (x_pos > 0)
+    {
+        x_pos--;
+    }
+    vga_putc(' ');
+    x_pos--;
+}
+
 void vga_putc(unsigned char c)
 {
     if (c == '\n')
@@ -54,6 +72,11 @@ void vga_putc(unsigned char c)
             y_pos--;
             vga_scroll();
         }
+        return;
+    }
+    else if (c == '\b')
+    {
+        vga_erase();
         return;
     }
 

@@ -68,11 +68,29 @@ char set_echo(int echo)
 
 void gets(char* str)
 {
+    const char* start = str;
     do {
         *str = keyboard_getchar();
-        
+
+        if (*str == '\b')
+        {
+            if (str > start)
+            {
+                if (should_echo)
+                    putc(*str);
+
+                *str-- = '\0'; // Blank over \b
+                *str-- = '\0'; // blank over the character to erase
+            }
+            else if (str == start)
+            {
+                *str-- = '\0'; // in this case just blank over the \b
+            }
+            continue;
+        }
+
         if (should_echo)
-            putc(*str);            
+            putc(*str);
     } while (*str++ != '\n');
     *--str = '\0';
 }
