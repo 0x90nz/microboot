@@ -6,12 +6,12 @@ int x_pos;
 int y_pos;
 uint16_t default_colour;
 
-static inline uint16_t vga_entry(uint8_t c, uint8_t colour)
+uint16_t vga_entry(uint8_t c, uint8_t colour)
 {
     return c | (colour << 8);
 }
 
-static inline uint8_t vga_colour(uint8_t fg, uint8_t bg)
+uint8_t vga_colour(uint8_t fg, uint8_t bg)
 {
     return fg | bg << 4;
 }
@@ -58,10 +58,10 @@ void vga_puts(const char* str)
     }
 }
 
-void vga_init()
+void vga_init(uint16_t colour)
 {
     vga_buffer = (uint16_t*)VGA_BUFFER_ADDR;
-    default_colour = vga_colour(VGA_GREEN, VGA_BLACK);
+    default_colour = colour;
 
     vga_disable_cursor();
 

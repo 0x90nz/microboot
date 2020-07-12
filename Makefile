@@ -6,16 +6,18 @@ image: stage2 loader
 	dd if=build/load.bin of=build/load.img conv=notrunc
 	dd if=build/stage2.bin of=build/load.img bs=1 seek=512 conv=notrunc
 
+.suffixes: .o .c
+
 .PHONY: loader
 loader:
 	nasm -f bin -o build/load.bin loader/load.S
 
-stage2:
-	mkdir -p build
+stage2: kern/kernel.o kern/vga.o
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
-	$(CC) $(CFLAGS) -c kern/kernel.c -o build/kernel.o
-	$(CC) $(CFLAGS) -c kern/vga.c -o build/vga.o
-	$(CC) $(CFLAGS) build/stage2.o build/kernel.o build/vga.o -T link.ld -o build/stage2.bin
+	$(CC) $(CFLAGS) build/stage2.o $(addprefix build/, $(notdir $^)) -T link.ld -o build/stage2.bin
+
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
 
 run: image
 	qemu-system-i386 -drive format=raw,file=build/load.img,index=0,if=floppy -serial mon:stdio
