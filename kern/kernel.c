@@ -54,6 +54,7 @@ int kernel_main(memory_info_t* meminfo)
     vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
 
     interrupts_init();
+    keyboard_init();
     display_logo();
 
     // This is memory past 0x01000000 which is free to use

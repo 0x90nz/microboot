@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+void keyboard_init();
 uint8_t keyboard_poll_scancode();
 unsigned char keyboard_getchar(int retry);
 int keyboard_available();
