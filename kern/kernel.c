@@ -55,8 +55,12 @@ int kernel_main()
     {
         puts(">>> ");
         gets(temp);
-        puts(temp);
-        puts("\n");
+        
+        if (*temp)
+        {
+            puts(temp);
+            puts("\n");
+        }
     }
 
     hang();
