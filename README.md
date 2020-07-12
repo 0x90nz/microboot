@@ -28,6 +28,8 @@ There are 3 main components:
  2. Second stage loader
  3. User program
 
+The second stage loader and user program are linked together into one binary file at compile time. To use this as a more general bootloader, this functionality would need to be separated out further.
+
 ### First Stage Loader
 
 The first stage loader is implemented in `nasm` as it better supports the 16bit
