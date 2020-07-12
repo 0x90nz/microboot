@@ -26,6 +26,7 @@ const char* colours[] = {
     "gray",
     "dgrey",
     "lblue",
+    "lgreen",
     "lcyan",
     "lred",
     "lpurple",
@@ -90,11 +91,42 @@ void clock()
     puts("\n");
 }
 
+void dino()
+{
+    puts("                         .       .\n");
+    puts("                        / `.   .' \\\n");
+    puts("                .---.  <    > <    >  .---.\n");
+    puts("                |    \\  \\ - ~ ~ - /  /    |\n");
+    puts("                 ~-..-~             ~-..-~\n");
+    puts("             \\~~~\\.'                    `./~~~/\n");
+    puts("              \\__/                        \\__/\n");
+    puts("               /                  .-    .  \\\n");
+    puts("        _._ _.-    .-~ ~-.       /       }   \\/~~~/\n");
+    puts("    _.-'q  }~     /       }     {        ;    \\__/\n");
+    puts("   {'__,  /      (       /      {       /      `. ,~~|   .     .\n");
+    puts("    `''''='~~-.__(      /_      |      /- _      `..-'   \\\\   //\n");
+    puts("                / \\   =/  ~~--~~{    ./|    ~-.     `-..__\\\\_//_.-'\n");
+    puts("               {   \\  +\\         \\  =\\ (        ~ - . _ _ _..---~\n");
+    puts("               |  | {   }         \\   \\_\\\n");
+    puts("              '---.o___,'       .o___,'\n");
+}
+
+void help()
+{
+    puts("uptime    - display uptime in seconds\n");
+    puts("clear     - clear the display\n");
+    puts("clock     - updating clock demo\n");
+    puts("setcolour - set the display colour\n");
+    puts("help      - this help message\n");
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
     {"clock", clock},
-    {"setcolour", setcolour}
+    {"setcolour", setcolour},
+    {"dino", dino},
+    {"help", help}
 };
 
 

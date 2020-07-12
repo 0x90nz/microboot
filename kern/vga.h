@@ -17,7 +17,8 @@ uint16_t vga_get_default();
 #define VGA_BROWN           6
 #define VGA_GRAY            7
 #define VGA_DARK_GRAY       8
-#define VGA_LIGHT_BLUE      10
+#define VGA_LIGHT_BLUE      9
+#define VGA_BRIGHT_GREEN    10
 #define VGA_LIGHT_CYAN      11
 #define VGA_LIGHT_RED       12
 #define VGA_LIGHT_PURPLE    13
