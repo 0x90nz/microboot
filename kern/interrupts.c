@@ -3,14 +3,25 @@
 #include "vga.h"
 
 idt_entry_t idt[INTR_COUNT];
+intr_handler* bound_handlers[INTR_COUNT];
 
 void make_gate(int i, void (*fn)(void), int dpl, int gate_type)
 {
     idt[i].offset_low = (uint32_t)fn & 0xffff;
     idt[i].offset_high = ((uint32_t)fn & 0xffff0000) >> 16;
     idt[i].reserved0 = 0;
-    idt[i].type_attr = 0x8e;
+    idt[i].dpl = dpl;
+    idt[i].gate_type = gate_type;
+    idt[i].present = 1;
     idt[i].selector = 0x08;
+}
+
+void register_handler(int int_no, intr_handler* handler)
+{
+    if (int_no >= 0 && int_no < INTR_COUNT)
+    {
+        bound_handlers[int_no] = handler;
+    }
 }
 
 void interrupts_init()
@@ -19,7 +30,8 @@ void interrupts_init()
 
     for (int i = 0; i < INTR_COUNT; i++)
     {
-        make_gate(i, interrupts_stubs[i], 0, 0);
+        make_gate(i, interrupts_stubs[i], 0, 15);
+        bound_handlers[i] = 0;
     }
 
     idt_descriptor_t descriptor = { sizeof(idt) - 1, (uint32_t)idt };
@@ -37,6 +49,9 @@ void interrupts_eoi(int irq)
 
 void interrupts_handle_int(uint32_t intr_num, uint32_t err_code) 
 {
+    if (bound_handlers[intr_num])
+        bound_handlers[intr_num](intr_num, err_code);
+
     if (intr_num >= 0x20 && intr_num < 0x30)
     {
         interrupts_eoi(intr_num);
