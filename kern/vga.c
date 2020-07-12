@@ -136,3 +136,8 @@ void vga_init(uint16_t colour)
     x_pos = 0;
     y_pos = 0;
 }
+
+uint16_t vga_get_default()
+{
+    return default_colour;
+}
