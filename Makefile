@@ -1,4 +1,4 @@
-CFLAGS=-m32 -nostdlib -ffreestanding -fno-pie
+CFLAGS=-m32 -march=i386 -nostdlib -ffreestanding -fno-pie -mgeneral-regs-only -mno-red-zone
 CC=gcc
 
 image: stage2 loader
@@ -12,9 +12,10 @@ image: stage2 loader
 loader:
 	nasm -f bin -o build/load.bin loader/load.S
 
-stage2: kern/kernel.o kern/vga.o kern/keyboard.o
+stage2: kern/kernel.o kern/vga.o kern/keyboard.o kern/interrupts.o
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
-	$(CC) $(CFLAGS) build/stage2.o $(addprefix build/, $(notdir $^)) -T link.ld -o build/stage2.bin
+	$(CC) $(CFLAGS) -c kern/interrupts_stubs.S -o build/interrupts_stubs.o
+	$(CC) $(CFLAGS) build/stage2.o build/interrupts_stubs.o $(addprefix build/, $(notdir $^)) -T link.ld -o build/stage2.bin
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
