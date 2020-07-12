@@ -27,6 +27,14 @@ void interrupts_init()
     asm("sti");
 }
 
+void interrupts_eoi(int irq)
+{
+    outb(PIC0_REG_CTRL, 0x20);
+
+    if (irq >= 0x28)
+        outb(PIC1_REG_CTRL, 0x20);
+}
+
 void interrupts_handle_int(uint32_t intr_num, uint32_t err_code) 
 {
     if (intr_num >= 0x20 && intr_num < 0x30)
@@ -58,12 +66,4 @@ void interrupts_pic_init()
 
     outb(PIC0_REG_DATA, 0);
     outb(PIC1_REG_DATA, 0);
-}
-
-void interrupts_eoi(int irq)
-{
-    outb(PIC0_REG_CTRL, 0x20);
-
-    if (irq >= 0x28)
-        outb(PIC1_REG_CTRL, 0x20);
 }
