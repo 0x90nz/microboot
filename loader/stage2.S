@@ -1,5 +1,7 @@
 .word KERNEL_SIZE
+jmp	_start
 
+.align 16
 .code16
 .global _start
 _start:
@@ -27,7 +29,7 @@ _start:
 	mov	%ax, %ss
 
 	# Setup the stack
-	mov	$0x7ffff, %esp
+	mov	$0x70000, %esp
 
 	call	kernel_main
 
@@ -70,7 +72,3 @@ gdt:
 gdt_desc:
 .word gdt_desc - gdt - 1	# Size
 .long gdt			# Address
-
-.rept 512
-.byte 0x90
-.endr

@@ -95,9 +95,9 @@ putc:
 
 ; Read a n sectors
 read_sector:
-	mov	al, [esp + 4]
-	mov	cx, [esp + 2]
 	pusha
+	mov	al, [esp + 20]
+	mov	cx, [esp + 18]
 	mov	ah, 02h		; function code
 	mov	dl, [disk_num]	; disk number
 	mov	dh, 00h		; head number
