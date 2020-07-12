@@ -14,6 +14,20 @@ unsigned char scancode_pc104_lut[] = {
     0, 0, 0, ' '
 };
 
+unsigned char scancode_pc104_shift_lut[] = {
+    0,
+    0x13,       // ESC
+    '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
+    '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
+    0, // Special
+    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', 
+    0, 0, 0,
+    'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?',
+    0, 0, 0, ' '
+};
+
+static int shift = 0;
+
 uint8_t keyboard_poll_scancode()
 {
     // Loop until we get something
@@ -31,14 +45,21 @@ unsigned char keyboard_convert_scancode(uint8_t scancode)
     if (scancode > sizeof(scancode_pc104_lut) / sizeof(unsigned char))
         return 0;
 
-    return scancode_pc104_lut[scancode];
+    return shift ? scancode_pc104_shift_lut[scancode] : scancode_pc104_lut[scancode];
 }
 
 unsigned char keyboard_getchar(int retry)
 {
     uint8_t code;
     do {
-        code = keyboard_convert_scancode(keyboard_poll_scancode());
+        uint8_t raw_code = keyboard_poll_scancode();
+
+        if (raw_code == KB_LSHIFT || raw_code == KB_RSHIFT)
+            shift = 1;
+        else if (raw_code == KB_UP_LSHIFT || raw_code == KB_UP_LSHIFT)
+            shift = 0;
+        else
+            code = keyboard_convert_scancode(raw_code);
     } while(retry && code == 0);
     return code;
 }
