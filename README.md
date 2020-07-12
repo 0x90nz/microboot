@@ -1,5 +1,5 @@
 # μboot
-A Small (and very limited) Bootloader
+A small (and very limited) bootloader
 
 ## What is it?
 
@@ -12,7 +12,13 @@ reduces the complexity to get started.
 ## How to use
 
 To use μboot, you'll at the very minimum need some linux environment, which has
-the tools `qemu`, `gcc`, `nasm`, and `dd` available.
+the tools `qemu`, `gcc`, `nasm`, and `dd` available. Once all the tools are
+installed, you can run `make` to build or `make run` to both build and launch
+qemu.
+
+By default a 1.44MiB floppy disk image is produced, although in theory because
+BIOS interrupts are used, it μboot should run just as well from a hard disk or
+any other bootable media.
 
 ## Architecture
 
