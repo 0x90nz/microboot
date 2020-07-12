@@ -117,17 +117,21 @@ void help()
     puts("clear     - clear the display\n");
     puts("clock     - updating clock demo\n");
     puts("setcolour - set the display colour\n");
+    puts("scancode  - display raw scancodes\n");
     puts("help      - this help message\n");
 }
 
 void scancode()
 {
+    puts("esc to exit\n");
     while (1)
     {
         uint8_t code = keyboard_poll_scancode();
         itoa(code, main_scratch, 10);
         puts(main_scratch);
         puts("\n");
+        if (code == 1)
+            break;
     }
 }
 
