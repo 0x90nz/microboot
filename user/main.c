@@ -120,12 +120,24 @@ void help()
     puts("help      - this help message\n");
 }
 
+void scancode()
+{
+    while (1)
+    {
+        uint8_t code = keyboard_poll_scancode();
+        itoa(code, main_scratch, 10);
+        puts(main_scratch);
+        puts("\n");
+    }
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
     {"clock", clock},
     {"setcolour", setcolour},
     {"dino", dino},
+    {"scancode", scancode},
     {"help", help}
 };
 
