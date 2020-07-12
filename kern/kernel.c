@@ -34,20 +34,30 @@ void display_logo()
     vga_pad(offset); vga_puts(" ##\n");
 }
 
+
+char temp[32];
 void print_hex(int num)
 {
-    char temp[32];
     itoa(num, temp, 16);
-    vga_puts(temp);
+    puts(temp);
+}
+
+void print_int(int num)
+{
+    itoa(num, temp, 10);
+    puts(temp);
 }
 
 int kernel_main()
 {
-    vga_init(vga_colour(VGA_GREEN, VGA_BLACK));
+    vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
 
     interrupts_init();
-
     display_logo();
+
+    uint16_t* size = (uint16_t*)0x07e00;
+    print_int(*size);
+    puts(" KiB\n");
 
     extern int main();
     main();
