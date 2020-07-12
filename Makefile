@@ -1,4 +1,4 @@
-CFLAGS=-nostdlib
+CFLAGS=-m32 -nostdlib -ffreestanding -fno-pie
 CC=gcc
 
 image: stage2 loader
@@ -13,8 +13,9 @@ loader:
 stage2:
 	mkdir -p build
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
-	$(CC) $(CFLAGS) -c kernel.c -o build/kernel.o
-	$(CC) $(CFLAGS) build/stage2.o build/kernel.o -T link.ld -o build/stage2.bin
+	$(CC) $(CFLAGS) -c kern/kernel.c -o build/kernel.o
+	$(CC) $(CFLAGS) -c kern/vga.c -o build/vga.o
+	$(CC) $(CFLAGS) build/stage2.o build/kernel.o build/vga.o -T link.ld -o build/stage2.bin
 
 run: image
 	qemu-system-i386 -drive format=raw,file=build/load.img,index=0,if=floppy -serial mon:stdio
