@@ -12,7 +12,7 @@ image: stage2 loader
 loader:
 	nasm -f bin -o build/load.bin loader/load.S
 
-stage2: kern/kernel.o kern/vga.o kern/keyboard.o kern/interrupts.o
+stage2: kern/kernel.o kern/vga.o kern/keyboard.o kern/interrupts.o kern/stdlib.o
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
 	$(CC) $(CFLAGS) -c kern/interrupts_stubs.S -o build/interrupts_stubs.o
 	$(CC) $(CFLAGS) build/stage2.o build/interrupts_stubs.o $(addprefix build/, $(notdir $^)) -T link.ld -o build/stage2.bin
