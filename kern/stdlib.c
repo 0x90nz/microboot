@@ -58,7 +58,7 @@ void putc(char c)
 
 char getc()
 {
-    return keyboard_getchar();
+    return keyboard_getchar(1);
 }
 
 char set_echo(int echo)
@@ -70,7 +70,7 @@ void gets(char* str)
 {
     const char* start = str;
     do {
-        *str = keyboard_getchar();
+        *str = keyboard_getchar(1);
 
         if (*str == '\b')
         {

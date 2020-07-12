@@ -3,7 +3,8 @@
 #include <stdint.h>
 
 uint8_t keyboard_poll_scancode();
-unsigned char keyboard_getchar();
+unsigned char keyboard_getchar(int retry);
+int keyboard_available();
 
 #define KB_REG_DATA         0x60
 #define KB_REG_STATUS       0x64

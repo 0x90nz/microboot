@@ -21,6 +21,11 @@ uint8_t keyboard_poll_scancode()
     return inb(KB_REG_DATA);
 }
 
+int keyboard_available()
+{
+    return inb(KB_REG_STATUS) & KB_OUT_FULL;
+}
+
 unsigned char keyboard_convert_scancode(uint8_t scancode)
 {
     if (scancode > sizeof(scancode_pc104_lut) / sizeof(unsigned char))
@@ -29,11 +34,11 @@ unsigned char keyboard_convert_scancode(uint8_t scancode)
     return scancode_pc104_lut[scancode];
 }
 
-unsigned char keyboard_getchar()
+unsigned char keyboard_getchar(int retry)
 {
     uint8_t code;
     do {
         code = keyboard_convert_scancode(keyboard_poll_scancode());
-    } while(code == 0);
+    } while(retry && code == 0);
     return code;
 }

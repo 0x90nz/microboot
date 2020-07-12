@@ -79,6 +79,11 @@ void vga_putc(unsigned char c)
         vga_erase();
         return;
     }
+    else if(c == '\r')
+    {
+        x_pos = 0;
+        return;
+    }
 
     vga_buffer[y_pos * VGA_WIDTH + x_pos] = vga_entry(c, default_colour);
     x_pos++;
