@@ -22,12 +22,38 @@ void vga_disable_cursor()
     outb(0x3d5, 0x20);
 }
 
+void vga_clear_row(int row)
+{
+    for (int x = 0; x < VGA_WIDTH; x++) 
+    {
+        vga_buffer[row * VGA_WIDTH + x] = vga_entry(' ', default_colour);
+    }
+}
+
+void vga_scroll()
+{
+    for(int y = 0; y < VGA_HEIGHT; y++)
+    {
+        for(int x = 0; x < VGA_WIDTH; x++)
+        {
+            vga_buffer[(y * VGA_WIDTH) + x] = vga_buffer[(y + 1) * VGA_WIDTH + x];
+        }
+    }
+
+    vga_clear_row(y_pos);
+}
+
 void vga_putc(unsigned char c)
 {
     if (c == '\n')
     {
         x_pos = 0;
         y_pos++;
+        if (y_pos >= VGA_HEIGHT)
+        {
+            y_pos--;
+            vga_scroll();
+        }
         return;
     }
 
@@ -38,6 +64,11 @@ void vga_putc(unsigned char c)
     {
         x_pos = 0;
         y_pos++;
+        if (y_pos >= VGA_HEIGHT)
+        {
+            y_pos--;
+            vga_scroll();
+        }
     }
 }
 
