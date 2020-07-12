@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "keyboard.h"
 #include "kernel.h"
+#include "interrupts.h"
 
 unsigned char scancode_pc104_lut[] = {
     0,
@@ -27,17 +28,29 @@ unsigned char scancode_pc104_shift_lut[] = {
 };
 
 static int shift = 0;
+static int available = 0;
+
+void keyboard_handle_irq(uint32_t int_no, uint32_t err_no)
+{
+    available = 1;
+}
+
+void keyboard_init()
+{
+    register_handler(IRQ_TO_INTR(1), keyboard_handle_irq);
+}
 
 uint8_t keyboard_poll_scancode()
 {
     // Loop until we get something
-    while (!(inb(KB_REG_STATUS) & KB_OUT_FULL)) { hlt(); }
+    while (!available) { hlt(); }
+    available = 0;
     return inb(KB_REG_DATA);
 }
 
 int keyboard_available()
 {
-    return inb(KB_REG_STATUS) & KB_OUT_FULL;
+    return available;
 }
 
 unsigned char keyboard_convert_scancode(uint8_t scancode)
@@ -50,7 +63,7 @@ unsigned char keyboard_convert_scancode(uint8_t scancode)
 
 unsigned char keyboard_getchar(int retry)
 {
-    uint8_t code;
+    uint8_t code = 0;
     do {
         uint8_t raw_code = keyboard_poll_scancode();
 
