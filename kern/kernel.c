@@ -2,6 +2,7 @@
 #include "keyboard.h"
 #include "interrupts.h"
 #include "stdlib.h"
+#include "kernel.h"
 
 void hang() { while (1) { asm("hlt"); } }
 void hlt() { asm("hlt"); }
@@ -48,16 +49,16 @@ void print_int(int num)
     puts(temp);
 }
 
-int kernel_main()
+int kernel_main(memory_info_t* meminfo)
 {
     vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
 
     interrupts_init();
     display_logo();
 
-    uint16_t* size = (uint16_t*)0x07e00;
-    print_int(*size);
-    puts(" KiB\n");
+    // This is memory past 0x01000000 which is free to use
+    print_int((meminfo->extended2 * 64) / 1024);
+    puts(" MiB free\n");
 
     extern int main();
     main();

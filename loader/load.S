@@ -57,6 +57,14 @@ xfer:
 	call	puts
 	add	esp, 2
 
+	; Get memory info to use later
+	mov	ax, 0e801h
+	int	15h
+
+	push	dx	; configured 2
+	push	cx	; configured 1
+	push	bx	; extended 2
+	push 	ax	; extended 1
 	jmp 	kern_start
 
 	; If for some reason we get back here, just hang
