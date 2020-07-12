@@ -17,7 +17,7 @@ unsigned char scancode_pc104_lut[] = {
 uint8_t keyboard_poll_scancode()
 {
     // Loop until we get something
-    while (!(inb(KB_REG_STATUS) & KB_OUT_FULL)) { }
+    while (!(inb(KB_REG_STATUS) & KB_OUT_FULL)) { hlt(); }
     return inb(KB_REG_DATA);
 }
 
@@ -31,5 +31,9 @@ unsigned char keyboard_convert_scancode(uint8_t scancode)
 
 unsigned char keyboard_getchar()
 {
-    return keyboard_convert_scancode(keyboard_poll_scancode());
+    uint8_t code;
+    do {
+        code = keyboard_convert_scancode(keyboard_poll_scancode());
+    } while(code == 0);
+    return code;
 }

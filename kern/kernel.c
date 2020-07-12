@@ -91,5 +91,10 @@ int kernel_main()
     display_logo();
     vga_puts(" >>> ");
 
+    while (1)
+    {
+        vga_putc(keyboard_getchar());
+    }
+
     hang();
 }
