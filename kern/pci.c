@@ -70,11 +70,27 @@ uint32_t pci_cfg_read_dword(uint8_t bus, uint8_t device, uint8_t func, uint8_t o
     addr.bus_num = bus;
     addr.dev_num = device;
     addr.func_num = func;
-    addr.reg_off = off; // Make sure the low 2 bits are always 0
+    addr.reg_off = off;
     addr.enable = 1;
 
     outl(PCI_CFG_ADDR, *(uint32_t*)&addr);
     return inl(PCI_CFG_DATA);
+}
+
+void pci_cfg_write_dword(uint8_t bus, uint8_t device, uint8_t func, uint8_t off, uint32_t data)
+{
+    ASSERT((off & 3) == 0, "Unaligned PCI read attempt");
+
+    pci_addr_t addr;
+    addr.reserved0 = 0;
+
+    addr.bus_num = bus;
+    addr.dev_num = device;
+    addr.func_num = func;
+    addr.reg_off = off;
+    addr.enable = 1;
+    outl(PCI_CFG_ADDR, *(uint32_t*)&addr);
+    outl(PCI_CFG_DATA, data);
 }
 
 uint16_t pci_cfg_read_word(uint8_t bus, uint8_t device, uint8_t func, uint8_t off)
