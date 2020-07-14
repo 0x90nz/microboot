@@ -1,6 +1,7 @@
 #include "stdlib.h"
 #include "vga.h"
 #include "keyboard.h"
+#include "kernel.h"
 
 static int should_echo = 1;
 
@@ -102,4 +103,22 @@ int strcmp(const char* a, const char* b)
         a++; b++;
     }
     return *(const unsigned char*)a - *(const unsigned char*)b;
+}
+
+void __assert(const char* file, int line, const char* func, int expr, const char* message)
+{
+    if (!expr)
+    {
+        puts("Assertion failed!\n");
+        puts(func);
+        puts("() @ ");
+        puts(file);
+        puts(":");
+        print_int(line);
+        puts(" (");
+        puts(message);
+        puts(")");
+
+        while (1) { hlt(); }
+    }
 }
