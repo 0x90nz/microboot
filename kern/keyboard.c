@@ -2,6 +2,7 @@
 #include "keyboard.h"
 #include "kernel.h"
 #include "interrupts.h"
+#include "pio.h"
 
 unsigned char scancode_pc104_lut[] = {
     0,

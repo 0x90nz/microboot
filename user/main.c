@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <interrupts.h>
 #include <vga.h>
+#include <pio.h>
 #include <kernel.h>
 #include <keyboard.h>
 
