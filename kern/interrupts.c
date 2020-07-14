@@ -13,7 +13,7 @@ void make_gate(int i, void (*fn)(void), int dpl, int gate_type)
     idt[i].dpl = dpl;
     idt[i].gate_type = gate_type;
     idt[i].present = 1;
-    idt[i].selector = 0x08;
+    idt[i].selector = KERNEL_CSEL;
 }
 
 void register_handler(int int_no, intr_handler* handler)
@@ -35,8 +35,7 @@ void interrupts_init()
     }
 
     idt_descriptor_t descriptor = { sizeof(idt) - 1, (uint32_t)idt };
-    asm volatile("lidt %0" :: "m" (descriptor));
-    asm("sti");
+    asm volatile("lidt %0; sti" :: "m" (descriptor));
 }
 
 void interrupts_eoi(int irq)
