@@ -19,3 +19,4 @@ typedef struct {
 void pci_test();
 uint16_t pci_cfg_read_word(uint8_t bus, uint8_t device, uint8_t func, uint8_t off);
 uint32_t pci_cfg_read_dword(uint8_t bus, uint8_t device, uint8_t func, uint8_t off);
+void pci_cfg_write_dword(uint8_t bus, uint8_t device, uint8_t func, uint8_t off, uint32_t data);
