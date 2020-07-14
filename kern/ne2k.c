@@ -1,5 +1,6 @@
 #include "ne2k.h"
 #include "pio.h"
+#include "interrupts.h"
 #include "kernel.h"
 #include "stdlib.h"
 
@@ -7,29 +8,33 @@ uint16_t iobase;
 
 void tx_packet(void* packet, size_t len)
 {
-    outb(iobase + NE2K_REG_CMD, 0x22); // Start, nodma
-
-    // Load the packet size
     outb(iobase + NE2K_RBCR0, len & 0xff);
     outb(iobase + NE2K_RBCR1, (len >> 8) & 0xff);
 
-    outb(iobase + NE2K_REG_INT_STAT, inb(iobase + NE2K_REG_INT_STAT) | (1 << 6));
+    int txbuf = 0;
+    outb(iobase + NE2K_RSAR0, 0);
+    outb(iobase + NE2K_RSAR1, txbuf);
 
-    outb(iobase + NE2K_RSAR0, 0x00); // Always 0
-    outb(iobase + NE2K_RSAR1, 0x01); // Target page
+    outb(iobase + NE2K_REG_CMD, NE2K_CMD_REMOTE_WRITE | 0b10);
 
-
-    outb(iobase + NE2K_REG_CMD, 0x12); // start, remote write DMA
-
-    uint8_t* temp_packet = (uint8_t*)packet;
+    uint8_t* data = (uint8_t*)packet;
     for (size_t i = 0; i < len; i++)
     {
-        outw(iobase + NE2K_REG_DATA, temp_packet[i]);
+        outb(iobase + NE2K_REG_DATA, data[i]);
     }
 
-    // Wait until bit 6 is set
-    while (inb(iobase + NE2K_REG_INT_STAT) & (1 << 6) == 0) { puts("poll\n");};
-    puts("done tx\n");
+    outb(iobase + NE2K_REG_TPSR, txbuf);
+
+    outb(iobase + NE2K_REG_TBCR0, len & 0xff);
+    outb(iobase + NE2K_REG_TBCR1, (len >> 8) & 0xff);
+
+    // nodma, txp, start
+    outb(iobase + NE2K_REG_CMD, 0b110);
+}
+
+void ne2k_handle_irq(uint32_t int_no, uint32_t err_no)
+{
+    puts("ne2k_intr\n");
 }
 
 void ne2k_init(pci_device_desc_t* device)
@@ -80,6 +85,20 @@ void ne2k_init(pci_device_desc_t* device)
     puts(":");
     print_hex(prom[5]);
     puts("\n");
+
+    // Select page 1
+    outb(iobase + NE2K_REG_CMD, (inb(iobase + NE2K_REG_CMD) & 0x3f) | (1 << 6));
+
+    // Write the MAC addr to par0..6
+    for (int i = 0; i < 6; i++)
+    {
+        outb(iobase + 1 + i, prom[i]);
+    }
+
+    // Select page 0
+    outb(iobase + NE2K_REG_CMD, (inb(iobase + NE2K_REG_CMD) & 0x3f) | (0 << 6));
+
+    register_handler(IRQ_TO_INTR(device->interrupt_line), ne2k_handle_irq);
 
     tx_packet(prom, 32);
 }

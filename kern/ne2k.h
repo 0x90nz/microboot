@@ -5,6 +5,11 @@
 
 #define NE2K_REG_CMD            0x00
 #define NE2K_REG_TX_STAT        0x04
+#define NE2K_REG_TPSR           0x04
+
+#define NE2K_REG_TBCR0          0x05
+#define NE2K_REG_TBCR1          0x06
+
 #define NE2K_REG_INT_STAT       0x07
 
 // Remote start address 0, low byte
@@ -23,6 +28,10 @@
 #define NE2K_REG_INT_MASK       0x0f
 #define NE2K_REG_DATA           0x10
 #define NE2K_REG_RESET          0x1f
-#define NE_IO_EXTENT    0x20
+
+#define NE2K_CMD_TXP            (1 << 2)
+#define NE2K_CMD_REMOTE_READ    (1 << 3)
+#define NE2K_CMD_REMOTE_WRITE   (1 << 4)
+#define NE2K_CMD_SEND_PKT       (3 << 4)
 
 void ne2k_init(pci_device_desc_t* device);
