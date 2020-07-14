@@ -16,7 +16,7 @@ loader:
 user:
 	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern
 
-stage2: kern/kernel.o kern/vga.o kern/keyboard.o kern/interrupts.o kern/stdlib.o kern/pci.o kern/pio.o
+stage2: kern/kernel.o kern/vga.o kern/keyboard.o kern/interrupts.o kern/stdlib.o kern/pci.o kern/pio.o kern/ne2k.o
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
 	$(CC) $(CFLAGS) -c kern/interrupts_stubs.S -o build/interrupts_stubs.o
 	$(CC) $(CFLAGS) build/stage2.o build/interrupts_stubs.o build/main.o $(addprefix build/, $(notdir $^)) -T link.ld -o build/stage2.bin
@@ -25,7 +25,7 @@ stage2: kern/kernel.o kern/vga.o kern/keyboard.o kern/interrupts.o kern/stdlib.o
 	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
 
 run: image
-	qemu-system-i386 -drive format=raw,file=build/load.img,index=0,if=floppy -serial mon:stdio
+	qemu-system-i386 -drive format=raw,file=build/load.img,index=0,if=floppy -serial mon:stdio -net nic,model=ne2k_pci,macaddr=de:ad:be:ef:c0:fe
 
 clean:
 	rm -r build

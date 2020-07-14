@@ -2,12 +2,29 @@
 #include "stdlib.h"
 #include "pio.h"
 #include "pci.h"
+#include "ne2k.h"
+
+void read_dev(uint32_t* desc, uint8_t bus, uint8_t device, uint8_t func)
+{
+    for (int i = 0; i < 16; i++)
+    {
+        desc[i] = pci_cfg_read_dword(bus, device, func, PCI_REG(i, 0));
+    }
+}
 
 void pci_check_func(uint8_t bus, uint8_t device, uint8_t func)
 {
-    uint16_t vid = pci_cfg_read_word(bus, device, func, 0);
-    uint16_t did = pci_cfg_read_word(bus, device, func, 2);
+    uint16_t vid = pci_cfg_read_word(bus, device, func, 2);
+    uint16_t did = pci_cfg_read_word(bus, device, func, 0);
     print_hex(vid); puts(":"); print_hex(did); puts("\n");
+
+    uint32_t buf[16];
+    if (vid == 0x10ec && did == 0x8029)
+    {
+        read_dev(buf, bus, device, func);
+        pci_device_desc_t* dev = (pci_device_desc_t*)buf;
+        ne2k_init(dev);
+    }
 }
 
 uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t func)
