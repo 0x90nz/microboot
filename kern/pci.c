@@ -16,7 +16,6 @@ void pci_check_func(uint8_t bus, uint8_t device, uint8_t func)
 {
     uint16_t vid = pci_cfg_read_word(bus, device, func, 2);
     uint16_t did = pci_cfg_read_word(bus, device, func, 0);
-    print_hex(vid); puts(":"); print_hex(did); puts("\n");
 
     uint32_t buf[16];
     if (vid == 0x10ec && did == 0x8029)
