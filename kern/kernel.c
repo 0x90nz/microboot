@@ -5,6 +5,7 @@
 #include "stdlib.h"
 #include "kernel.h"
 #include "pci.h"
+#include "alloc.h"
 
 void hang() { while (1) { asm("hlt"); } }
 void hlt() { asm("hlt"); }
@@ -49,6 +50,8 @@ int kernel_main(memory_info_t* meminfo)
     // This is memory past 0x01000000 which is free to use
     print_int((meminfo->extended2 * 64) / 1024);
     puts(" MiB free\n");
+
+    init_alloc((void*)0x01000000, meminfo->extended2 * 64 * KiB);
 
     pci_test();
 
