@@ -3,7 +3,7 @@
 #include "kernel.h"
 #include <stdint.h>
 
-void* mem_start;
+void* mem_start = NULL;
 mem_block_t* head;
 mem_block_t* last;
 size_t mem_size;
@@ -22,6 +22,8 @@ void init_alloc(void* start, size_t size)
 
 void* kalloc(size_t size)
 {
+    ASSERT(mem_start, "Allocator was used before initialised");
+
     for (mem_block_t* current = head; current; current = current->next)
     {
         if (current->state == MEM_STATE_FREE && current->size >= size)
@@ -41,7 +43,6 @@ void* kalloc(size_t size)
     last->next = current;
     last = current;
 
-    // puts("block @ "); print_hex(current); puts("\n");
     return (void*)current + sizeof(mem_block_t);
 }
 
@@ -51,6 +52,5 @@ void kfree(void* ptr)
     ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to free invalid address");
 
     mem_block_t* block = ptr - sizeof(mem_block_t);
-    // puts("block @ "); print_hex(block); puts("\n");
     block->state = MEM_STATE_FREE;
 }
