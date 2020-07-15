@@ -1,6 +1,7 @@
 #include "interrupts.h"
 #include "kernel.h"
 #include "vga.h"
+#include "pio.h"
 
 idt_entry_t idt[INTR_COUNT];
 intr_handler* bound_handlers[INTR_COUNT];

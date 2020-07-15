@@ -1,24 +1,13 @@
 #include "vga.h"
 #include "keyboard.h"
 #include "interrupts.h"
+#include "pio.h"
 #include "stdlib.h"
 #include "kernel.h"
+#include "pci.h"
 
 void hang() { while (1) { asm("hlt"); } }
 void hlt() { asm("hlt"); }
-
-// Byte sized port access
-void outb(uint16_t portnumber, uint8_t data)
-{
-	asm volatile("outb %%al, %%dx" :: "d" (portnumber), "a" (data));
-}
- 
-uint8_t inb(uint16_t portnumber)
-{
-	uint8_t result;
-	asm volatile("inb %%dx, %%al" : "=a" (result) : "d" (portnumber));
-	return result;
-}
 
 void display_logo()
 {
@@ -60,6 +49,8 @@ int kernel_main(memory_info_t* meminfo)
     // This is memory past 0x01000000 which is free to use
     print_int((meminfo->extended2 * 64) / 1024);
     puts(" MiB free\n");
+
+    pci_test();
 
     extern int main();
     main();

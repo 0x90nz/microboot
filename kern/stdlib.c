@@ -1,6 +1,8 @@
 #include "stdlib.h"
 #include "vga.h"
 #include "keyboard.h"
+#include "kernel.h"
+#include <stddef.h>
 
 static int should_echo = 1;
 
@@ -102,4 +104,31 @@ int strcmp(const char* a, const char* b)
         a++; b++;
     }
     return *(const unsigned char*)a - *(const unsigned char*)b;
+}
+
+void memset(void* memory, uint8_t value, size_t len)
+{
+    uint8_t* ptr = memory;
+    for (int i = 0; i < len; i++)
+    {
+        ptr[i] = value;
+    }
+}
+
+void __assert(const char* file, int line, const char* func, int expr, const char* message)
+{
+    if (!expr)
+    {
+        puts("Assertion failed!\n");
+        puts(func);
+        puts("() @ ");
+        puts(file);
+        puts(":");
+        print_int(line);
+        puts(" (");
+        puts(message);
+        puts(")");
+
+        while (1) { hlt(); }
+    }
 }
