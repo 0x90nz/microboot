@@ -3,11 +3,14 @@
 #include "interrupts.h"
 #include "kernel.h"
 #include "stdlib.h"
+#include "alloc.h"
 
 uint16_t iobase;
 
 void tx_packet(void* packet, size_t len)
 {
+    ASSERT(len % 2 == 0, "Cannot tx packet with non-word length");
+
     outb(iobase + NE2K_RBCR0, len & 0xff);
     outb(iobase + NE2K_RBCR1, (len >> 8) & 0xff);
 
@@ -17,10 +20,10 @@ void tx_packet(void* packet, size_t len)
 
     outb(iobase + NE2K_REG_CMD, NE2K_CMD_REMOTE_WRITE | 0b10);
 
-    uint8_t* data = (uint8_t*)packet;
-    for (size_t i = 0; i < len; i++)
+    uint16_t* data = (uint16_t*)packet;
+    for (size_t i = 0; i < len / 2; i++)
     {
-        outb(iobase + NE2K_REG_DATA, data[i]);
+        outw(iobase + NE2K_REG_DATA, data[i]);
     }
 
     outb(iobase + NE2K_REG_TPSR, txbuf);
@@ -100,5 +103,7 @@ void ne2k_init(pci_device_desc_t* device)
 
     register_handler(IRQ_TO_INTR(device->interrupt_line), ne2k_handle_irq);
 
-    tx_packet(prom, 32);
+    char* test = kalloc(1024);
+    memset(test, 0xaa, 1024);
+    tx_packet(test, 1024);
 }
