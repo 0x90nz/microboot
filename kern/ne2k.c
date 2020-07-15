@@ -76,19 +76,6 @@ void ne2k_init(pci_device_desc_t* device)
         prom[i] = inb(iobase + 0x10);
     }
 
-    print_hex(prom[0]);
-    puts(":");
-    print_hex(prom[1]);
-    puts(":");
-    print_hex(prom[2]);
-    puts(":");
-    print_hex(prom[3]);
-    puts(":");
-    print_hex(prom[4]);
-    puts(":");
-    print_hex(prom[5]);
-    puts("\n");
-
     // Select page 1
     outb(iobase + NE2K_REG_CMD, (inb(iobase + NE2K_REG_CMD) & 0x3f) | (1 << 6));
 

@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "printf.h"
 
 void itoa(int value, char* buffer, int base);
 void gets(char* str);

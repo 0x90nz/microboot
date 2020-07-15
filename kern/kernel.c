@@ -49,8 +49,7 @@ int kernel_main(memory_info_t* meminfo)
     display_logo();
 
     // This is memory past 0x01000000 which is free to use
-    print_int((meminfo->extended2 * 64) / 1024);
-    puts(" MiB free\n");
+    printf("%d MiB free\n", (meminfo->extended2 * 64) / 1024);
 
     pci_test();
 
