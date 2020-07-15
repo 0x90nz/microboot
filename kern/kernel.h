@@ -16,3 +16,6 @@ typedef struct {
 
 #define KERNEL_CSEL     0x08
 #define KERNEL_DSEL     0x10
+
+#define KiB             1024
+#define MiB             1048576
