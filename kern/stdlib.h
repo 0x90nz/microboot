@@ -11,6 +11,7 @@ void puts(const char* str);
 void putc(char c);
 int strcmp(const char* a, const char* b);
 void memset(void* memory, uint8_t value, size_t len);
+void memcpy(void* dst, const void* src, size_t len);
 
 
 // Assertions. Note that we use a ternary to force evaluation as an if, from which return an int

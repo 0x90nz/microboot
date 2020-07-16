@@ -8,34 +8,31 @@
 
 uint16_t iobase;
 
-int tx_packet(void* packet, size_t len)
+int ne2k_tx_packet(void* packet, size_t len)
 {
-    ASSERT(len % 2 == 0, "Cannot tx packet with non-word length");
+    outb(iobase + NE2K_REG_CMD, 0b00100010);
 
     // Set the length to transmit
     outb(iobase + NE2K_RBCR0, len & 0xff);
     outb(iobase + NE2K_RBCR1, (len >> 8) & 0xff);
 
+    outb(iobase + NE2K_REG_INT_STAT, 1 << 6);
+
     // Set which buffer we're going to use
-    int txbuf = 0;
+    int txbuf = 0x40;
     outb(iobase + NE2K_RSAR0, 0);
     outb(iobase + NE2K_RSAR1, txbuf);
 
-    ne2k_select_page(2);
-    uint8_t dcr = inb(NE2K_REG_DATA_CFG);
-    ne2k_select_page(0);
-    // Blank out the low two bits, leaving us in byte-wise DMA mode
-    outb(iobase + NE2K_REG_DATA_CFG, dcr & 0xfc);
-
     outb(iobase + NE2K_REG_CMD, NE2K_CMD_REMOTE_WRITE | NE2K_CMD_START);
 
-    // Shove out all the data word by word. 
-    // This is why length needs to be word-length
     uint8_t* data = (uint8_t*)packet;
     for (size_t i = 0; i < len; i++)
     {
         outb(iobase + NE2K_REG_DATA, data[i]);
     }
+
+    // Wait for the remote DMA to complete
+    while ((inb(iobase + NE2K_REG_INT_STAT) & (1 << 6)) == 0);
 
     outb(iobase + NE2K_REG_TPSR, txbuf);
 
@@ -50,7 +47,9 @@ int tx_packet(void* packet, size_t len)
 
 void ne2k_handle_irq(uint32_t int_no, uint32_t err_no)
 {
-    puts("ne2k_intr\n");
+    printf("ne2k intr: %08b\n", inb(iobase + NE2K_REG_INT_STAT));
+    // For now just acknowledge everything
+    outb(iobase + NE2K_REG_INT_STAT, inb(iobase + NE2K_REG_INT_STAT));
 }
 
 void ne2k_select_page(int page)
@@ -70,7 +69,7 @@ void ne2k_init(pci_device_desc_t* device)
 
     outb(iobase, (1 << 5) | 1); // Page 0, no DMA, stop
     
-    outb(iobase + NE2K_REG_DATA_CFG, 0x49);  // Word wide access
+    outb(iobase + NE2K_REG_DATA_CFG, 0x49);
     
     outb(iobase + NE2K_RBCR0, 0);     // Clear count
     outb(iobase + NE2K_RBCR1, 0);
@@ -79,7 +78,7 @@ void ne2k_init(pci_device_desc_t* device)
     outb(iobase + NE2K_REG_INT_STAT, 0xff);
 
     outb(iobase + NE2K_REG_RX_CFG, 0x20);  // Monitor mode
-    outb(iobase + NE2K_REG_TX_CFG, 0x02);  // Loopback
+    outb(iobase + NE2K_REG_TX_CFG, 0x02);  // Normal
 
     outb(iobase + NE2K_RBCR0, 32);    // Read 32 bytes
     outb(iobase + NE2K_RBCR1, 0);     // High byte of count
@@ -87,15 +86,14 @@ void ne2k_init(pci_device_desc_t* device)
     outb(iobase + NE2K_RSAR0, 0);     // Start DMA at 0
     outb(iobase + NE2K_RSAR1, 0);     // High byte of DMA start
 
-    outb(iobase, NE2K_RBCR0);         // Actually start the Read
+    outb(iobase, NE2K_CMD_REMOTE_READ | NE2K_CMD_START);         // Actually start the Read
 
     uint8_t prom[32];
     for (int i = 0; i < 32; i++)
     {
-        prom[i] = inb(iobase + 0x10);
+        prom[i] = inb(iobase + NE2K_REG_DATA);
     }
 
-    // Select page 1
     ne2k_select_page(1);
 
     // Write the MAC addr to par0..6
@@ -104,17 +102,15 @@ void ne2k_init(pci_device_desc_t* device)
         outb(iobase + 1 + i, prom[i]);
     }
 
-    // Select page 0
+    printf("mac: %02x:%02x:%02x:%02x:%02x:%02x\n", prom[0], prom[1], prom[2], prom[3], prom[4], prom[5]);
+
+    ne2k_select_page(2);
+    uint8_t dcr = inb(NE2K_REG_DATA_CFG);
     ne2k_select_page(0);
+    // Blank out the low two bits, leaving us in byte-wise DMA mode
+    outb(iobase + NE2K_REG_DATA_CFG, dcr & 0xfc);
 
     register_handler(IRQ_TO_INTR(device->interrupt_line), ne2k_handle_irq);
 
-    size_t pkt_size = ip_buffer_length(1024);
-    char* test = kalloc(pkt_size);
-
-
-    char* data = ip_make_packet(test, 1024, 0xfd, 0xdeadbeef, 0xdeadbeef);
-    memset(data, 0xcc, 1024);
-
-    printf("Packet ISR: %02x\n", tx_packet(test, pkt_size));
+    outb(iobase + NE2K_REG_INT_MASK, 0b10);
 }

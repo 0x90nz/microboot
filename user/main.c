@@ -2,10 +2,15 @@
 #include <stdint.h>
 #include <interrupts.h>
 #include <vga.h>
-#include <crc.h>
 #include <pio.h>
 #include <kernel.h>
 #include <keyboard.h>
+
+#include <ne2k.h>
+#include <ether.h>
+#include <ip.h>
+#include <stddef.h>
+#include <alloc.h>
 
 uint16_t colour;
 int ticks;
@@ -159,11 +164,22 @@ void handle_irq0(uint32_t int_no, uint32_t err_no)
     ticks++;
 }
 
+
+void net_test()
+{
+    int size = 1024;
+    size_t pktsz = ether_buffer_length(ip_buffer_length(size));
+    
+    uint8_t* packet = (uint8_t*)kalloc(pktsz);
+    uint8_t src[] = {0xde, 0xad, 0xbe, 0xef, 0xc0, 0xfe};
+    char* ether = ether_make_packet(packet, src, src, ip_buffer_length(size));
+    char* ip = ip_make_packet(ether, size, 0x11, 0xffffffff, 0xffffffff);
+    
+    ne2k_tx_packet(packet, pktsz);
+}
+
 void main()
 {
-    char test[] = "Hello World";
-    printf("crc test: %08x\n", crc32(test, sizeof(test) - 1));
-
     // Set to roughly 100hz
     set_timer_reload(11932);
 
@@ -171,6 +187,8 @@ void main()
     register_handler(IRQ_TO_INTR(0), handle_irq0);
 
     colour = vga_get_default();
+
+    net_test();
 
     char cmdbuf[64];
 
