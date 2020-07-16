@@ -29,9 +29,11 @@
 #define NE2K_REG_DATA           0x10
 #define NE2K_REG_RESET          0x1f
 
+#define NE2K_CMD_START          (1 << 1)
 #define NE2K_CMD_TXP            (1 << 2)
 #define NE2K_CMD_REMOTE_READ    (1 << 3)
 #define NE2K_CMD_REMOTE_WRITE   (1 << 4)
 #define NE2K_CMD_SEND_PKT       (3 << 4)
 
 void ne2k_init(pci_device_desc_t* device);
+void ne2k_select_page(int page);
