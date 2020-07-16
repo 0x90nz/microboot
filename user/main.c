@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <interrupts.h>
 #include <vga.h>
+#include <crc.h>
 #include <pio.h>
 #include <kernel.h>
 #include <keyboard.h>
@@ -160,6 +161,9 @@ void handle_irq0(uint32_t int_no, uint32_t err_no)
 
 void main()
 {
+    char test[] = "Hello World";
+    printf("crc test: %08x\n", crc32(test, sizeof(test) - 1));
+
     // Set to roughly 100hz
     set_timer_reload(11932);
 

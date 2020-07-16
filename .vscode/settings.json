@@ -7,6 +7,7 @@
         "initializer_list": "c",
         "ranges": "c",
         "utility": "c",
-        "valarray": "c"
+        "valarray": "c",
+        "system_error": "c"
     }
 }
