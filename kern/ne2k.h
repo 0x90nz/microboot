@@ -1,9 +1,13 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 #include "pci.h"
 
 #define NE2K_REG_CMD            0x00
+#define NE2K_REG_PSTART         0x01
+#define NE2K_REG_PSTOP          0x02
+
 #define NE2K_REG_TX_STAT        0x04
 #define NE2K_REG_TPSR           0x04
 
@@ -37,3 +41,4 @@
 
 void ne2k_init(pci_device_desc_t* device);
 void ne2k_select_page(int page);
+int ne2k_tx_packet(void* packet, size_t len);

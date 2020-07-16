@@ -8,6 +8,7 @@
         "ranges": "c",
         "utility": "c",
         "valarray": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "tuple": "c"
     }
 }

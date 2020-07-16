@@ -115,6 +115,17 @@ void memset(void* memory, uint8_t value, size_t len)
     }
 }
 
+void memcpy(void* dst, const void* src, size_t len)
+{
+    uint8_t* lsrc = (uint8_t*)src;
+    uint8_t* ldst = (uint8_t*)dst;
+
+    for (size_t i = 0; i < len; i++)
+    {
+        ldst[i] = lsrc[i];
+    }
+}
+
 void __assert(const char* file, int line, const char* func, int expr, const char* message)
 {
     if (!expr)
