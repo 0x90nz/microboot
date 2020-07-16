@@ -7,8 +7,8 @@ void* ether_make_packet(void* buffer, uint8_t* src, uint8_t* dst, uint16_t lengt
     ether_header_t* header = (ether_header_t*)buffer;
     memcpy(header->src_mac, src, 6);
     memcpy(header->dst_mac, dst, 6);
-    header->length = 0x0080;
-    return header + sizeof(header);
+    header->ethertype = 0x0008;
+    return buffer + sizeof(ether_header_t);
 }
 
 size_t ether_buffer_length(size_t data_size)

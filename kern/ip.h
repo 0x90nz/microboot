@@ -20,7 +20,7 @@ typedef struct {
 
     uint32_t src_ip;
     uint32_t dst_ip;
-} __attribute__((packed)) ipv4_header_t;
+} __attribute__((packed, scalar_storage_order("big-endian"))) ipv4_header_t;
 
 typedef struct {
     uint8_t addr[4];
