@@ -168,7 +168,7 @@ void handle_irq0(uint32_t int_no, uint32_t err_no)
 
 void net_test()
 {
-    int size = 1024;
+    int size = 13;
     size_t pktsz = ether_buffer_length(ip_buffer_length(udp_buffer_length(size)));
     
     uint8_t* packet = (uint8_t*)kalloc(pktsz);
