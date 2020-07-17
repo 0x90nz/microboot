@@ -23,6 +23,25 @@ void vga_disable_cursor()
     outb(0x3d5, 0x20);
 }
 
+void vga_cursor_width(uint8_t start, uint8_t end)
+{
+    outb(0x3d4, 0x0a);
+    outb(0x3d5, (inb(0x3d5) & 0xc0) | start);
+    outb(0x3d4, 0x0b);
+    outb(0x3d5, (inb(0x3d5) & 0xe0) | end);
+}
+
+void vga_set_cursor(int x, int y)
+{
+    uint16_t pos = y * VGA_WIDTH + x;
+
+    outb(0x3d4, 0x0f);
+    outb(0x3d5, pos & 0xff);
+    outb(0x3d4, 0x0e);
+    outb(0x3d5, (pos >> 8) & 0xff);
+}
+
+
 void vga_clear_row(int row)
 {
     for (int x = 0; x < VGA_WIDTH; x++) 
@@ -73,16 +92,19 @@ void vga_putc(unsigned char c)
             y_pos--;
             vga_scroll();
         }
+        vga_set_cursor(x_pos, y_pos);
         return;
     }
     else if (c == '\b')
     {
         vga_erase();
+        vga_set_cursor(x_pos, y_pos);
         return;
     }
     else if(c == '\r')
     {
         x_pos = 0;
+        vga_set_cursor(x_pos, y_pos);
         return;
     }
 
@@ -99,6 +121,8 @@ void vga_putc(unsigned char c)
             vga_scroll();
         }
     }
+
+    vga_set_cursor(x_pos, y_pos);
 }
 
 
@@ -123,7 +147,7 @@ void vga_init(uint16_t colour)
     vga_buffer = (uint16_t*)VGA_BUFFER_ADDR;
     default_colour = colour;
 
-    vga_disable_cursor();
+    vga_cursor_width(14, 15);
 
     // Clear the whole screen
     for (int y = 0; y < VGA_HEIGHT; y++)
