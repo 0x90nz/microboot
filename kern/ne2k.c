@@ -112,5 +112,6 @@ void ne2k_init(pci_device_desc_t* device)
 
     register_handler(IRQ_TO_INTR(device->interrupt_line), ne2k_handle_irq);
 
-    outb(iobase + NE2K_REG_INT_MASK, 0b10);
+    // Enable interrupts for tx and rx
+    outb(iobase + NE2K_REG_INT_MASK, 0b11);
 }
