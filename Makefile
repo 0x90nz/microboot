@@ -1,6 +1,9 @@
 CFLAGS=-m32 -march=i386 -nostdlib -ffreestanding -fno-pie -mgeneral-regs-only -mno-red-zone -msoft-float
 CC=gcc
 
+KSRC=$(shell find kern -type f -name "*.c")
+KOBJS=$(KSRC:.c=.o)
+
 image: user stage2 loader
 	dd if=/dev/zero of=build/load.img bs=512 count=2880
 	dd if=build/load.bin of=build/load.img conv=notrunc
@@ -16,9 +19,10 @@ loader:
 user:
 	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern
 
-stage2: kern/kernel.o kern/vga.o kern/keyboard.o kern/interrupts.o \
-	kern/stdlib.o kern/pci.o kern/pio.o kern/ne2k.o kern/alloc.o kern/printf.o kern/ip.o \
-	kern/ether.o kern/crc.o kern/udp.o
+thing:
+	echo $(KOBJS)
+
+stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
 	$(CC) $(CFLAGS) -c kern/interrupts_stubs.S -o build/interrupts_stubs.o
 	$(CC) $(CFLAGS) build/stage2.o build/interrupts_stubs.o build/main.o $(addprefix build/, $(notdir $^)) -T link.ld -o build/stage2.bin
