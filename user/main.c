@@ -165,10 +165,10 @@ void handle_irq0(uint32_t int_no, uint32_t err_no)
     ticks++;
 }
 
-
 void net_test()
 {
-    int size = 13;
+    char message[] = "Hello World";
+    int size = sizeof(message);
     size_t pktsz = ether_buffer_length(ip_buffer_length(udp_buffer_length(size)));
     
     uint8_t* packet = (uint8_t*)kalloc(pktsz);
@@ -177,7 +177,7 @@ void net_test()
     char* ip = ip_make_packet(ether, udp_buffer_length(size), 0x11, make_ip(127, 0, 0, 1), make_ip(127, 0, 0, 1));
     char* udp = udp_make_packet(ip, size, 1234, 1234);
 
-    memcpy(udp, "Hello World!", 13);
+    memcpy(udp, message, size);
 
     ne2k_tx_packet(packet, pktsz);
 }
