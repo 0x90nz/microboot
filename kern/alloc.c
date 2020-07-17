@@ -8,6 +8,8 @@ mem_block_t* head;
 mem_block_t* last;
 size_t mem_size;
 
+#define ALIGNMENT       64
+
 void init_alloc(void* start, size_t size)
 {
     mem_start = start;
@@ -20,13 +22,22 @@ void init_alloc(void* start, size_t size)
     last = head;
 }
 
+// Align the requested size to the alignment boundary
+// Means that we can re-use more blocks easier, and because
+// we're naive and don't combine blocks, this is good.
+size_t aligned_size(size_t size)
+{
+    return (size / ALIGNMENT) * ALIGNMENT + ALIGNMENT;
+}
+
 void* kalloc(size_t size)
 {
     ASSERT(mem_start, "Allocator was used before initialised");
+    size_t allocated_size = aligned_size(size);
 
     for (mem_block_t* current = head; current; current = current->next)
     {
-        if (current->state == MEM_STATE_FREE && current->size >= size)
+        if (current->state == MEM_STATE_FREE && current->size >= allocated_size)
         {
             current->state = MEM_STATE_USED;
             return (void*)current + sizeof(mem_block_t);
@@ -37,7 +48,7 @@ void* kalloc(size_t size)
 
     ASSERT((void*)current <= mem_start + mem_size, "Out of memory, cannot allocate");
 
-    current->size = size;
+    current->size = allocated_size;
     current->next = NULL;
     current->state = MEM_STATE_USED;
     last->next = current;
