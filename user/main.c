@@ -9,6 +9,7 @@
 #include <ne2k.h>
 #include <ether.h>
 #include <ip.h>
+#include <udp.h>
 #include <stddef.h>
 #include <alloc.h>
 
@@ -168,13 +169,16 @@ void handle_irq0(uint32_t int_no, uint32_t err_no)
 void net_test()
 {
     int size = 1024;
-    size_t pktsz = ether_buffer_length(ip_buffer_length(size));
+    size_t pktsz = ether_buffer_length(ip_buffer_length(udp_buffer_length(size)));
     
     uint8_t* packet = (uint8_t*)kalloc(pktsz);
     uint8_t src[] = {0xde, 0xad, 0xbe, 0xef, 0xc0, 0xfe};
-    char* ether = ether_make_packet(packet, src, src, ip_buffer_length(size));
-    char* ip = ip_make_packet(ether, size, 0x11, 0xffffffff, 0xffffffff);
-    
+    char* ether = ether_make_packet(packet, src, src, ip_buffer_length(udp_buffer_length(size)));
+    char* ip = ip_make_packet(ether, udp_buffer_length(size), 0x11, make_ip(127, 0, 0, 1), make_ip(127, 0, 0, 1));
+    char* udp = udp_make_packet(ip, size, 1234, 1234);
+
+    memcpy(udp, "Hello World!", 13);
+
     ne2k_tx_packet(packet, pktsz);
 }
 

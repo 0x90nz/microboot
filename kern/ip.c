@@ -26,3 +26,8 @@ size_t ip_buffer_length(size_t data_length)
 {
     return data_length + sizeof(ipv4_header_t);
 }
+
+uint32_t make_ip(int o1, int o2, int o3, int o4)
+{
+    return ((o1 & 0xff) << 24) | ((o2 & 0xff) << 16) | ((o3 & 0xff) << 8) | (o4 & 0xff);
+}
