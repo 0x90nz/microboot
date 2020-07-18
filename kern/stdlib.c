@@ -131,15 +131,8 @@ void __assert(const char* file, int line, const char* func, int expr, const char
     if (!expr)
     {
         puts("Assertion failed!\n");
-        puts(func);
-        puts("() @ ");
-        puts(file);
-        puts(":");
-        print_int(line);
-        puts(" (");
-        puts(message);
-        puts(")");
+        printf("%s() @ %s %d [%s]", func, file, line, message);
 
-        while (1) { hlt(); }
+        hang();
     }
 }
