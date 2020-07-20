@@ -1,10 +1,13 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 void init_alloc(void* start, size_t size);
 void* kalloc(size_t size);
 void kfree(void* ptr);
+
+#define MEM_BLOCK_MAGIC         0xbadbaddd
 
 enum mem_block_state {
     MEM_STATE_USED,
@@ -12,6 +15,7 @@ enum mem_block_state {
 };
 
 typedef struct mem_block {
+    uint32_t magic;
     size_t size;
     int state;
     struct mem_block* next;
