@@ -18,6 +18,7 @@ void init_alloc(void* start, size_t size)
     head->next = NULL;
     head->size = 0;
     head->state = MEM_STATE_USED;
+    head->magic = MEM_BLOCK_MAGIC;
 
     last = head;
 }
@@ -44,6 +45,8 @@ void* kalloc(size_t size)
         }
     }
 
+    ASSERT(last->magic == MEM_BLOCK_MAGIC, "Memory corruption detected, magic value not present");
+
     mem_block_t* current = last + last->size + sizeof(mem_block_t);
 
     ASSERT((void*)current <= mem_start + mem_size, "Out of memory, cannot allocate");
@@ -52,6 +55,7 @@ void* kalloc(size_t size)
     current->next = NULL;
     current->state = MEM_STATE_USED;
     last->next = current;
+    last->magic = MEM_BLOCK_MAGIC;
     last = current;
 
     return (void*)current + sizeof(mem_block_t);
@@ -63,5 +67,8 @@ void kfree(void* ptr)
     ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to free invalid address");
 
     mem_block_t* block = ptr - sizeof(mem_block_t);
+
+    ASSERT(block->magic == MEM_BLOCK_MAGIC, "Memory corruption detected, magic value not present");
+
     block->state = MEM_STATE_FREE;
 }
