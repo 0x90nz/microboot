@@ -37,6 +37,9 @@ void exception(intr_frame_t* frame)
     printf("eip: %08x efl: %08x\n", frame->eip, frame->eflags);
     printf("esp: %08x\n", frame->esp);
 
+    printf("cs: %04x ss: %04x ds: %04x\n", frame->cs, frame->ss, frame->ds);
+    printf("es: %04x fs: %04x gs: %04x\n", frame->es, frame->fs, frame->gs);
+
     hang();
 }
 

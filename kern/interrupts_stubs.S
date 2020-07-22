@@ -56,9 +56,21 @@ call_int_handle:
     pushl   %esi
     pushl   %edi
 
+    pushw   %ss
+    pushw   %ds
+    pushw   %es
+    pushw   %fs
+    pushw   %gs
+
     pushl   %esp
     call    interrupts_handle_int
     popl    %esp
+
+    popw    %gs
+    popw    %fs
+    popw    %es
+    popw    %ds
+    popw    %ss
 
     popl    %edi
     popl    %esi
