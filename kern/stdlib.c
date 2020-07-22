@@ -2,6 +2,7 @@
 #include "vga.h"
 #include "keyboard.h"
 #include "kernel.h"
+#include "serial.h"
 #include <stddef.h>
 
 static int should_echo = 1;
@@ -63,7 +64,12 @@ char getc()
     return keyboard_getchar(1);
 }
 
-char set_echo(int echo)
+void debug_putc(char c, void* ignore)
+{
+    serial_putc(c);
+}
+
+void set_echo(int echo)
 {
     should_echo = echo;
 }
@@ -126,7 +132,7 @@ void memcpy(void* dst, const void* src, size_t len)
     }
 }
 
-void __assert(const char* file, int line, const char* func, int expr, const char* message)
+void _assert(const char* file, int line, const char* func, int expr, const char* message)
 {
     if (!expr)
     {
@@ -135,4 +141,13 @@ void __assert(const char* file, int line, const char* func, int expr, const char
 
         hang();
     }
+}
+
+void _debug_printf(const char* file, int line, const char* func, const char* fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    fctprintf(debug_putc, NULL, "[%s] ", func);
+    vfctprintf(debug_putc, NULL, fmt, va);
+    va_end(va);
 }

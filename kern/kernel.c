@@ -6,6 +6,7 @@
 #include "kernel.h"
 #include "pci.h"
 #include "alloc.h"
+#include "serial.h"
 
 void hang() { while (1) { asm("hlt"); } }
 void hlt() { asm("hlt"); }
@@ -39,13 +40,14 @@ void print_int(int num)
     puts(temp);
 }
 
-int kernel_main(memory_info_t* meminfo)
+void kernel_main(memory_info_t* meminfo)
 {
     vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
     init_alloc((void*)0x01000000, meminfo->extended2 * 64 * KiB);
 
     interrupts_init();
     keyboard_init();
+    serial_init(SP_COM0_PORT);
     display_logo();
 
     // This is memory past 0x01000000 which is free to use
