@@ -19,7 +19,31 @@ typedef struct {
     uint32_t base;
 } __attribute__((packed)) idt_descriptor_t;
 
+
+/*
+* eflags
+* cs
+* eip
+* err code
+* int num
+* eax
+* ecx
+* edx
+* ebx
+* esp
+* ebp
+* esi
+* edi
+ */
+
+typedef struct {
+    uint32_t edi, esi, ebp, ebx, edx, ecx, eax, esp;
+    uint32_t int_no, err_code;
+    uint32_t eip, cs, eflags;    
+} __attribute__((packed)) intr_frame_t;
+
 typedef void intr_handler (uint32_t int_no, uint32_t err_no);
+typedef void ll_intr_handler (intr_frame_t* frame); // Low level handler, gets the entire frame
 
 typedef void intr_stub (void);
 extern intr_stub* interrupts_stubs[256];

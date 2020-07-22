@@ -47,8 +47,32 @@ exception\num\():
 .text
 .extern interrupts_handle_int
 call_int_handle:
+    pushl   %esp
+    pushl   %eax
+    pushl   %ecx
+    pushl   %edx
+    pushl   %ebx
+    pushl   %ebp
+    pushl   %esi
+    pushl   %edi
+
+    pushl   %esp
     call    interrupts_handle_int
+    popl    %esp
+
+    popl    %edi
+    popl    %esi
+    popl    %ebp
+
+    popl    %ebx
+    popl    %edx
+    popl    %ecx
+    popl    %eax
+    popl    %esp
+
+    # Deal with the error code and int_no
     add     $8, %esp
+
     sti
     iret
 
