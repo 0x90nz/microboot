@@ -37,7 +37,6 @@ void pci_check(uint8_t bus, uint8_t device)
     if (vid != 0xFFFF)
     {
         // The device actually exists, do something with int
-        uint16_t did = pci_cfg_read_word(bus, device, 0, 2);
         pci_check_func(bus, device, 0);
 
         // If this is a multi-function device, we need to check the rest of the
