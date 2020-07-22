@@ -19,23 +19,6 @@ typedef struct {
     uint32_t base;
 } __attribute__((packed)) idt_descriptor_t;
 
-
-/*
-* eflags
-* cs
-* eip
-* err code
-* int num
-* eax
-* ecx
-* edx
-* ebx
-* esp
-* ebp
-* esi
-* edi
- */
-
 typedef struct {
     uint16_t gs, fs, es, ds, ss;
     uint32_t edi, esi, ebp, ebx, edx, ecx, eax, esp;
