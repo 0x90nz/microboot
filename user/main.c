@@ -194,6 +194,8 @@ void main()
 
     net_test();
 
+    asm("int $3");
+
     char cmdbuf[64];
 
     while (1)
