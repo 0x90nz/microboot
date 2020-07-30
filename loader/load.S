@@ -4,13 +4,19 @@
 bits 16
 org 0x7c00
 _start:
+	mov	ax, 0
+	mov	ds, ax
+	mov	es, ax
+	mov	fs, ax
+	mov	gs, ax
+
 	mov	[disk_num], dl
 	
-	; Set sp to be 0007:f000 so it doesn't mess with our stuff
-	; We disable interrupts while doing this because apparently they can
-	; mess with it in a bad way.
+	; Set sp to be 7000:f000 (which is the end of conventional memory)
+	; so it doesn't mess with our stuff We disable interrupts while doing 
+	; this because apparently they can mess with it in a bad way.
 	cli
-	mov	ax, 07h
+	mov	ax, 0x7000
 	mov	ss, ax
 	mov	sp, 0xf000
 	sti
