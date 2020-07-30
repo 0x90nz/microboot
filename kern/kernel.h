@@ -19,3 +19,17 @@ typedef struct {
 
 #define KiB             1024
 #define MiB             1048576
+
+enum log_level {
+    LOG_FATAL,
+    LOG_ERROR,
+    LOG_WARN,
+    LOG_INFO,
+    LOG_DEBUG,
+    LOG_ALL,
+    LOG_OFF
+};
+
+extern char* debug_names[];
+
+#define DEBUG_LEVEL LOG_WARN

@@ -8,6 +8,16 @@
 #include "alloc.h"
 #include "serial.h"
 
+char* debug_names[] = {
+    "FATAL",
+    "ERROR",
+    "WARN",
+    "INFO",
+    "DEBUG",
+    "ALL",
+    "OFF"
+};
+
 void hang() { while (1) { asm("hlt"); } }
 void hlt() { asm("hlt"); }
 

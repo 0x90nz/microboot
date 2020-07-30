@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "printf.h"
+#include "kernel.h"
 
 void itoa(int value, char* buffer, int base);
 void gets(char* str);
@@ -21,5 +22,9 @@ void _assert(const char* file, int line, const char* func, int expr, const char*
 #define ASSERT(expr, message)       _assert(__FILE__, __LINE__, __PRETTY_FUNCTION__, expr ? 1 : 0, message);
 
 
-void _debug_printf(const char* file, int line, const char* func, const char* fmt, ...);
-#define dprintf(x, ...)     _debug_printf(__FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);
+void _debug_printf(enum log_level level, const char* file, int line, const char* func, const char* fmt, ...);
+
+#define log(l, x)           _debug_printf(l, __FILE__, __LINE__, __PRETTY_FUNCTION__, x);
+#define logf(l, x, ...)     _debug_printf(l, __FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);
+#define debug(x)            _debug_printf(LOG_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, x);
+#define debugf(x, ...)      _debug_printf(LOG_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);

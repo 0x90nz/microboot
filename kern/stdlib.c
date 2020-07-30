@@ -143,11 +143,15 @@ void _assert(const char* file, int line, const char* func, int expr, const char*
     }
 }
 
-void _debug_printf(const char* file, int line, const char* func, const char* fmt, ...)
+void _debug_printf(enum log_level level, const char* file, int line, const char* func, const char* fmt, ...)
 {
+    if (level < DEBUG_LEVEL)
+        return;
+
     va_list va;
     va_start(va, fmt);
-    fctprintf(debug_putc, NULL, "[%s] ", func);
+    fctprintf(debug_putc, NULL, "[%s %s] ", debug_names[level], func);
     vfctprintf(debug_putc, NULL, fmt, va);
+    debug_putc('\n', NULL);
     va_end(va);
 }
