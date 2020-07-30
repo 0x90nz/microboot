@@ -32,7 +32,7 @@ stage2: $(KOBJS)
 
 run: image
 	qemu-system-i386 \
-		-drive format=raw,file=build/load.img,index=0,if=floppy \
+		-drive format=raw,file=build/load.img,index=0 \
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap

@@ -54,8 +54,8 @@ void* kalloc(size_t size)
     current->size = allocated_size;
     current->next = NULL;
     current->state = MEM_STATE_USED;
+    current->magic = MEM_BLOCK_MAGIC;
     last->next = current;
-    last->magic = MEM_BLOCK_MAGIC;
     last = current;
 
     return (void*)current + sizeof(mem_block_t);
@@ -63,6 +63,7 @@ void* kalloc(size_t size)
 
 void kfree(void* ptr)
 {
+    debug("Free called");
     // We should only free addresses which we own
     ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to free invalid address");
 
