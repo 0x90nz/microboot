@@ -5,6 +5,7 @@
 #include <pio.h>
 #include <kernel.h>
 #include <keyboard.h>
+#include <env.h>
 
 #include <ne2k.h>
 #include <ether.h>
@@ -15,7 +16,6 @@
 
 uint16_t colour;
 int ticks;
-const char* prompt = "# ";
 char main_scratch[64];
 
 typedef struct {
@@ -198,7 +198,7 @@ void main()
 
     while (1)
     {
-        puts(prompt);
+        puts(env_get("prompt"));
         gets(cmdbuf);
         
         if (*cmdbuf)
