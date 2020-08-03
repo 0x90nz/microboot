@@ -21,7 +21,7 @@ typedef struct {
 #define MiB             1048576
 
 enum log_level {
-    LOG_FATAL,
+    LOG_FATAL = 0,
     LOG_ERROR,
     LOG_WARN,
     LOG_INFO,
@@ -32,4 +32,4 @@ enum log_level {
 
 extern char* debug_names[];
 
-#define DEBUG_LEVEL LOG_WARN
+#define DEBUG_LEVEL LOG_ALL

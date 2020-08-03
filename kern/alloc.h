@@ -5,7 +5,9 @@
 
 void init_alloc(void* start, size_t size);
 void* kalloc(size_t size);
+void* kcalloc(size_t size);
 void kfree(void* ptr);
+void kdumpmm();
 
 #define MEM_BLOCK_MAGIC         0xbadbaddd
 

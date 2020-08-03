@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 static int should_echo = 1;
+static enum log_level log_level = DEBUG_LEVEL;
 
 void swap(char* x, char* y)
 {
@@ -132,12 +133,19 @@ void memcpy(void* dst, const void* src, size_t len)
     }
 }
 
+void set_log_level(enum log_level level)
+{
+    log_level = level;
+}
+
 void _assert(const char* file, int line, const char* func, int expr, const char* message)
 {
     if (!expr)
     {
+        char* assert_fmt = "%s() @ %s:%d [%s]";
         puts("Assertion failed!\n");
-        printf("%s() @ %s %d [%s]", func, file, line, message);
+        printf(assert_fmt, func, file, line, message);
+        logf(LOG_FATAL, assert_fmt, func, file, line, message);
 
         hang();
     }
@@ -145,7 +153,7 @@ void _assert(const char* file, int line, const char* func, int expr, const char*
 
 void _debug_printf(enum log_level level, const char* file, int line, const char* func, const char* fmt, ...)
 {
-    if (level < DEBUG_LEVEL)
+    if (level > log_level)
         return;
 
     va_list va;
