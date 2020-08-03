@@ -1,9 +1,8 @@
 #include "stdlib.h"
-#include "vga.h"
-#include "keyboard.h"
+#include "io/vga.h"
+#include "io/serial.h"
+#include "io/keyboard.h"
 #include "kernel.h"
-#include "serial.h"
-#include <stddef.h>
 
 static int should_echo = 1;
 static enum log_level log_level = DEBUG_LEVEL;

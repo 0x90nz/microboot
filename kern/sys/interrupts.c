@@ -1,7 +1,7 @@
 #include "interrupts.h"
-#include "kernel.h"
-#include "stdlib.h"
-#include "pio.h"
+#include "../kernel.h"
+#include "../stdlib.h"
+#include "../io/pio.h"
 
 idt_entry_t idt[INTR_COUNT];
 

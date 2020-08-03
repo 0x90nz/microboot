@@ -1,9 +1,9 @@
 #include "ne2k.h"
-#include "pio.h"
-#include "interrupts.h"
-#include "kernel.h"
-#include "stdlib.h"
-#include "alloc.h"
+#include "../io/pio.h"
+#include "../sys/interrupts.h"
+#include "../kernel.h"
+#include "../stdlib.h"
+#include "../alloc.h"
 #include "ip.h"
 
 uint16_t iobase;
