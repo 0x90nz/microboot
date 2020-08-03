@@ -4,6 +4,7 @@
 #include "io/serial.h"
 #include "io/keyboard.h"
 #include "sys/interrupts.h"
+#include "sys/gdt.h"
 #include "stdlib.h"
 #include "kernel.h"
 #include "alloc.h"
@@ -59,6 +60,9 @@ void kernel_main(memory_info_t* meminfo)
     interrupts_init();
     keyboard_init();
     serial_init(SP_COM0_PORT);
+
+    gdt_init();
+
     env_init();
     display_logo();
     env_put("prompt", "# ");
