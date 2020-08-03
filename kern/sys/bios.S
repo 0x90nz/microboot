@@ -94,20 +94,28 @@ _internal_bios_interrupt:
 	mov 	%ax, %fs
 	mov 	%ax, %gs
 
+	# Save these, because we're going to clobber them
 	mov	%esp, saved_esp
 	mov	%ebp, saved_ebp
+
+	# Load the bios regs struct to %esp so we can use fancy instructions
 	movl	$(bios_regs), %esp
 
+	# These fancy instructions pop all the registers (and flags!) off
+	# the 'stack' that we just setup
 	popal
 	popfw
 	pop	%es
 	pop	%ds
 
+	# We want a stack that's accessible to real mode code, so we just
+	# pick something within low memory
 	mov	$0xf000, %esp
 
 intr:	int	$0
 	cli			# Some BIOS' enable interrupts, don't let 'em do that
 	
+	# Save the registers we'll clobber while saving the other registers
 	mov	%eax, saved_eax
 	mov	%ds, saved_ds
 	mov	%es, saved_es
@@ -116,6 +124,7 @@ intr:	int	$0
 	popw	%ax
 	mov	%ax, saved_fl
 
+	# Get back to protected mode
 	mov	%cr0, %eax
 	or	$1, %ax
 	mov	%eax, %cr0
@@ -133,6 +142,7 @@ intr:	int	$0
 	# lgdt	(saved_gdt_ptr)
 	lidt	(saved_idt_ptr)
 
+	# Reconstruct our struct with all the registers which have changed
 	mov	saved_ebp, %ebp
 	movl	$(bios_regs), %esp
 	add	$38, %esp
@@ -152,6 +162,7 @@ intr:	int	$0
 	pushal
 	mov	saved_esp, %esp
 
+	# Fix the PIC
 	call	interrupts_pic_init
 
 	movzbl	pic1_saved_mask, %eax
@@ -166,17 +177,22 @@ intr:	int	$0
 	call	set_pic_mask
 	add	$8, %esp
 
+	# Keyboards are annoying. Some BIOS' seem to not like this and
+	# put something in the keyboard buffer for whatever reason. Clear it
 	in	$0x60, %al
 
+	# Set the interrupt flag
 	movzbl	saved_if, %eax
 	pushl	%eax
 	call	set_if
 	add	$4, %esp
 
+	# FINALLY! We're done, restore all the registers and hand back off
 	popal
 	pop	%ebp
 	ret
 
+# Get the interrupt flag
 get_if:
 	pushf
 	popl	%eax
@@ -184,6 +200,7 @@ get_if:
 	and	$1, %eax	# flags & 1, mask the interrupt bit
 	ret
 
+# Set the interrupt flag (1 = on, 0 = of)
 set_if:
 	cmpl	$0, 4(%esp)	# if 1, sti else cli
 	jz	0f
