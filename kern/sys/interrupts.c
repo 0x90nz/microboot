@@ -128,3 +128,13 @@ void interrupts_pic_init()
     outb(PIC0_REG_DATA, 0);
     outb(PIC1_REG_DATA, 0);
 }
+
+unsigned char get_pic_mask(int pic)
+{
+	return inb(pic > 0 ? 0x21 : 0xa1);
+}
+
+void set_pic_mask(int pic, unsigned char mask)
+{
+	outb(pic > 0 ? 0x21 : 0xa1, mask);
+}
