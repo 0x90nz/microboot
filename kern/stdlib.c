@@ -178,7 +178,7 @@ void _debug_printf(enum log_level level, const char* file, int line, const char*
 
     va_list va;
     va_start(va, fmt);
-    fctprintf(debug_putc, NULL, "[%s %s] ", debug_names[level], func);
+    fctprintf(debug_putc, NULL, "[%s] %s: ", debug_names[level], func);
     vfctprintf(debug_putc, NULL, fmt, va);
     debug_putc('\n', NULL);
     va_end(va);

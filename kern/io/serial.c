@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "pio.h"
 #include "serial.h"
-#include "stdlib.h"
+#include "../stdlib.h"
 #include "../printf.h"
 #include "../sys/interrupts.h"
 #include "../kernel.h"
