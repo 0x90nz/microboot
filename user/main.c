@@ -141,6 +141,11 @@ void verb()
     logf(LOG_INFO, "Log level set to %d", level);
 }
 
+void brk()
+{
+	asm("int $3");
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
@@ -149,6 +154,7 @@ command_t commands[] = {
     {"dino", dino},
     {"scancode", scancode},
     {"verb", verb},
+    {"brk", brk},
     {"help", help}
 };
 

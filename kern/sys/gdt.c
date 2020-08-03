@@ -11,8 +11,10 @@
 
 static struct gdt_entry gdt[] = {
     {0, 0, 0},
-    {0, 0xffffffff, GDT_TYPE(1, 0, 1, 1, 0), GDT_SIZE},      // 0x08, kernel code
-    {0, 0xffffffff, GDT_TYPE(1, 0, 0, 1, 0), GDT_SIZE},      // 0x10, kernel data
+    {0, 0xffffffff, GDT_TYPE(1, 0, 1, 1, 0), GDT_SIZE},     // 0x08, kernel code
+    {0, 0xffffffff, GDT_TYPE(1, 0, 0, 1, 0), GDT_SIZE},     // 0x10, kernel data
+    {0, 0xffff, GDT_TYPE(1, 0, 1, 1, 0), 0xb0},                // 0x18, 16 bit code
+    {0, 0xffff, GDT_TYPE(1, 0, 0, 1, 0), 0xb0},                // 0x20, 16 bit data
 };
 
 // Create a buffer for our GDT. It is 8-byte aligned as per vol3 3.5.1 intel
@@ -34,7 +36,7 @@ static void encode_entry(uint8_t* dst, struct gdt_entry src)
 {
     if (src.limit > 65536) {
         src.limit = src.limit >> 12;
-        dst[6] = (GDT_GRANULARITY);
+        dst[6] = GDT_GRANULARITY;
     } else {
         dst[6] = 0;
     }
