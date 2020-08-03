@@ -180,6 +180,7 @@ void net_test()
     memcpy(udp, message, size);
 
     ne2k_tx_packet(packet, pktsz);
+    kfree(packet);
 }
 
 void main()
@@ -193,6 +194,8 @@ void main()
     colour = vga_get_default();
 
     net_test();
+
+    kdumpmm();
 
     char cmdbuf[64];
 

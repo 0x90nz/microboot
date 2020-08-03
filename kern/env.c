@@ -7,9 +7,8 @@ static int item_count;
 
 void env_init()
 {
-    items = kalloc(sizeof(env_item_t) * 5);
+    items = kcalloc(sizeof(env_item_t) * 5);
     item_count = 0;
-    memset(items, 0, sizeof(env_item_t) * ENV_SIZE);    
 }
 
 static int env_index(const char* key)
