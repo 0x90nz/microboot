@@ -26,8 +26,7 @@ enum log_level {
     LOG_WARN,
     LOG_INFO,
     LOG_DEBUG,
-    LOG_ALL,
-    LOG_OFF
+    LOG_ALL
 };
 
 extern char* debug_names[];

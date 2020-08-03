@@ -50,6 +50,22 @@ void itoa(int value, char* buffer, int base)
     reverse(buffer, 0, i - 1);
 }
 
+int atoi(const char* str)
+{
+    int n = 0;
+    int neg_flag = 0;
+
+    switch (*str) {
+        case '-': neg_flag = 1;
+        case '+': str++;
+    }
+
+    while (*str != '\0')
+        n = 10 * n - (*str++ - '0');
+    
+    return neg_flag ? n : -n;
+}
+
 void puts(const char* str)
 {
     vga_puts(str);
@@ -136,6 +152,11 @@ void memcpy(void* dst, const void* src, size_t len)
 void set_log_level(enum log_level level)
 {
     log_level = level;
+}
+
+enum log_level get_log_level()
+{
+    return log_level;
 }
 
 void _assert(const char* file, int line, const char* func, int expr, const char* message)

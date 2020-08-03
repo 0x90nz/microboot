@@ -131,6 +131,16 @@ void scancode()
     }
 }
 
+void verb()
+{
+    printf("Current log level is: %d, enter new level: ", get_log_level());
+    gets(main_scratch);
+    int level = atoi(main_scratch);
+    set_log_level(level);
+
+    logf(LOG_INFO, "Log level set to %d", level);
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
@@ -138,6 +148,7 @@ command_t commands[] = {
     {"setcolour", setcolour},
     {"dino", dino},
     {"scancode", scancode},
+    {"verb", verb},
     {"help", help}
 };
 
