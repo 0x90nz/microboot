@@ -1,13 +1,23 @@
 #include "gdt.h"
 #include "../stdlib.h"
 
+#define GDT_TYPE(rw, dc, executable, segtype, priv) \
+        ((rw & 1) << 1 \
+        | (dc & 1) << 2 \
+        | (executable & 1) << 3 \
+        | (segtype & 1) << 4 \
+        | (priv & 2) << 6 \
+        | 1 << 7) \
+
 static struct gdt_entry gdt[] = {
     {0, 0, 0},
-    {0, 0xffffffff, 0x9A},      // 0x08, kernel code
-    {0, 0xffffffff, 0x92},      // 0x10, kernel data
+    {0, 0xffffffff, GDT_TYPE(1, 0, 1, 1, 0), GDT_SIZE},      // 0x08, kernel code
+    {0, 0xffffffff, GDT_TYPE(1, 0, 0, 1, 0), GDT_SIZE},      // 0x10, kernel data
 };
 
-uint8_t gdt_buffer[(sizeof(gdt) / sizeof(struct gdt_entry)) * 8];
+// Create a buffer for our GDT. It is 8-byte aligned as per vol3 3.5.1 intel
+// developer manual
+uint8_t gdt_buffer[(sizeof(gdt) / sizeof(struct gdt_entry)) * 8] __attribute__((aligned(8)));
 
 __attribute__((naked)) static void load_gdt(struct gdt_ptr* gdt)
 {
@@ -24,17 +34,20 @@ static void encode_entry(uint8_t* dst, struct gdt_entry src)
 {
     if (src.limit > 65536) {
         src.limit = src.limit >> 12;
-        dst[6] = 0xc0;
+        dst[6] = (GDT_GRANULARITY);
     } else {
-        dst[6] = 0x40;
+        dst[6] = 0;
     }
 
+    // The 'access byte'
     dst[5] = src.type;
 
     // Encode the source address
     dst[0] = src.limit & 0xff;          // The first byte of limit
     dst[1] = (src.limit >> 8) & 0xff;   // The high byte of limit
     dst[6] |= (src.limit >> 16) & 0x0f; // The high nibble or limit
+    
+    dst[6] |= src.flags & 0xf0;
 
     // Encode the base address
     dst[2] = src.base & 0xff;           // Byte 1
