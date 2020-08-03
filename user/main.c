@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include <interrupts.h>
-#include <vga.h>
-#include <pio.h>
+#include <sys/interrupts.h>
+#include <io/vga.h>
+#include <io/pio.h>
+#include <io/keyboard.h>
 #include <kernel.h>
-#include <keyboard.h>
 #include <env.h>
 #include <stddef.h>
 #include <alloc.h>

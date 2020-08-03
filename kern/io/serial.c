@@ -1,9 +1,10 @@
 #include <stdint.h>
 #include "pio.h"
-#include "kernel.h"
 #include "serial.h"
 #include "stdlib.h"
-#include "interrupts.h"
+#include "../printf.h"
+#include "../sys/interrupts.h"
+#include "../kernel.h"
 
 static uint16_t sp_port;
 

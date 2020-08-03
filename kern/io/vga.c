@@ -1,6 +1,6 @@
 #include "vga.h"
 #include "pio.h"
-#include "kernel.h"
+#include "../kernel.h"
 
 uint16_t* vga_buffer;
 int x_pos;

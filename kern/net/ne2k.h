@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "pci.h"
+#include "../io/pci.h"
 
 #define NE2K_REG_CMD            0x00
 #define NE2K_REG_PSTART         0x01

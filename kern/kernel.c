@@ -1,12 +1,12 @@
-#include "vga.h"
-#include "keyboard.h"
-#include "interrupts.h"
-#include "pio.h"
+#include "io/pio.h"
+#include "io/vga.h"
+#include "io/pci.h"
+#include "io/serial.h"
+#include "io/keyboard.h"
+#include "sys/interrupts.h"
 #include "stdlib.h"
 #include "kernel.h"
-#include "pci.h"
 #include "alloc.h"
-#include "serial.h"
 #include "env.h"
 
 char* debug_names[] = {

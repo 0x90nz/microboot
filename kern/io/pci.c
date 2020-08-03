@@ -1,8 +1,8 @@
-#include "kernel.h"
-#include "stdlib.h"
+#include "../kernel.h"
+#include "../stdlib.h"
 #include "pio.h"
 #include "pci.h"
-#include "ne2k.h"
+#include "../net/ne2k.h"
 
 void read_dev(uint32_t* desc, uint8_t bus, uint8_t device, uint8_t func)
 {
