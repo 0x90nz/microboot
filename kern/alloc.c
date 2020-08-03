@@ -100,6 +100,16 @@ void kfree(void* ptr)
     block->state = MEM_STATE_FREE;
 }
 
+size_t alloc_used()
+{
+    size_t total = 0;
+    for (mem_block_t* current = head; current; current = current->next)
+    {
+        total += current->size;
+    }
+    return total;
+}
+
 void kdumpmm()
 {
     debugf("sizeof(mem_block_t) = %d", sizeof(mem_block_t));

@@ -6,13 +6,9 @@
 #include <kernel.h>
 #include <keyboard.h>
 #include <env.h>
-
-#include <ne2k.h>
-#include <ether.h>
-#include <ip.h>
-#include <udp.h>
 #include <stddef.h>
 #include <alloc.h>
+#include <printf.h>
 
 uint16_t colour;
 int ticks;
@@ -54,10 +50,7 @@ int colour_from_str(const char* str)
 
 void uptime()
 {
-    puts("up ");
-    itoa(ticks / 100, main_scratch, 10);
-    puts(main_scratch);
-    puts(" seconds\n");
+    printf("Up approximately %d.%d seconds\n", ticks / 100, ticks % 100);
 }
 
 void clear()
@@ -88,12 +81,7 @@ void clock()
                 break;
         }
 
-        if (ticks % 100 == 0)
-        {
-            itoa(ticks / 100, main_scratch, 10);
-            puts("\r");
-            puts(main_scratch);
-        }
+        printf("\r%d.%d", ticks / 100, ticks % 100);
         hlt();
     }
     puts("\n");
@@ -165,24 +153,6 @@ void handle_irq0(uint32_t int_no, uint32_t err_no)
     ticks++;
 }
 
-void net_test()
-{
-    char message[] = "Hello World";
-    int size = sizeof(message);
-    size_t pktsz = ether_buffer_length(ip_buffer_length(udp_buffer_length(size)));
-    
-    uint8_t* packet = (uint8_t*)kalloc(pktsz);
-    uint8_t src[] = {0xde, 0xad, 0xbe, 0xef, 0xc0, 0xfe};
-    char* ether = ether_make_packet(packet, src, src, ip_buffer_length(udp_buffer_length(size)));
-    char* ip = ip_make_packet(ether, udp_buffer_length(size), 0x11, make_ip(127, 0, 0, 1), make_ip(127, 0, 0, 1));
-    char* udp = udp_make_packet(ip, size, 1234, 1234);
-
-    memcpy(udp, message, size);
-
-    ne2k_tx_packet(packet, pktsz);
-    kfree(packet);
-}
-
 void main()
 {
     // Set to roughly 100hz
@@ -192,10 +162,6 @@ void main()
     register_handler(IRQ_TO_INTR(0), handle_irq0);
 
     colour = vga_get_default();
-
-    net_test();
-
-    kdumpmm();
 
     char cmdbuf[64];
 
@@ -219,9 +185,7 @@ void main()
 
             if (!found)
             {
-                puts("? ");
-                puts(cmdbuf);
-                puts("\n");
+                printf("? %s\n", cmdbuf);
             }
         }
     }
