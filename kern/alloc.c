@@ -29,6 +29,7 @@ void init_alloc(void* start, size_t size)
  */ 
 size_t aligned_size(size_t size)
 {
+    if (size % ALIGNMENT == 0) return size;
     return (size / ALIGNMENT) * ALIGNMENT + ALIGNMENT;
 }
 
