@@ -52,7 +52,8 @@ void* kalloc(size_t size)
 #ifdef ALLOC_DEBUG
             debugf("Reused memory at %08x", (void*)current + sizeof(mem_block_t));
 #endif
-            return (void*)current + sizeof(mem_block_t);
+            current->addr = (void*)current + sizeof(mem_block_t);
+            return current->addr;
         }
 
         if (!current->next)
@@ -68,13 +69,14 @@ void* kalloc(size_t size)
     next->next = NULL;
     next->state = MEM_STATE_USED;
     next->magic = MEM_BLOCK_MAGIC;
+    next->addr = (void*)next + sizeof(mem_block_t);
     current->next = next;
 
 #ifdef ALLOC_DEBUG
     debugf("Allocated memory at %08x", (void*)next + sizeof(mem_block_t));
 #endif
 
-    return (void*)next + sizeof(mem_block_t);
+    return next->addr;
 }
 
 void* kcalloc(size_t size)
