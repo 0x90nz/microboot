@@ -74,8 +74,8 @@ void kernel_main(struct startup_info* start_info)
     printf("%d MiB free\n", (start_info->extended2 * 64) / 1024);
 
     uint8_t* buffer = kalloc(4096);
-    kfree(buffer);
     bdrive_read(start_info->drive_number, 4, 0, buffer);
+    kfree(buffer);
 
     extern int main();
     main();
