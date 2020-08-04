@@ -146,6 +146,11 @@ void brk()
 	asm("int $3");
 }
 
+void hdisk()
+{
+    printf("Root disk @ %02x\n", *env_get("root", uint16_t*));
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
@@ -155,6 +160,7 @@ command_t commands[] = {
     {"scancode", scancode},
     {"verb", verb},
     {"brk", brk},
+    {"hdisk", hdisk},
     {"help", help}
 };
 
@@ -184,7 +190,7 @@ void main()
 
     while (1)
     {
-        puts(env_get("prompt"));
+        puts(env_get("prompt", const char*));
         gets(cmdbuf);
         
         if (*cmdbuf)

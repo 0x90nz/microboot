@@ -21,7 +21,7 @@ static int env_index(const char* key)
     return -1;
 }
 
-void env_put(const char* key, const char* value)
+void env_put(const char* key, void* value)
 {
     ASSERT(items, "Trued to 'put' before items was initialised");
     int index = env_index(key);
@@ -33,7 +33,7 @@ void env_put(const char* key, const char* value)
     }
 }
 
-const char* env_get(const char* key)
+void* _env_get(const char* key)
 {
     ASSERT(items, "Tried to 'get' before items was initialised");
     int index = env_index(key);
