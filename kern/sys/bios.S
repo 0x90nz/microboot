@@ -210,8 +210,16 @@ set_if:
 	cli
 	ret
 
+.align 4
 .global low_mem_buffer
 low_mem_buffer:
 .rept 4096
+.byte 0
+.endr
+
+.align 4
+.global low_mem_disk_addr
+low_mem_disk_addr:
+.rept 16
 .byte 0
 .endr

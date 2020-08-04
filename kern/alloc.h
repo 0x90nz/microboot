@@ -20,6 +20,7 @@ enum mem_block_state {
 typedef struct mem_block {
     uint32_t magic;
     size_t size;
-    int state;
+    enum mem_block_state state;
+    void* addr;
     struct mem_block* next;
 } mem_block_t;
