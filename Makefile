@@ -4,12 +4,12 @@ CC=gcc
 KSRC=$(shell find kern -type f -name "*.c")
 KOBJS=$(KSRC:.c=.o)
 
-image: build_dir user stage2 loader
-	dd if=/dev/zero of=build/load.img bs=512 count=2880
-	dd if=build/load.bin of=build/load.img conv=notrunc
-	dd if=build/stage2.bin of=build/load.img bs=1 seek=512 conv=notrunc
-
 .suffixes: .o .c
+
+image: build_dir user stage2 loader
+	./mkimg.sh build/microboot.img
+	dd if=build/load.bin of=build/microboot.img conv=notrunc
+	dd if=build/stage2.bin of=build/microboot.img bs=1 seek=512 conv=notrunc
 
 build_dir:
 	mkdir -p build
@@ -34,7 +34,7 @@ stage2: $(KOBJS)
 
 run: image
 	qemu-system-i386 \
-		-drive format=raw,file=build/load.img,index=0 \
+		-drive format=raw,file=build/microboot.img,index=0 \
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap

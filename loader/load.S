@@ -3,6 +3,7 @@
 
 bits 16
 org 0x7c00
+jmp	0:_start
 _start:
 	mov	ax, 0
 	mov	ds, ax
@@ -29,14 +30,15 @@ _start:
 	call	puts
 	add	esp, 2
 
-	push	01h		; num sectors
-	push	01h		; start index
+	push	01h			; num sectors
+	push	WORD [kimage_start]	; start index
 	call	read_sector
-	add	esp, 2
+	add	esp, 4
 
 	; Get the size and figure out how many more sectors
 	; we need to load from disk
 	mov	ax, WORD [buffer]
+
 	mov	dx, 0
 	mov 	bx, 512
 
@@ -51,8 +53,8 @@ _start:
 
 	add	ax, 1
 
-	push	ax		; num sectors
-	push	01h		; start index
+	push	ax			; num sectors
+	push	WORD [kimage_start]	; start index
 	call	read_sector
 	add	esp, 4
 
@@ -137,6 +139,8 @@ buffer equ 07e00h
 kern_start equ 07e02h
 disk_num: db 0
 
+# The disk address packet structure that is required for
+# int 13h ah=42h
 dsk_addr:
 db 10h
 db 0
@@ -145,10 +149,13 @@ dsk_buf dd 0
 dsk_lo_lba dd 0
 dsk_hi_lba dd 0
 
+# The starting **logical block** of the kernel on disk
+kimage_start dw 1
+
 msg db `Loading binary\r\n`, 0
 verinfo db `\xe6boot v0.1.0\r\n`,0
 s2msg db `Entering second stage\r\n`, 0
 
 ; Boot signature and padding
-times	510-($-$$) db 0
-dw 0xaa55
+; times	510-($-$$) db 0
+; dw 0xaa55
