@@ -28,7 +28,14 @@ There are 3 main components:
  2. Second stage loader
  3. User program
 
-The second stage loader and user program are linked together into one binary file at compile time. To use this as a more general bootloader, this functionality would need to be separated out further.
+The second stage loader and user program are linked together into one binary
+file at compile time. To use this as a more general bootloader, this
+functionality would need to be separated out further.
+
+The second stage loader is stored in the space between the MBR and the first
+partition. Currently work is ongoing to support the ext2 filesystem which should
+enable loadable modules. Once these are supported, proper user programs which
+are not linked at compile time should be fairly simple to implement.
 
 ### First Stage Loader
 
