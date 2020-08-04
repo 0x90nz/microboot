@@ -4,12 +4,15 @@ CC=gcc
 KSRC=$(shell find kern -type f -name "*.c")
 KOBJS=$(KSRC:.c=.o)
 
-image: user stage2 loader
+image: build_dir user stage2 loader
 	dd if=/dev/zero of=build/load.img bs=512 count=2880
 	dd if=build/load.bin of=build/load.img conv=notrunc
 	dd if=build/stage2.bin of=build/load.img bs=1 seek=512 conv=notrunc
 
 .suffixes: .o .c
+
+build_dir:
+	mkdir -p build
 
 .PHONY: loader
 loader:
@@ -18,9 +21,6 @@ loader:
 .PHONY: user
 user:
 	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern
-
-thing:
-	echo $(KOBJS)
 
 stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
