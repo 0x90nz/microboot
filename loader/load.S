@@ -30,14 +30,16 @@ _start:
 	add	esp, 2
 
 	push	01h		; num sectors
-	push	02h		; start index
+	push	01h		; start index
 	call	read_sector
 	add	esp, 2
 
 	; Get the size and figure out how many more sectors
 	; we need to load from disk
-	mov	ax, [buffer]
+	mov	ax, WORD [buffer]
+	mov	dx, 0
 	mov 	bx, 512
+
 	div	bx
 
 	; ax now contains file size / 512, which is the number of extra
@@ -47,14 +49,10 @@ _start:
 	test	ax, ax
 	jz	xfer
 
-	; While it's not really efficient, it's easy. We just take the performance hit
-	; that comes from reloading the first sector
-
-	; Add 1 to ax so we get _all_ the sectors we need to load
 	add	ax, 1
 
 	push	ax		; num sectors
-	push	02h		; start index
+	push	01h		; start index
 	call	read_sector
 	add	esp, 4
 
@@ -72,9 +70,11 @@ xfer:
 	push	bx	; extended 2
 	push 	ax	; extended 1
 
-	xor		ax, ax
-	mov		al, [disk_num]
+	xor	ax, ax
+	mov	al, [disk_num]
 	push	ax	; disk number
+
+	cli
 	jmp 	kern_start
 
 	; If for some reason we get back here, just hang
@@ -114,12 +114,17 @@ putc:
 ; Read a n sectors
 read_sector:
 	pusha
-	mov	al, [esp + 20]
-	mov	cx, [esp + 18]
-	mov	ah, 02h		; function code
-	mov	dl, [disk_num]	; disk number
-	mov	dh, 00h		; head number
-	mov	bx, buffer
+	mov	ax, [esp + 20]
+	mov	[dsk_num_sec], ax
+
+	mov	ax, [esp + 18]
+	mov	[dsk_lo_lba], ax
+
+	mov	DWORD [dsk_buf], buffer
+	mov	dl, [disk_num]
+
+	mov	si, dsk_addr
+	mov	ax, 4200h
 
 	int	13h
 
@@ -131,6 +136,14 @@ read_sector:
 buffer equ 07e00h
 kern_start equ 07e02h
 disk_num: db 0
+
+dsk_addr:
+db 10h
+db 0
+dsk_num_sec dw 0
+dsk_buf dd 0
+dsk_lo_lba dd 0
+dsk_hi_lba dd 0
 
 msg db `Loading binary\r\n`, 0
 verinfo db `\xe6boot v0.1.0\r\n`,0

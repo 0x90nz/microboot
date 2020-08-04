@@ -7,7 +7,7 @@ SECTIONS
 	.text : { *(.text) }
 	.rodata : { *(.rodata) }
 	.data : { *(.data) }
-	.bss : { *(COMMON) *(.bss) }
 	_end = .;
+	.bss : { *(COMMON) *(.bss) }
 	KERNEL_SIZE = _end - _start;
 }

@@ -29,8 +29,6 @@ _start:
 
 	call	enable_a20
 
-	cli
-
 	# Perform a far jump
 	data32 ljmp	$0x08, $1f
 .code32
