@@ -65,3 +65,9 @@ At the moment a _very_ limited subset of functions inspired by (but not
 necessarily compatible with) the POSIX standard library are provided in
 `stdlib.h`. In addition the devices and kernel functions are accessible by their
 respective headers.
+
+## Acknowledgements
+
+This project uses mpaland's printf library, which is under the MIT license. To
+learn more about this project go to the repository page
+[here](https://github.com/mpaland/printf).
