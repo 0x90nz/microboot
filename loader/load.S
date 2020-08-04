@@ -71,6 +71,10 @@ xfer:
 	push	cx	; configured 1
 	push	bx	; extended 2
 	push 	ax	; extended 1
+
+	xor		ax, ax
+	mov		al, [disk_num]
+	push	ax	; disk number
 	jmp 	kern_start
 
 	; If for some reason we get back here, just hang

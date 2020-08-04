@@ -8,6 +8,9 @@ _start:
 	# Store the memory info we got from stage1 somewhere
 	# we can get to it easier
 	pop	%ax
+	mov	%ax, memory_config + 8
+
+	pop	%ax
 	mov	%ax, memory_config
 	pop	%ax
 	mov	%ax, memory_config + 2
@@ -87,7 +90,6 @@ gdt_desc:
 
 .global memory_config
 memory_config:
+.rept 5
 .word 0
-.word 0
-.word 0
-.word 0
+.endr

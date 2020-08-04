@@ -3,6 +3,7 @@
 #include "io/pci.h"
 #include "io/serial.h"
 #include "io/keyboard.h"
+#include "io/bios_drive.h"
 #include "sys/interrupts.h"
 #include "sys/gdt.h"
 #include "sys/bios.h"
@@ -53,23 +54,27 @@ void print_int(int num)
     puts(temp);
 }
 
-void kernel_main(memory_info_t* meminfo)
+void kernel_main(struct startup_info* start_info)
 {
     vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
-    init_alloc((void*)0x01000000, meminfo->extended2 * 64 * KiB);
+    init_alloc((void*)0x01000000, start_info->extended2 * 64 * KiB);
 
     interrupts_init();
     keyboard_init();
     serial_init(SP_COM0_PORT);
+
+    debugf("Loaded from bios disk %02x", start_info->drive_number);
+
     gdt_init();
     env_init();
     display_logo();
     env_put("prompt", "# ");
 
     // This is memory past 0x01000000 which is free to use
-    printf("%d MiB free\n", (meminfo->extended2 * 64) / 1024);
+    printf("%d MiB free\n", (start_info->extended2 * 64) / 1024);
 
-    pci_test();
+    uint8_t* buffer = kalloc(1023);
+    bdrive_read_sectors(start_info->drive_number, 0, buffer, 1);
 
     extern int main();
     main();
