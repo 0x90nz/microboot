@@ -111,7 +111,7 @@ _internal_bios_interrupt:
 	# We want a stack that's accessible to real mode code, so we just
 	# pick something within low memory
 	mov	$0xf000, %esp
-
+	
 intr:	int	$0
 	cli			# Some BIOS' enable interrupts, don't let 'em do that
 	
@@ -209,3 +209,9 @@ set_if:
 0:
 	cli
 	ret
+
+.global low_mem_buffer
+low_mem_buffer:
+.rept 4096
+.byte 0
+.endr

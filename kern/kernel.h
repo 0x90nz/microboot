@@ -7,12 +7,13 @@ void hlt();
 void print_hex(int num);
 void print_int(int num);
 
-typedef struct {
+struct startup_info {
     uint16_t extended1;
     uint16_t extended2;
     uint16_t configured1;
     uint16_t configured2;
-} memory_info_t;
+    uint16_t drive_number;
+} __attribute__((packed));
 
 #define KERNEL_CSEL     0x08
 #define KERNEL_DSEL     0x10
