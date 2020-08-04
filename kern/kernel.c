@@ -73,9 +73,6 @@ void kernel_main(struct startup_info* start_info)
     // This is memory past 0x01000000 which is free to use
     printf("%d MiB free\n", (start_info->extended2 * 64) / 1024);
 
-    uint8_t* buffer = kalloc(1023);
-    bdrive_read_sectors(start_info->drive_number, 0, buffer, 1);
-
     extern int main();
     main();
 
