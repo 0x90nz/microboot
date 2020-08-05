@@ -3,7 +3,7 @@
 #include "io/pci.h"
 #include "io/serial.h"
 #include "io/keyboard.h"
-#include "io/bios_drive.h"
+#include "fs/fs.h"
 #include "sys/interrupts.h"
 #include "sys/gdt.h"
 #include "sys/bios.h"
@@ -73,6 +73,8 @@ void kernel_main(struct startup_info* start_info)
 
     // This is memory past 0x01000000 which is free to use
     printf("%d MiB free\n", (start_info->extended2 * 64) / 1024);
+
+    fs_init(start_info->drive_number);
 
     extern int main();
     main();

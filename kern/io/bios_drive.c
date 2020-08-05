@@ -5,7 +5,7 @@
 
 extern struct disk_addr low_mem_disk_addr;
 
-void bdrive_read(uint8_t drive_num, uint16_t num_sectors, uint64_t lba, uint8_t* buffer) 
+void bdrive_read(uint8_t drive_num, uint16_t num_sectors, uint64_t lba, void* buffer) 
 {
     ASSERT(num_sectors * 512 <= 4096, "Size would overflow low memory buffer");
 
