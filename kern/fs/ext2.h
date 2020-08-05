@@ -28,7 +28,7 @@ struct ext2_superblock {
     uint32_t revision_level;
     uint16_t default_uid;
     uint16_t default_gid;
-};
+} __attribute__((packed));
 
 // Extended information. Missing journal support
 struct ext2_extended {
@@ -46,7 +46,7 @@ struct ext2_extended {
     uint8_t num_blocks_prealloc;
     uint8_t num_dir_blocks_prealloc;
     uint16_t reserved0;
-};
+} __attribute__((packed));
 
 enum ext2_error_mode {
     EXT2_ERR_IGNORE = 1,
@@ -81,7 +81,7 @@ struct ext2_inode {
     uint32_t v1_size_hi_acl;
     uint32_t frag_block_addr;
     uint8_t osv2[12];
-};
+} __attribute__((packed));
 
 enum inode_type {
     EXT2_INODE_FIFO = 0x1000,
@@ -99,6 +99,30 @@ struct ext2_dir_entry {
     uint8_t name_length;
     uint8_t type_indicator;
     char first_name_char;
+} __attribute__((packed));
+
+struct ext2_bgd {
+    uint32_t addr_block_usage_bitmap;
+    uint32_t addr_inode_usage_bitmap;
+    uint32_t addr_block_inode_table;
+    uint16_t num_free_blocks;
+    uint16_t num_free_inodes;
+    uint16_t num_directories;
+} __attribute__((packed));
+
+/**
+ * OS accounting information for this file system. Is NOT an ext2 structure
+ * that would be found on disk
+ */
+struct ext2_fs {
+    uint8_t drive_num;
+    uint32_t start_lba;
+    uint64_t block_size;
+    uint32_t num_groups;
+    uint32_t blocks_per_group;
+    uint32_t inodes_per_group;
+    struct ext2_superblock* sb;
+    struct ext2_bgd* bgd_table;
 };
 
 void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors);
