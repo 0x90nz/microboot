@@ -26,10 +26,38 @@ idt_entry_t idt[INTR_COUNT];
 intr_handler* bound_handlers[INTR_COUNT];
 ll_intr_handler* ll_bound_handlers[INTR_COUNT];
 
+static char* exception_names[] = {
+    "#DE",
+    "#DB",
+    "NMI",
+    "#BP",
+    "#OF",
+    "#BR",
+    "#UD",
+    "#NM",
+    "#DF",
+    "#MF",
+    "#TS",
+    "#NP",
+    "#SS",
+    "#GP",
+    "#PF",
+    "RESERVED",
+    "#MF",
+    "#AC",
+    "#MC",
+    "#XM",
+    "#VE",
+    "#CP",
+};
+
 // Simple panic function that we bind by default
 void exception(intr_frame_t* frame)
 {
-    printf("\n!!! Unhandled interrupt !!!\n");
+    printf("\n!!! Unhandled interrupt [%s] !!!\n", 
+        frame->int_no < 22 ? exception_names[frame->int_no] : "int");
+    if (frame->int_no < 21)
+        
     printf("int num: %d, err code: %08x\n", frame->int_no, frame->err_code);
     printf("eax: %08x ebx: %08x\n", frame->eax, frame->ebx);
     printf("ecx: %08x edx: %08x\n", frame->ecx, frame->edx);
