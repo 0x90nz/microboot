@@ -117,7 +117,7 @@ struct ext2_bgd {
 struct ext2_fs {
     uint8_t drive_num;
     uint32_t start_lba;
-    uint64_t block_size;
+    uint32_t block_size;
     uint32_t num_groups;
     uint32_t blocks_per_group;
     uint32_t inodes_per_group;

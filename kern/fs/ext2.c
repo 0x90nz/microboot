@@ -13,6 +13,14 @@ void read_block(struct ext2_fs* fs, uint32_t block, void* buffer)
     );
 }
 
+void inode_data(struct ext2_fs* fs, uint32_t inode_num)
+{
+    uint32_t group = inode_num / fs->inodes_per_group;
+    uint32_t inode_tbl_block = fs->bgd_table[group].addr_block_inode_table;
+    uint32_t group_idx = inode_num - (group * fs->inodes_per_group);
+    
+}
+
 void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
 {
     struct ext2_fs* fs = kcalloc(sizeof(struct ext2_fs));
@@ -38,9 +46,14 @@ void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
         fs->num_groups++;
 
 
-    uint32_t bgd_table_blocks = (fs->num_groups * sizeof(struct ext2_bgd));
+    uint32_t bgd_table_blocks = (fs->num_groups * sizeof(struct ext2_bgd)) / fs->block_size;
     if (bgd_table_blocks * fs->block_size < fs->num_groups * sizeof(struct ext2_bgd))
         bgd_table_blocks++;
 
     debugf("num_groups: %d, bgd_table_blocks: %d", fs->num_groups, bgd_table_blocks);
+    
+    fs->bgd_table = kcalloc(bgd_table_blocks * fs->block_size * sizeof(struct ext2_bgd));
+    for (uint32_t i = 0; i < bgd_table_blocks; i++) {
+        read_block(fs, 2, (void*)fs->bgd_table + i * fs->block_size);
+    }
 }

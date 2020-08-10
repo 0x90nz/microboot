@@ -1,6 +1,10 @@
 # μboot
 A small (and very limited) bootloader
 
+![μboot on boot](.images/microboot_1.png)
+
+![μboot on boot](.images/microboot_2.png)
+
 ## What is it?
 
 μboot is a small environment that allows a C program to run on "bare metal". It
@@ -9,6 +13,9 @@ designed to work with a normal installation of `gcc` on an x86_64 computer. This
 solution is somewhat unstable however, and is only used because it greatly
 reduces the complexity to get started.
 
+Calling it a "bootloader" is (currently) a bit of a misnomer because it can't
+load any user defined applications at run time. This however is the end goal.
+
 ## How to use
 
 To use μboot, you'll at the very minimum need some linux environment, which has
@@ -16,9 +23,9 @@ the tools `qemu`, `gcc`, `nasm`, and `dd` available. Once all the tools are
 installed, you can run `make` to build or `make run` to both build and launch
 qemu.
 
-By default a 1.44MiB floppy disk image is produced, although in theory because
-BIOS interrupts are used, it μboot should run just as well from a hard disk or
-any other bootable media.
+By default a hard disk image is created, 32MiB large (see `mkimg.sh` for more 
+details). The bootloader's core image is stored within the space between the MBR
+and the first partition.
 
 ## Architecture
 
