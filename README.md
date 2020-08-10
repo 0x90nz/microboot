@@ -3,8 +3,6 @@ A small (and very limited) bootloader
 
 ![μboot on boot](.images/microboot_1.png)
 
-![μboot on boot](.images/microboot_2.png)
-
 ## What is it?
 
 μboot is a small environment that allows a C program to run on "bare metal". It
