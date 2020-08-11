@@ -2,6 +2,24 @@
 
 #include <stdint.h>
 
+// Extended information. Missing journal support
+struct ext2_extended {
+    uint32_t first_inode;
+    uint16_t inode_size;
+    uint16_t block_group_num;
+    uint32_t feature_set;
+    uint32_t incompat_feature_set;
+    uint32_t ro_feature_set;
+    uint8_t uuid[16];
+    char vol_name[16];
+    char last_mounted[64];
+    uint32_t usage_bitmap;
+
+    uint8_t num_blocks_prealloc;
+    uint8_t num_dir_blocks_prealloc;
+    uint16_t reserved0;
+} __attribute__((packed));
+
 struct ext2_superblock {
     uint32_t total_inodes;
     uint32_t total_blocks;
@@ -28,24 +46,7 @@ struct ext2_superblock {
     uint32_t revision_level;
     uint16_t default_uid;
     uint16_t default_gid;
-} __attribute__((packed));
-
-// Extended information. Missing journal support
-struct ext2_extended {
-    uint32_t first_inode;
-    uint16_t inode_size;
-    uint16_t block_group_num;
-    uint32_t feature_set;
-    uint32_t incompat_feature_set;
-    uint32_t ro_feature_set;
-    uint8_t uuid[16];
-    char vol_name[16];
-    char last_mounted[64];
-    uint32_t usage_bitmap;
-
-    uint8_t num_blocks_prealloc;
-    uint8_t num_dir_blocks_prealloc;
-    uint16_t reserved0;
+    struct ext2_extended ext;
 } __attribute__((packed));
 
 enum ext2_error_mode {
@@ -105,9 +106,9 @@ struct ext2_bgd {
     uint32_t addr_block_usage_bitmap;
     uint32_t addr_inode_usage_bitmap;
     uint32_t addr_block_inode_table;
-    uint16_t num_free_blocks;
-    uint16_t num_free_inodes;
-    uint16_t num_directories;
+    uint16_t free_blocks;
+    uint16_t free_inodes;
+    uint16_t directories;
 } __attribute__((packed));
 
 /**
