@@ -126,4 +126,6 @@ struct ext2_fs {
     struct ext2_bgd* bgd_table;
 };
 
+#define EXT2_DIRECT_BLOCKS      12
+
 void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors);

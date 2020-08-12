@@ -3,11 +3,12 @@ OUTPUT_FORMAT(binary)
 SECTIONS
 {
 	. = 0x7e00;
-	_start = .;
+	_kstart = .;
 	.text : { *(.text) }
 	.rodata : { *(.rodata) }
 	.data : { *(.data) }
-	_end = .;
+	_kend = .;
 	.bss : { *(COMMON) *(.bss) }
-	KERNEL_SIZE = _end - _start;
+	_kbss_end = .;
+	KERNEL_SIZE = _kend - _kstart;
 }
