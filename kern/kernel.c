@@ -70,8 +70,6 @@ void kernel_main(struct startup_info* start_info)
     env_put("root", &start_info->drive_number);
 
     debugf("Loaded from bios disk %02x", start_info->drive_number);
-    // extern int _kstart, _kend, _kbss_end;
-    // debugf("Kernel size: %d bytes (%d bytes BSS)", &_kend - &_kstart, &_kbss_end - &_kend);
     
     extern int _kstart, _kend;
     uint32_t kstart = (uint32_t)&_kstart;

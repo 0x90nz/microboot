@@ -13,11 +13,13 @@ void fs_init(uint8_t drive_num)
 
     for (int i = 0; i < 4; i++) {
         if (bootsect->partitions[i].drive_attributes == 0x83) {
+#ifdef EXT2_ENABLE
             ext2_init(
                 drive_num, 
                 bootsect->partitions[i].start_lba, 
                 bootsect->partitions[i].num_sectors
             );
+#endif
         }
     }
 

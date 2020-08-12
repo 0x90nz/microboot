@@ -1,18 +1,23 @@
 .section bios, "ax"
 saved_if: .byte 0
 
+.align 4
+.short 0
 saved_gdt_ptr:
 .short 0
 .long 0
 
+.short 0
 saved_idt_ptr:
 .short 0
 .long 0
 
+.short 0
 realmode_idt_ptr:
 .short 0x3ff
 .long 0
 
+.short 0
 realmode_gdt_ptr:
 .short 0
 .long 0
