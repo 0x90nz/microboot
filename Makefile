@@ -26,8 +26,8 @@ stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
 	$(CC) $(CFLAGS) -c kern/sys/interrupts_stubs.S -o build/interrupts_stubs.o
 	$(CC) $(CFLAGS) -c kern/sys/bios.S -o build/bios.o
-	$(CC) $(CFLAGS) -lgcc build/stage2.o build/interrupts_stubs.o build/bios.o build/main.o \
-		$(addprefix build/, $(notdir $^)) -T link.ld -o build/stage2.bin
+	$(CC) $(CFLAGS) -lgcc build/stage2.o build/interrupts_stubs.o build/bios.o  build/main.o \
+		$(addprefix build/, $(notdir $^)) -T link.ld -Wl,-Map=build/stage2.map -o build/stage2.bin
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
@@ -38,5 +38,15 @@ run: image
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap
+
+debug: CFLAGS += -g
+debug: image
+	qemu-system-i386 \
+		-drive format=raw,file=build/microboot.img,index=0 \
+		-serial mon:stdio \
+		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
+		-object filter-dump,id=id,netdev=n1,file=out.pcap -s -S &
+	konsole -e "gdb -ex 'target remote localhost:1234'"
+
 clean:
 	rm -r build

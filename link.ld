@@ -4,6 +4,8 @@ SECTIONS
 {
 	. = 0x7e00;
 	_kstart = .;
+	bootstrap : { *(bootstrap) }
+	bios : { *(bios) }
 	.text : { *(.text) }
 	.rodata : { *(.rodata) }
 	.data : { *(.data) }

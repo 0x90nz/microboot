@@ -27,6 +27,7 @@ void bdrive_read(uint8_t drive_num, uint16_t num_sectors, uint64_t lba, void* bu
     regs.edx = drive_num & 0xff;
 
     debugf("addr of struct %04x:%04x", SEGOF((uint32_t)&low_mem_disk_addr), OFFOF((uint32_t)&low_mem_disk_addr));
+    debugf("addr of low buffer: %04x:%04x", SEGOF((uint32_t)&low_mem_buffer), OFFOF((uint32_t)&low_mem_buffer));
 
     bios_interrupt(0x13, &regs);
 
