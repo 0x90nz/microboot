@@ -1,3 +1,5 @@
+.section bootstrap, "ax"
+
 .word KERNEL_SIZE
 jmp	_start
 
@@ -41,6 +43,9 @@ _start:
 	mov	%ax, %ss
 
 	# Setup the stack
+	#        0x9FFFF
+	#        0x10ac4
+	#        0x7FFFF
 	mov	$0x70000, %esp
 
 	push	$memory_config

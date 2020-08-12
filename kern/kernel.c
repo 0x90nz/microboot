@@ -74,7 +74,9 @@ void kernel_main(struct startup_info* start_info)
     // debugf("Kernel size: %d bytes (%d bytes BSS)", &_kend - &_kstart, &_kbss_end - &_kend);
     
     extern int _kstart, _kend;
-    debugf("kernel bounds: start=%08x, end=%08x", &_kstart, &_kend);
+    uint32_t kstart = (uint32_t)&_kstart;
+    uint32_t kend = (uint32_t)&_kend;
+    debugf("kernel bounds: start=%08x, end=%08x, size=%08x", kstart, kend, kend - kstart);
 
     // This is memory past 0x01000000 which is free to use
     printf("%d MiB free\n", (start_info->extended2 * 64) / 1024);

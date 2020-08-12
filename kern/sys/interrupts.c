@@ -51,14 +51,8 @@ static char* exception_names[] = {
     "#CP",
 };
 
-// Simple panic function that we bind by default
-void exception(intr_frame_t* frame)
+void dump_regs(intr_frame_t* frame)
 {
-    printf("\n!!! Unhandled interrupt [%s] !!!\n", 
-        frame->int_no < 22 ? exception_names[frame->int_no] : "int");
-    if (frame->int_no < 21)
-        
-    printf("int num: %d, err code: %08x\n", frame->int_no, frame->err_code);
     printf("eax: %08x ebx: %08x\n", frame->eax, frame->ebx);
     printf("ecx: %08x edx: %08x\n", frame->ecx, frame->edx);
     printf("esi: %08x edi: %08x\n", frame->esi, frame->edi);
@@ -67,6 +61,26 @@ void exception(intr_frame_t* frame)
 
     printf("cs: %04x ss: %04x ds: %04x\n", frame->cs, frame->ss, frame->ds);
     printf("es: %04x fs: %04x gs: %04x\n", frame->es, frame->fs, frame->gs);
+
+    debugf("eax: %08x ebx: %08x", frame->eax, frame->ebx);
+    debugf("ecx: %08x edx: %08x", frame->ecx, frame->edx);
+    debugf("esi: %08x edi: %08x", frame->esi, frame->edi);
+    debugf("eip: %08x efl: %08x", frame->eip, frame->eflags);
+    debugf("esp: %08x", frame->esp);
+
+    debugf("cs: %04x ss: %04x ds: %04x", frame->cs, frame->ss, frame->ds);
+    debugf("es: %04x fs: %04x gs: %04x", frame->es, frame->fs, frame->gs);
+}
+
+// Simple panic function that we bind by default
+void exception(intr_frame_t* frame)
+{
+    printf("\n!!! Unhandled interrupt [%s] !!!\n", 
+        frame->int_no < 22 ? exception_names[frame->int_no] : "int");
+    if (frame->int_no < 21)
+        
+    printf("int num: %d, err code: %08x\n", frame->int_no, frame->err_code);
+    dump_regs(frame);
 
     hang();
 }
@@ -106,6 +120,7 @@ void interrupts_init()
     // Register a handler for irq0, because the
     // timer is probably already running
     register_handler(IRQ_TO_INTR(0), do_nothing);
+    ll_bound_handlers[3] = dump_regs;
 
     idt_descriptor_t descriptor = { sizeof(idt) - 1, (uint32_t)idt };
     asm volatile("lidt %0; sti" :: "m" (descriptor));

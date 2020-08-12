@@ -1,3 +1,4 @@
+.section bios, "ax"
 saved_if: .byte 0
 
 saved_gdt_ptr:
