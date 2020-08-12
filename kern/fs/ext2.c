@@ -5,14 +5,18 @@
 
 void read_block(struct ext2_fs* fs, uint32_t block, void* buffer)
 {
+    uint32_t sectors_per_block = fs->block_size / 512;
     bdrive_read(
         fs->drive_num, 
-        fs->block_size / 512, 
-        (fs->block_size * block) / 512 + fs->start_lba,
+        sectors_per_block, 
+        (sectors_per_block * block) + fs->start_lba,
         buffer
     );
 }
 
+/**
+ * Read the inode metadata for a given inode index (starts from 1!)
+ */ 
 void read_inode(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t inode_num)
 {
     // The group to which this inode belongs
@@ -37,6 +41,104 @@ void read_inode(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t inode_num
     read_block(fs, inode_tbl_block + block_off, buffer);
     memcpy(inode, buffer + internal_offset * fs->sb->ext.inode_size, fs->sb->ext.inode_size);
     kfree(buffer);
+}
+
+/**
+ * This mass of code determines where the iblock is located (i.e. the actual
+ * index of the block as it is on disk). Note: triply indirect references will
+ * cause 3 reads! This could get slow if used too often
+ */ 
+uint32_t disk_block_num(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t iblock)
+{
+    uint32_t* tmp = kalloc(fs->block_size);
+    uint32_t ret = -1;
+    uint32_t u32_blksz = fs->block_size / 4;
+
+    if (iblock <= 11) {
+        ret = inode->direct_ptr[iblock];
+        goto cleanup;
+    }
+
+    uint32_t blocks_left = iblock - 12;
+
+    // Singly indirect pointer
+    if (blocks_left < u32_blksz) {
+        read_block(fs, inode->singly_indirect_ptr, tmp);
+        ret = tmp[blocks_left];
+        goto cleanup;
+    }
+
+    // Doubly indirect pointer
+    blocks_left -= u32_blksz;
+
+    if (blocks_left < u32_blksz * u32_blksz) {
+        uint32_t d_index = blocks_left / u32_blksz;
+        uint32_t index = blocks_left - d_index * u32_blksz;
+
+        read_block(fs, inode->doubly_indirect_ptr, tmp);
+        read_block(fs, tmp[d_index], tmp);
+        ret = tmp[index];
+        goto cleanup;
+    }
+
+    blocks_left -= u32_blksz * u32_blksz;
+    if (blocks_left < u32_blksz * u32_blksz * u32_blksz) {
+        ASSERT(0, "Not yet implemented");
+    }
+
+    ASSERT(0, "Invalid block pointer");
+
+    // Oh no, a goto! https://xkcd.com/292/
+cleanup:
+    kfree(tmp);
+    return ret;
+}
+
+/**
+ * Read the actual data for a given inode.
+ * 
+ * Note: `offset` refers to the offset within the file
+ */ 
+uint32_t read_inode_data(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t offset, uint32_t size, char* buffer)
+{
+    // Limit the end offset we want to read to the length of the inode if it
+    // goes over the actual length of the file. Caller can determine if this
+    // happened by looking at the return value
+    uint32_t end_off = (inode->size_lo >= offset + size) ? (offset + size) : inode->size_lo;
+    
+    uint32_t start_block = offset / fs->block_size;
+    uint32_t end_block = end_off / fs->block_size;
+
+    // The offset into the first block that we need to start reading from
+    uint32_t start_off = offset % fs->block_size;
+    // The amount that we need to read from the final block
+    uint32_t end_block_size = end_off - end_block * fs->block_size;
+
+    uint32_t i = start_block;
+    uint32_t curr_off = 0;
+
+    char* buf = kalloc(fs->block_size);
+    while (i <= end_block) {
+        uint32_t start = 0, end = fs->block_size - 1;
+
+        uint32_t dsk_block = disk_block_num(fs, inode, i);
+
+        ASSERT(dsk_block != -1, "Invalid disk block");
+        
+        read_block(fs, dsk_block, buf);
+
+        if (i == start_block)
+            start = start_off;
+        if (i == end_block)
+            end = end_block_size - 1;
+
+        memcpy(buf + curr_off, buf + start, (end - start - 1));
+        curr_off += (end - start + 1);
+        i++;
+    }
+
+    kfree(buf);
+    return end_off - offset;
 }
 
 void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
@@ -79,5 +181,13 @@ void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
     struct ext2_inode* root_inode = kcalloc(sizeof(struct ext2_inode));
     read_inode(fs, root_inode, 2);
 
-    debugf("last access time: %d", root_inode->last_access_time);
+    char* tmp = kalloc(fs->block_size);
+
+    int blknum = disk_block_num(fs, root_inode, 0);
+    debugf("block num: %d", blknum);
+
+    read_block(fs, blknum, tmp);
+
+    struct ext2_dir_entry* dirent = (struct ext2_dir_entry*)tmp;
+    debugf("name len: %d", dirent->name_length);
 }

@@ -9,7 +9,7 @@ size_t mem_size;
 
 #define ALIGNMENT       64
 
-#define ALLOC_DEBUG
+// #define ALLOC_DEBUG
 
 void init_alloc(void* start, size_t size)
 {

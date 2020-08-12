@@ -63,13 +63,18 @@ void kernel_main(struct startup_info* start_info)
     keyboard_init();
     serial_init(SP_COM0_PORT);
 
-    debugf("Loaded from bios disk %02x", start_info->drive_number);
-
     gdt_init();
     env_init();
     display_logo();
     env_put("prompt", "# ");
     env_put("root", &start_info->drive_number);
+
+    debugf("Loaded from bios disk %02x", start_info->drive_number);
+    // extern int _kstart, _kend, _kbss_end;
+    // debugf("Kernel size: %d bytes (%d bytes BSS)", &_kend - &_kstart, &_kbss_end - &_kend);
+    
+    extern int _kstart, _kend;
+    debugf("kernel bounds: start=%08x, end=%08x", &_kstart, &_kend);
 
     // This is memory past 0x01000000 which is free to use
     printf("%d MiB free\n", (start_info->extended2 * 64) / 1024);
