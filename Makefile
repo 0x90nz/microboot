@@ -24,9 +24,10 @@ user:
 
 stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
-	$(CC) $(CFLAGS) -c kern/sys/interrupts_stubs.S -o build/interrupts_stubs.o
 	$(CC) $(CFLAGS) -c kern/sys/bios.S -o build/bios.o
-	$(CC) $(CFLAGS) -lgcc build/stage2.o build/interrupts_stubs.o build/bios.o  build/main.o \
+	$(CC) $(CFLAGS) -c loader/stage2_hl.c -o build/stage2_hl.o
+	$(CC) $(CFLAGS) -c kern/sys/interrupts_stubs.S -o build/interrupts_stubs.o
+	$(CC) $(CFLAGS) -lgcc build/stage2_hl.o build/interrupts_stubs.o build/bios.o  build/main.o \
 		$(addprefix build/, $(notdir $^)) -T link.ld -Wl,-Map=build/stage2.map -o build/stage2.bin
 
 .c.o:

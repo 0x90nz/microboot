@@ -40,7 +40,6 @@ void display_logo()
     vga_pad(offset); vga_puts(" ##\n");
 }
 
-
 char temp[32];
 void print_hex(int num)
 {
@@ -54,15 +53,14 @@ void print_int(int num)
     puts(temp);
 }
 
-void kernel_main(struct startup_info* start_info)
+void kernel_main(struct kstart_info* start_info)
 {
     vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
-    init_alloc((void*)0x01000000, start_info->extended2 * 64 * KiB);
+    init_alloc(start_info->memory_start, start_info->free_memory * 64 * KiB);
 
     interrupts_init();
     keyboard_init();
     serial_init(SP_COM0_PORT);
-
     gdt_init();
     env_init();
     display_logo();
@@ -71,13 +69,8 @@ void kernel_main(struct startup_info* start_info)
 
     debugf("Loaded from bios disk %02x", start_info->drive_number);
     
-    extern int _kstart, _kend;
-    uint32_t kstart = (uint32_t)&_kstart;
-    uint32_t kend = (uint32_t)&_kend;
-    debugf("kernel bounds: start=%08x, end=%08x, size=%08x", kstart, kend, kend - kstart);
-
     // This is memory past 0x01000000 which is free to use
-    printf("%d MiB free\n", (start_info->extended2 * 64) / 1024);
+    printf("%d MiB free\n", (start_info->free_memory * 64) / 1024);
 
     fs_init(start_info->drive_number);
 

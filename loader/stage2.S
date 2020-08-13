@@ -42,14 +42,10 @@ _start:
 	mov 	%ax, %gs
 	mov	%ax, %ss
 
-	# Setup the stack
-	#        0x9FFFF
-	#        0x10ac4
-	#        0x7FFFF
 	mov	$0x70000, %esp
 
 	push	$memory_config
-	call	kernel_main
+	call	stage2_hl
 
 	# We should never get here. If we do, just hang
 	cli	
