@@ -3,8 +3,6 @@
 #include "../alloc.h"
 #include "../io/bios_drive.h"
 
-// #define EXT2_ENABLE
-
 #ifdef EXT2_ENABLE
 
 void read_block(struct ext2_fs* fs, uint32_t block, void* buffer)
@@ -184,6 +182,12 @@ void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
 
     struct ext2_inode* root_inode = kcalloc(sizeof(struct ext2_inode));
     read_inode(fs, root_inode, 2);
+
+
+    struct ext2_dir_entry* dirent = kalloc(1024);
+    // read_inode_data(fs, root_inode, 0, 1024, dirent);
+    int num = disk_block_num(fs, root_inode, 0);
+    read_block(fs, num, dirent);
 }
 
 #endif

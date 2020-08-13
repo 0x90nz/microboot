@@ -22,8 +22,17 @@ char* debug_names[] = {
     "OFF"
 };
 
+static struct kstart_info sinfo;
+
 void hang() { while (1) { asm("hlt"); } }
 void hlt() { asm("hlt"); }
+
+uint32_t get_esp()
+{
+    uint32_t esp;
+    asm("mov    %%esp, %0" : "=m" (esp));
+    return esp;
+}
 
 void display_logo()
 {
@@ -40,17 +49,50 @@ void display_logo()
     vga_pad(offset); vga_puts(" ##\n");
 }
 
-char temp[32];
-void print_hex(int num)
+void dump_memory(void* input_buffer, size_t length)
 {
-    itoa(num, temp, 16);
-    puts(temp);
+    uint8_t* startaddr = (uint8_t*)input_buffer;
+    uint8_t buffer[8];
+
+    for(size_t i = 0; i < length; i += 8) {
+        printf("0x%08x: ", (int)(startaddr + i));
+        for(int j = 0; j < 8; j++) {
+            buffer[j] = *(uint8_t*)(startaddr + i + j);
+			printf("%02x ", buffer[j]);
+            if((j + 1) % 4 == 0)
+                printf(" ");
+        }
+        printf("   |");
+        char charbuf[2];
+        charbuf[1] = '\0';
+        for(int j = 0; j < 8; j++) {
+            if(buffer[j] >= 32 && buffer[j] <= 126) {
+                charbuf[0] = buffer[j];
+            } else {
+                charbuf[0] = '.';
+            }
+            
+            printf(charbuf);
+        }
+        printf("|\n");
+    }
+    printf("\n");
 }
 
-void print_int(int num)
+__attribute__((naked)) void switch_stacks(void* new)
 {
-    itoa(num, temp, 10);
-    puts(temp);
+    asm("mov    4(%esp), %esp");
+    asm("jmp    kernel_late_init");
+}
+
+void kernel_late_init()
+{
+    fs_init(sinfo.drive_number);
+
+    extern int main();
+    main();
+
+    hang();
 }
 
 void kernel_main(struct kstart_info* start_info)
@@ -67,15 +109,19 @@ void kernel_main(struct kstart_info* start_info)
     env_put("prompt", "# ");
     env_put("root", &start_info->drive_number);
 
-    debugf("Loaded from bios disk %02x", start_info->drive_number);
-    
-    // This is memory past 0x01000000 which is free to use
-    printf("%d MiB free\n", (start_info->free_memory * 64) / 1024);
+    // Save start info because when we switch stacks it'll get destroied
+    memcpy(&sinfo, start_info, sizeof(struct kstart_info));
 
-    fs_init(start_info->drive_number);
+    /**
+     * Setup and switch to a new stack. After we switch to this, we won't be
+     * using any low memory apart from the BIOS interrupt code. This means that
+     * we can (mostly) dedicate it to user programs
+     */ 
+    size_t stack_size = 32 * KiB;
+    void* stack = kalloc(stack_size);
+    *(uint32_t*)stack = STACK_MAGIC;
+    switch_stacks(stack + stack_size);
 
-    extern int main();
-    main();
-
+    // We shouldn't ever get here
     hang();
 }
