@@ -1,12 +1,10 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 void hang();
 void hlt();
-void print_hex(int num);
-void print_int(int num);
-
 
 struct kstart_info {
     uint8_t drive_number;
@@ -20,6 +18,8 @@ struct kstart_info {
 #define KiB             1024
 #define MiB             1048576
 
+#define STACK_MAGIC     0xc0ffebad
+
 enum log_level {
     LOG_FATAL = 0,
     LOG_ERROR,
@@ -31,5 +31,6 @@ enum log_level {
 
 extern char* debug_names[];
 void kernel_main(struct kstart_info* start_info);
+void dump_memory(void* input_buffer, size_t length);
 
 #define DEBUG_LEVEL LOG_ALL
