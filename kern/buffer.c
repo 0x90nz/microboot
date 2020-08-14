@@ -12,6 +12,15 @@ void ringbuffer_init(struct ringbuffer* rbuf, uint8_t* buffer, uint32_t max_size
     rbuf->full = 0;
 }
 
+void ringbuffer_reset(struct ringbuffer* rbuf)
+{
+    ASSERT(rbuf, "Can't reset null buffer");
+
+    rbuf->head = 0;
+    rbuf->tail = 0;
+    rbuf->full = 0;
+}
+
 int ringbuffer_empty(struct ringbuffer* rbuf)
 {
     return (rbuf->head == rbuf->tail) && !rbuf->full;

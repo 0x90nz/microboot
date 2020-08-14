@@ -8,3 +8,5 @@
 void serial_init(uint16_t port);
 void serial_putc(char c);
 char serial_getc();
+int serial_available();
+void serial_clear_input();
