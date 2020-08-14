@@ -3,7 +3,9 @@
 #include <sys/interrupts.h>
 #include <io/vga.h>
 #include <io/pio.h>
+#include <io/serial.h>
 #include <io/keyboard.h>
+#include <io/ioutil.h>
 #include <kernel.h>
 #include <env.h>
 #include <stddef.h>
@@ -151,6 +153,14 @@ void hdisk()
     printf("Root disk @ %02x\n", *env_get("root", uint16_t*));
 }
 
+void ldprg()
+{
+    char csz[9] = {0};
+    fill_buffer(serial_getc, csz, 8);
+
+    printf("%s\n", csz);
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
@@ -161,6 +171,7 @@ command_t commands[] = {
     {"verb", verb},
     {"brk", brk},
     {"hdisk", hdisk},
+    {"ldprg", ldprg},
     {"help", help}
 };
 

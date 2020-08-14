@@ -7,3 +7,4 @@
 
 void serial_init(uint16_t port);
 void serial_putc(char c);
+char serial_getc();

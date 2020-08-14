@@ -1,23 +1,72 @@
 #include <stdint.h>
 #include "pio.h"
 #include "serial.h"
+#include "../buffer.h"
 #include "../stdlib.h"
 #include "../printf.h"
 #include "../sys/interrupts.h"
 #include "../kernel.h"
 
 static uint16_t sp_port;
+static struct ringbuffer in_buffer;
+static struct ringbuffer out_buffer;
+
+#define SP_BUFFER_SIZE 32
+static uint8_t in_base_buffer[SP_BUFFER_SIZE];
+static uint8_t out_base_buffer[SP_BUFFER_SIZE];
+
+static int force_tx = 0;
 
 static void serial_handle_irq(uint32_t int_no, uint32_t err_no)
 {
-    printf("serial gotten\n");
+    uint8_t id = inb(sp_port + 2);
+
+    // Change in the line status register
+    uint8_t lsr = -1;
+    if ((id & 0x07) == 0b110) {
+        lsr = inb(sp_port + 5);
+    }
+
+    // Recieved data available
+    if ((id & 0x07) == 0b0100) {
+        char c = inb(sp_port);
+        ringbuffer_put(&in_buffer, c);
+    }
+    
+    // THR empty
+    if ((id & 0x07) == 0b0010) {
+        // THR is empty, so we can send stuff
+        if (!ringbuffer_empty(&out_buffer)) {
+            outb(sp_port, ringbuffer_get(&out_buffer));
+        }
+    }
+
+    /**
+     * This is convoluted, and will probably be replaced at some point once I
+     * figure out a nicer way to do it. In essence, we need to be able to kick
+     * off the transfer, so we force transmission of something. From there we
+     * can easily just use the THR empty interrupt, but not so for the first time.
+     */
+    if (force_tx) {
+        lsr = lsr != -1 ? lsr : inb(sp_port + 5);
+        if (lsr & 0x20) {
+            if (!ringbuffer_empty(&out_buffer)) {
+                outb(sp_port, ringbuffer_get(&out_buffer));
+            }
+        }
+    }
 }
 
 void serial_init(uint16_t port)
 {
+    // Setup ring buffers
+    ringbuffer_init(&in_buffer, in_base_buffer, SP_BUFFER_SIZE);
+    ringbuffer_init(&out_buffer, out_base_buffer, SP_BUFFER_SIZE);
+
+    sp_port = port;
+
     // Register the handlers
     register_handler(IRQ_TO_INTR(4), serial_handle_irq);
-    register_handler(IRQ_TO_INTR(3), serial_handle_irq);
 
     outb(port + 1, 0x00);       // Disable all interrupts
     outb(port + 3, 0x80);       // Set baud rate div.
@@ -26,17 +75,25 @@ void serial_init(uint16_t port)
     outb(port + 3, 0x03);       // 8-N-1
     outb(port + 2, 0xc7);       // Enable FIFO, clear and set 14-byte thresh
     outb(port + 4, 0x0b);       // Enable IRQs
-
-    sp_port = port;
+    outb(port + 1, 0x07);
 }
 
-static int serial_tx_empty()
+static inline int serial_tx_empty()
 {
     return inb(sp_port + 5) & 0x20;
 }
 
 void serial_putc(char c)
 {
-    while (serial_tx_empty() == 0) { hlt(); }
-    outb(sp_port, c);
+    ringbuffer_put(&out_buffer, c);
+    // Ugly hack. See `serial_handle_irq` for details. Replace at some point
+    asm("int $36");
+    force_tx = 1;
+}
+
+char serial_getc()
+{
+    while (ringbuffer_empty(&in_buffer)) { hlt(); }
+
+    return ringbuffer_get(&in_buffer);
 }
