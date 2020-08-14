@@ -21,6 +21,7 @@ loader:
 .PHONY: user
 user:
 	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern
+	$(CC) $(CFLAGS) -T user/loadable.ld user/loadable.c -o loadable.bin
 
 stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
@@ -33,10 +34,12 @@ stage2: $(KOBJS)
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
 
+# Load program with `netcat localhost 1234 < loadable.bin`
+
 run: image
 	qemu-system-i386 \
 		-drive format=raw,file=build/microboot.img,index=0 \
-		-serial mon:stdio \
+		-serial tcp::1234,server,nowait \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap
 

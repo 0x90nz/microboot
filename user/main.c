@@ -155,10 +155,18 @@ void hdisk()
 
 void ldprg()
 {
-    char csz[9] = {0};
-    fill_buffer(serial_getc, csz, 8);
+    char csz[4];
+    serial_clear_input();
+    fill_buffer(serial_getc, csz, 4);
+    uint32_t* size = (uint32_t*)csz;
 
-    printf("%s\n", csz);
+    printf("file size: %d bytes\n", *size);
+    char* program = 0x7e00;
+    fill_buffer(serial_getc, program, *size);
+
+    int (*entry)(void) = (int (*)(void)) program;
+    int ret = entry();
+    printf("program exited with status %d\n", ret);
 }
 
 command_t commands[] = {

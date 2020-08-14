@@ -78,6 +78,16 @@ void serial_init(uint16_t port)
     outb(port + 1, 0x07);
 }
 
+void serial_clear_input()
+{
+    ringbuffer_reset(&in_buffer);
+}
+
+int serial_available()
+{
+    return !ringbuffer_empty(&in_buffer);
+}
+
 static inline int serial_tx_empty()
 {
     return inb(sp_port + 5) & 0x20;
