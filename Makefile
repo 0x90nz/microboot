@@ -34,7 +34,7 @@ stage2: $(KOBJS)
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
 
-# Load program with `netcat localhost 1234 < loadable.bin`
+# Load program with `netcat localhost 1234 < loadable.bin 
 
 run: image
 	qemu-system-i386 \

@@ -37,6 +37,7 @@ void interrupts_init();
 void interrupts_pic_init();
 uint64_t make_idt_descriptor(uint16_t limit, void* base);
 void register_handler(int int_no, intr_handler* handler);
+void register_ll_handler(int int_no, ll_intr_handler* handler);
 
 #define IRQ_TO_INTR(x)  (x + 32)
 
