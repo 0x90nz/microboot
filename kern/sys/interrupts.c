@@ -104,6 +104,17 @@ void register_handler(int int_no, intr_handler* handler)
     }
 }
 
+/**
+ * Registers a low level handler. See comment at top for details.
+ */ 
+void register_ll_handler(int int_no, ll_intr_handler* handler)
+{
+    if (int_no >= 0 && int_no < INTR_COUNT)
+    {
+        ll_bound_handlers[int_no] = handler;
+    }
+}
+
 void do_nothing(uint32_t int_no, uint32_t err_no) {}
 
 void interrupts_init()
@@ -114,13 +125,13 @@ void interrupts_init()
     {
         make_gate(i, interrupts_stubs[i], 0, 15);
         bound_handlers[i] = 0;
-        ll_bound_handlers[i] = exception;
+        register_ll_handler(i, exception);
     }
 
     // Register a handler for irq0, because the
     // timer is probably already running
     register_handler(IRQ_TO_INTR(0), do_nothing);
-    ll_bound_handlers[3] = dump_regs;
+    register_ll_handler(3, dump_regs);
 
     idt_descriptor_t descriptor = { sizeof(idt) - 1, (uint32_t)idt };
     asm volatile("lidt %0; sti" :: "m" (descriptor));
