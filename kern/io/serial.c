@@ -54,6 +54,7 @@ static void serial_handle_irq(uint32_t int_no, uint32_t err_no)
                 outb(sp_port, ringbuffer_get(&out_buffer));
             }
         }
+	force_tx = 0;
     }
 }
 
