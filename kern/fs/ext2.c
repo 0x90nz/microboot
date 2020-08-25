@@ -101,7 +101,7 @@ cleanup:
  * 
  * Note: `offset` refers to the offset within the file
  */ 
-uint32_t read_inode_data(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t offset, uint32_t size, char* buffer)
+uint32_t read_inode_data(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t offset, uint32_t size, void* buffer)
 {
     // Limit the end offset we want to read to the length of the inode if it
     // goes over the actual length of the file. Caller can determine if this
@@ -134,7 +134,7 @@ uint32_t read_inode_data(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t 
         if (i == end_block)
             end = end_block_size - 1;
 
-        memcpy(buf + curr_off, buf + start, (end - start - 1));
+        memcpy(buffer + curr_off, buf + start, (end - start + 1));
         curr_off += (end - start + 1);
         i++;
     }
@@ -143,9 +143,25 @@ uint32_t read_inode_data(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t 
     return end_off - offset;
 }
 
-void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
+void ext2_listdir(struct ext2_fs* fs, struct ext2_inode* inode)
 {
-    struct ext2_fs* fs = kcalloc(sizeof(struct ext2_fs));
+    struct ext2_dir_entry* dirent = kalloc(inode->size_lo);
+    read_inode_data(fs, inode, 0, inode->size_lo, dirent);
+
+    struct ext2_dir_entry* current = dirent;
+    uint32_t size = 0;
+    while (size < inode->size_lo) {
+        printf("%s\n", &current->first_name_char);
+        size += current->size;
+        current =  (void*)current + current->size;        
+    }
+
+    kfree(dirent);
+}
+
+struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
+{
+    struct ext2_fs* fs = kallocz(sizeof(struct ext2_fs));
 
     fs->drive_num = drive_num;
     fs->start_lba = start_lba;
@@ -175,19 +191,15 @@ void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
     debugf("num_groups: %d, bgd_table_blocks: %d", fs->num_groups, bgd_table_blocks);
     
     // Allocate space for the BGD table, and then fill it with data from disk
-    fs->bgd_table = kcalloc(bgd_table_blocks * fs->block_size * sizeof(struct ext2_bgd));
+    fs->bgd_table = kallocz(bgd_table_blocks * fs->block_size * sizeof(struct ext2_bgd));
     for (uint32_t i = 0; i < bgd_table_blocks; i++) {
         read_block(fs, 2, (void*)fs->bgd_table + i * fs->block_size);
     }
 
-    struct ext2_inode* root_inode = kcalloc(sizeof(struct ext2_inode));
-    read_inode(fs, root_inode, 2);
+    fs->root_inode = kallocz(sizeof(struct ext2_inode));
+    read_inode(fs, fs->root_inode, 2);
 
-
-    struct ext2_dir_entry* dirent = kalloc(1024);
-    // read_inode_data(fs, root_inode, 0, 1024, dirent);
-    int num = disk_block_num(fs, root_inode, 0);
-    read_block(fs, num, dirent);
+    return fs;
 }
 
 #endif
