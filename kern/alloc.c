@@ -1,16 +1,25 @@
+/**
+ * @file alloc.c
+ * @brief Dynamic memory allocator
+ */
+
 #include "alloc.h"
 #include "stdlib.h"
 #include "kernel.h"
 #include <stdint.h>
 
-void* mem_start = NULL;
-mem_block_t* head;
-size_t mem_size;
-
-#define ALIGNMENT       64
+static void* mem_start = NULL;
+static mem_block_t* head;
+static size_t mem_size;
 
 // #define ALLOC_DEBUG
 
+/**
+ * @brief Initialise the allocator
+ * 
+ * @param start the start of contiguous free memory
+ * @param size the number of free bytes following the start
+ */
 void init_alloc(void* start, size_t size)
 {
     mem_start = start;
@@ -22,17 +31,24 @@ void init_alloc(void* start, size_t size)
     head->magic = MEM_BLOCK_MAGIC;
 }
 
-/**
- * Align the requested size to the alignment boundary
- * Means that we can re-use more blocks easier, and because
- * we're naive and don't combine blocks, this is good.
- */ 
-size_t aligned_size(size_t size)
+/*
+ * Align the requested size to the alignment boundary. This is useful to
+ * increase reuse of blocks which are allocated
+ */
+static size_t aligned_size(size_t size)
 {
     if (size % ALIGNMENT == 0) return size;
     return (size / ALIGNMENT) * ALIGNMENT + ALIGNMENT;
 }
 
+/**
+ * @brief Dynamically allocate some memory. The returned pointer may be for a
+ * space larger than that which was requested, but it will *always* be at least
+ * as large as the space requested.
+ * 
+ * @param size the size to allocate, in bytes
+ * @return void* a pointer to the allocated memory
+ */
 void* kalloc(size_t size)
 {
     ASSERT(mem_start, "Allocator was used before initialised");
@@ -80,9 +96,15 @@ void* kalloc(size_t size)
 }
 
 /**
- * Attempt to resize memory. If the memory is too small to contain the new size
- * requested then the memory will be copied and the old pointer freed.
- */ 
+ * @brief Attempt to resize a dynamically allocated pointer to memory. If the
+ * memory allocated is too small to contain the new size, then the requested
+ * memory will be copied and the old memory freed.
+ * 
+ * @param ptr pointer to the memory to be reallocated
+ * @param new_size the new size, as the entire size to be used not just the
+ * additional size
+ * @return void* a pointer to the new memory
+ */
 void* krealloc(void* ptr, size_t new_size)
 {
     ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to realloc invalid address");
@@ -100,8 +122,11 @@ void* krealloc(void* ptr, size_t new_size)
 }
 
 /**
- * Allocate memory and clear it before returning the pointer
- */ 
+ * @brief Allocate memory and clear it
+ * 
+ * @param size the size to allocate, in bytes
+ * @return void* a pointer to the allocated memory
+ */
 void* kallocz(size_t size)
 {
     void* data = kalloc(size);
@@ -109,6 +134,11 @@ void* kallocz(size_t size)
     return data;
 }
 
+/**
+ * @brief Free allocated memory
+ * 
+ * @param ptr a pointer to the allocated memory
+ */
 void kfree(void* ptr)
 {
     // We should only free addresses which we own
@@ -126,6 +156,11 @@ void kfree(void* ptr)
     block->state = MEM_STATE_FREE;
 }
 
+/**
+ * @brief Get the currently used amount of memory
+ * 
+ * @return size_t the amount of memory currently in use, in bytes
+ */
 size_t alloc_used()
 {
     size_t total = 0;
@@ -136,6 +171,9 @@ size_t alloc_used()
     return total;
 }
 
+/**
+ * @brief Dump memory management info, only for debugging
+ */
 void kdumpmm()
 {
     debugf("sizeof(mem_block_t) = %d", sizeof(mem_block_t));
