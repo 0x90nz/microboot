@@ -159,6 +159,27 @@ void ext2_listdir(struct ext2_fs* fs, struct ext2_inode* inode)
     kfree(dirent);
 }
 
+uint32_t get_dir(struct ext2_fs* fs, struct ext2_inode* inode, const char* name)
+{
+    struct ext2_dir_entry* dirent = kalloc(inode->size_lo);
+    read_inode_data(fs, inode, 0, inode->size_lo, dirent);
+
+    struct ext2_dir_entry* current = dirent;
+    uint32_t num = -1;
+    uint32_t size = 0;
+    while (size < inode->size_lo) {
+        if (strcmp(name, &current->first_name_char) == 0) {
+            num = current->inode;
+            break;
+        }
+        size += current->size;
+        current =  (void*)current + current->size;        
+    }
+
+    kfree(dirent);
+    return num;
+}
+
 struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
 {
     struct ext2_fs* fs = kallocz(sizeof(struct ext2_fs));

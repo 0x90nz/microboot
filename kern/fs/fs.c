@@ -67,3 +67,35 @@ void fs_get_root(fs_t* fs, fs_dir_t* dir)
         break;
     }
 }
+
+fs_dir_t* fs_traverse(fs_t* fs, const char* path)
+{
+    size_t len = strlen(path) * sizeof(char) + 1;
+    char* buffer = kallocz(len + 2);
+    memcpy(buffer, path, len);
+
+    int count = 1;
+    char* token = strtok(buffer, FS_PATH_SEPARATOR);
+    while (strtok(NULL, FS_PATH_SEPARATOR) != NULL) { count++; }
+
+    char** parts = kalloc(sizeof(char*) * count);
+
+    char* tmp = token;
+    for (int i = 0; i < count; i++) {
+        parts[i] = tmp;
+        tmp += strlen(tmp) + 1;
+    }
+
+    fs_dir_t* current = kalloc(sizeof(fs_dir_t));
+    fs_get_root(fs, current);
+
+    for (int i = 0; i < count; i++) {
+        
+    }
+
+    kfree(current);
+    kfree(parts);
+    kfree(buffer);
+
+    return NULL;
+}
