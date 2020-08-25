@@ -121,12 +121,17 @@ void dino(int argc, char** argv)
 
 void help(int argc, char** argv)
 {
-    puts("uptime    - display uptime in seconds\n");
-    puts("clear     - clear the display\n");
-    puts("clock     - updating clock demo\n");
-    puts("setcolour - set the display colour\n");
-    puts("scancode  - display raw scancodes\n");
-    puts("help      - this help message\n");
+    puts("uptime      - display uptime in seconds\n");
+    puts("clear       - clear the display\n");
+    puts("clock       - updating clock demo\n");
+    puts("setcolour   - set the display colour\n");
+    puts("listcolours - list all available colours\n");
+    puts("scancode    - display raw scancodes\n");
+    puts("verb        - set log verbosity\n");
+    puts("hdisk       - show the root disk number\n");
+    puts("ls          - list the current directory [WIP]\n");
+    puts("pwd         - print the working directory [WIP]\n");
+    puts("help        - this help message\n");
 }
 
 void scancode(int argc, char** argv)
