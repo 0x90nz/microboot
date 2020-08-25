@@ -3,8 +3,7 @@
 #include "../stdlib.h"
 #include "../io/pio.h"
 
-idt_entry_t idt[INTR_COUNT];
-
+idt_entry_t idt[INTR_COUNT] __attribute__((aligned(8)));
 
 /**
  * Interrupt Handlers:
@@ -76,12 +75,11 @@ void dump_regs(intr_frame_t* frame)
 void exception(intr_frame_t* frame)
 {
     printf("\n!!! Unhandled interrupt [%s] !!!\n", 
-        frame->int_no < 22 ? exception_names[frame->int_no] : "int");
-    if (frame->int_no < 21)
-        
-    printf("int num: %d, err code: %08x\n", frame->int_no, frame->err_code);
-    dump_regs(frame);
+        frame->int_no < 22 ? exception_names[frame->int_no] : "no name");
 
+    printf("int num: %d, err code: %08x\n", frame->int_no, frame->err_code);
+
+    dump_regs(frame);
     hang();
 }
 
@@ -119,7 +117,8 @@ void do_nothing(uint32_t int_no, uint32_t err_no) {}
 
 void interrupts_init()
 {
-    interrupts_pic_init();
+    asm("cli");
+    disable_pic();
 
     for (int i = 0; i < INTR_COUNT; i++)
     {
@@ -132,6 +131,8 @@ void interrupts_init()
     // timer is probably already running
     register_handler(IRQ_TO_INTR(0), do_nothing);
     register_ll_handler(3, dump_regs);
+
+    interrupts_pic_init();
 
     idt_descriptor_t descriptor = { sizeof(idt) - 1, (uint32_t)idt };
     asm volatile("lidt %0; sti" :: "m" (descriptor));

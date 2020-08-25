@@ -65,6 +65,41 @@ int atoi(const char* str)
     return neg_flag ? n : -n;
 }
 
+char* strtok(char* str, const char* delim)
+{
+    static char* buf;
+    static int last = 0;
+    if(str != NULL) { buf = str; last = 0; }
+    if(buf == NULL || buf[0] == '\0' || last) return NULL;
+
+    char *ret = buf, *b;
+    const char *d;
+ 
+    for(b = buf; *b !='\0'; b++) {
+        for(d = delim; *d != '\0'; d++) {
+            if(*b == *d) {
+                *b = '\0';
+                buf = b+1;
+                if(b == ret) { 
+                    ret++; 
+                    continue; 
+                }
+                return ret;
+            }
+        }
+    }
+
+    last = 1;
+    return buf;
+}
+
+size_t strlen(const char* str)
+{
+    size_t len = 0;
+    while (*str++) len++;
+    return len;
+}
+
 void puts(const char* str)
 {
     vga_puts(str);

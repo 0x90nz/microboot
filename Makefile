@@ -44,13 +44,13 @@ run: image
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap
 
-debug: CFLAGS += -g
+# debug: CFLAGS += -g
 debug: image
 	qemu-system-i386 \
 		-drive format=raw,file=build/microboot.img,index=0 \
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
-		-object filter-dump,id=id,netdev=n1,file=out.pcap -s -S &
+		-object filter-dump,id=id,netdev=n1,file=out.pcap -s -S -d cpu_reset &
 	konsole -e "gdb -ex 'target remote localhost:1234'"
 
 clean:

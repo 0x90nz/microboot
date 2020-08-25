@@ -5,10 +5,6 @@
 # an array of addresses to the interrup handlers, so we can just loop through
 # them instead to needing to explicitly refer to each in the C file
 
-.data
-.global interrupts_stubs
-interrupts_stubs:
-
 .macro IRQ num exnum
 .text
 .global irq\num
@@ -46,6 +42,7 @@ exception\num\():
 
 .text
 .extern interrupts_handle_int
+.global call_int_handle
 call_int_handle:
     pushl   %esp
     pushl   %eax
@@ -88,6 +85,10 @@ call_int_handle:
     sti
     iret
 
+.align 32
+.data
+.global interrupts_stubs
+interrupts_stubs:
 EXC 0
 EXC 1
 EXC 2
@@ -109,7 +110,7 @@ EXC_ERR 17
 EXC 18
 EXC 19
 EXC 20
-EXC_ERR 21
+EXC 21
 EXC 22
 EXC 23
 EXC 24
@@ -118,7 +119,7 @@ EXC 26
 EXC 27
 EXC 28
 EXC 29
-EXC_ERR 30
+EXC 30
 EXC 31
 
 IRQ 0, 32
