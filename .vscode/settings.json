@@ -10,5 +10,6 @@
         "valarray": "c",
         "system_error": "c",
         "tuple": "c"
-    }
+    },
+    "cSpell.language": "en-GB"
 }

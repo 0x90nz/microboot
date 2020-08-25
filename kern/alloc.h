@@ -12,6 +12,7 @@ void kdumpmm();
 void* krealloc(void* ptr, size_t new_size);
 
 #define MEM_BLOCK_MAGIC         0xbadbaddd
+#define ALIGNMENT       64
 
 enum mem_block_state {
     MEM_STATE_USED,
