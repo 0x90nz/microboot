@@ -20,7 +20,7 @@ char current_dir[256];
 
 typedef struct {
     const char* name;
-    void (*fn)(void);
+    void (*fn)(int, char**);
 } command_t;
 
 const char* colours[] = {
@@ -52,30 +52,38 @@ int colour_from_str(const char* str)
     return 0;
 }
 
-void uptime()
+void uptime(int argc, char** argv)
 {
     printf("Up approximately %d.%d seconds\n", ticks / 100, ticks % 100);
 }
 
-void clear()
+void clear(int argc, char** argv)
 {
     vga_init(colour);
 }
 
-void setcolour()
+void setcolour(int argc, char** argv)
 {
-    puts("fg: ");
-    gets(main_scratch);
-    uint8_t fg = colour_from_str(main_scratch);
-    puts("bg: ");
-    gets(main_scratch);
-    uint8_t bg = colour_from_str(main_scratch);
+    if (argc != 3) {
+        printf("Usage: %s fg_colour bg_colour\n", argv[0]);
+        return;
+    }
+
+    uint8_t fg = colour_from_str(argv[1]);
+    uint8_t bg = colour_from_str(argv[2]);
 
     colour = vga_colour(fg, bg);
     vga_init(colour);
 }
 
-void clock()
+void listcolours(int argc, char** argv)
+{
+    for (int i = 0; i < sizeof(colours) / sizeof(colours[0]); i++) {
+        printf("%s\n", colours[i]);
+    }
+}
+
+void clock(int argc, char** argv)
 {
     while (1)
     {
@@ -91,7 +99,7 @@ void clock()
     puts("\n");
 }
 
-void dino()
+void dino(int argc, char** argv)
 {
     puts("                         .       .\n");
     puts("                        / `.   .' \\\n");
@@ -111,7 +119,7 @@ void dino()
     puts("              '---.o___,'       .o___,'\n");
 }
 
-void help()
+void help(int argc, char** argv)
 {
     puts("uptime    - display uptime in seconds\n");
     puts("clear     - clear the display\n");
@@ -121,7 +129,7 @@ void help()
     puts("help      - this help message\n");
 }
 
-void scancode()
+void scancode(int argc, char** argv)
 {
     puts("esc to exit\n");
     while (1)
@@ -135,27 +143,28 @@ void scancode()
     }
 }
 
-void verb()
+void verb(int argc, char** argv)
 {
-    printf("Current log level is: %d, enter new level: ", get_log_level());
-    gets(main_scratch);
-    int level = atoi(main_scratch);
-    set_log_level(level);
+    if (argc != 2) {
+        printf("Usage: %s log_level\n", argv[0]);
+        return;
+    }
 
-    logf(LOG_INFO, "Log level set to %d", level);
+    int level = atoi(argv[1]);
+    set_log_level(level);
 }
 
-void brk()
+void brk(int argc, char** argv)
 {
 	asm("int $3");
 }
 
-void hdisk()
+void hdisk(int argc, char** argv)
 {
     printf("Root disk @ %02x\n", *env_get("root", uint16_t*));
 }
 
-void ls()
+void ls(int argc, char** argv)
 {
     fs_t* fs = env_get("rootfs", fs_t*);
     if (fs) {
@@ -163,12 +172,12 @@ void ls()
     }
 }
 
-void pwd()
+void pwd(int argc, char** argv)
 {
     printf("%s\n", current_dir);
 }
 
-void ldprg()
+void ldprg(int argc, char** argv)
 {
     char csz[4];
     serial_clear_input();
@@ -184,11 +193,20 @@ void ldprg()
     printf("program exited with status %d\n", ret);
 }
 
+void echo(int argc, char** argv)
+{
+    for (int i = 1; i < argc - 1; i++) {
+        printf("%s ", argv[i]);
+    }
+    printf("%s\n", argv[argc - 1]);
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
     {"clock", clock},
     {"setcolour", setcolour},
+    {"listcolours", listcolours},
     {"dino", dino},
     {"scancode", scancode},
     {"verb", verb},
@@ -197,9 +215,9 @@ command_t commands[] = {
     {"ldprg", ldprg},
     {"ls", ls},
     {"pwd", pwd},
+    {"echo", echo},
     {"help", help}
 };
-
 
 void set_timer_reload(uint16_t reload)
 {
@@ -231,12 +249,24 @@ void main()
         
         if (*cmdbuf)
         {
+            int argc = 1;
+            char* token = strtok(cmdbuf, " ");
+            while (strtok(NULL, " ") != NULL) { argc++; }
+
+            char** argv = kalloc(sizeof(char*) * argc);
+
+            char* tmp = token;
+            for (int i = 0; i < argc; i++) {
+                argv[i] = tmp;
+                tmp += strlen(tmp) + 1;
+            }
+
             int found = 0;
             for (int i = 0; i < sizeof(commands) / sizeof(command_t); i++)
             {
-                if (strcmp(commands[i].name, cmdbuf) == 0)
+                if (strcmp(commands[i].name, token) == 0)
                 {
-                    commands[i].fn();
+                    commands[i].fn(argc, argv);
                     found = 1;
                     break;
                 }

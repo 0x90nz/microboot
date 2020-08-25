@@ -15,11 +15,11 @@ SECTIONS
 	_kload_addr = 0x01000000;
 	. = _kload_addr;
 
-	.text  : AT(ADDR(.text) - _kload_addr + _low_end) { *(.text) }
-	.rodata : { *(.rodata) }
-	.data : { *(.data) }
+	.text ALIGN(4K) :  AT(ADDR(.text) - _kload_addr + _low_end) { *(.text) }
+	.rodata ALIGN(4K) :  { *(.rodata) }
+	.data ALIGN(4K) : { *(.data) }
 	_kend = .;
-	.bss : { *(COMMON) *(.bss) }
+	.bss ALIGN(4K) : { *(COMMON) *(.bss) }
 	_kbss_end = .;
 
 	_kphys_addr = LOADADDR(.text);

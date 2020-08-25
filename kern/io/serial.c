@@ -16,6 +16,7 @@ static uint8_t in_base_buffer[SP_BUFFER_SIZE];
 static uint8_t out_base_buffer[SP_BUFFER_SIZE];
 
 static int force_tx = 0;
+static int setup = 0;
 
 static void serial_handle_irq(uint32_t int_no, uint32_t err_no)
 {
@@ -77,6 +78,8 @@ void serial_init(uint16_t port)
     outb(port + 2, 0xc7);       // Enable FIFO, clear and set 14-byte thresh
     outb(port + 4, 0x0b);       // Enable IRQs
     outb(port + 1, 0x07);
+
+    setup = 1;
 }
 
 void serial_clear_input()
@@ -96,10 +99,12 @@ static inline int serial_tx_empty()
 
 void serial_putc(char c)
 {
-    ringbuffer_put(&out_buffer, c);
-    // Ugly hack. See `serial_handle_irq` for details. Replace at some point
-    asm("int $36");
-    force_tx = 1;
+    if (setup) {
+        ringbuffer_put(&out_buffer, c);
+        // Ugly hack. See `serial_handle_irq` for details. Replace at some point
+        asm("int $36");
+        force_tx = 1;
+    }
 }
 
 char serial_getc()
