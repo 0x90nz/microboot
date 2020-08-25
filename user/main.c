@@ -206,6 +206,16 @@ void echo(int argc, char** argv)
     printf("%s\n", argv[argc - 1]);
 }
 
+void pathtest(int argc, char** argv)
+{
+    if (argc == 2) {
+        fs_t* fs = env_get("rootfs", fs_t*);
+        if (fs) {
+            fs_traverse(fs, argv[1]);
+        }
+    }
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
@@ -221,6 +231,7 @@ command_t commands[] = {
     {"ls", ls},
     {"pwd", pwd},
     {"echo", echo},
+    {"pathtest", pathtest},
     {"help", help}
 };
 

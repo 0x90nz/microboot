@@ -21,3 +21,7 @@ typedef struct fs {
 } fs_t;
 
 void fs_list_dir(fs_t* fs, fs_dir_t* dir);
+fs_dir_t* fs_traverse(fs_t* fs, const char* path);
+
+#define FS_PATH_SEPARATOR       "/"
+#define FS_PATH_SEPARATOR_CHAR  '/'
