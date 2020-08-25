@@ -79,7 +79,30 @@ void* kalloc(size_t size)
     return next->addr;
 }
 
-void* kcalloc(size_t size)
+/**
+ * Attempt to resize memory. If the memory is too small to contain the new size
+ * requested then the memory will be copied and the old pointer freed.
+ */ 
+void* krealloc(void* ptr, size_t new_size)
+{
+    ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to realloc invalid address");
+    mem_block_t* block = ptr - sizeof(mem_block_t);
+    
+    if (new_size < block->size) {
+        block->size = new_size;
+        return ptr;
+    } else {
+        void* new_block = kalloc(new_size);
+        memcpy(new_block, ptr, block->size);
+        kfree(ptr);
+        return new_block;
+    }
+}
+
+/**
+ * Allocate memory and clear it before returning the pointer
+ */ 
+void* kallocz(size_t size)
 {
     void* data = kalloc(size);
     memset(data, 0, size);

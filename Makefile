@@ -35,11 +35,12 @@ stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
 
 # Load program with `netcat localhost 1234 < loadable.bin 
+# and replace `-serial ...` with `-serial tcp::1234,server,nowait \`
 
 run: image
 	qemu-system-i386 \
 		-drive format=raw,file=build/microboot.img,index=0 \
-		-serial tcp::1234,server,nowait \
+		-serial stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap
 

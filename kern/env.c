@@ -7,7 +7,7 @@ static int item_count;
 
 void env_init()
 {
-    items = kcalloc(sizeof(env_item_t) * 5);
+    items = kallocz(sizeof(env_item_t) * 5);
     item_count = 0;
 }
 

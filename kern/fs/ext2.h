@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#define EXT2_ENABLE
 
 // Extended information. Missing journal support
 struct ext2_extended {
@@ -60,6 +61,8 @@ enum ext2_state {
     EXT2_ERRORS = 2,
 };
 
+#define EXT2_DIRECT_BLOCKS      12
+
 struct ext2_inode {
     uint16_t type_and_perms;
     uint16_t uid;
@@ -73,7 +76,7 @@ struct ext2_inode {
     uint32_t sectors_used;
     uint32_t flags;
     uint32_t osv1;
-    uint32_t direct_ptr[12];
+    uint32_t direct_ptr[EXT2_DIRECT_BLOCKS];
     uint32_t singly_indirect_ptr;
     uint32_t doubly_indirect_ptr;
     uint32_t triply_indirect_ptr;
@@ -124,8 +127,8 @@ struct ext2_fs {
     uint32_t inodes_per_group;
     struct ext2_superblock* sb;
     struct ext2_bgd* bgd_table;
+    struct ext2_inode* root_inode;
 };
 
-#define EXT2_DIRECT_BLOCKS      12
-
-void ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors);
+struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors);
+void ext2_listdir(struct ext2_fs* fs, struct ext2_inode* inode);

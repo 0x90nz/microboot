@@ -6,6 +6,7 @@
 #include <io/serial.h>
 #include <io/keyboard.h>
 #include <io/ioutil.h>
+#include <fs/fs.h>
 #include <kernel.h>
 #include <env.h>
 #include <stddef.h>
@@ -15,6 +16,7 @@
 uint16_t colour;
 int ticks;
 char main_scratch[64];
+char current_dir[256];
 
 typedef struct {
     const char* name;
@@ -153,6 +155,19 @@ void hdisk()
     printf("Root disk @ %02x\n", *env_get("root", uint16_t*));
 }
 
+void ls()
+{
+    fs_t* fs = env_get("rootfs", fs_t*);
+    if (fs) {
+        fs_list_dir(fs, fs->root_dir);
+    }
+}
+
+void pwd()
+{
+    printf("%s\n", current_dir);
+}
+
 void ldprg()
 {
     char csz[4];
@@ -161,7 +176,7 @@ void ldprg()
     uint32_t* size = (uint32_t*)csz;
 
     printf("file size: %d bytes\n", *size);
-    char* program = 0x7e00;
+    char* program = (char*)0x7e00;
     fill_buffer(serial_getc, program, *size);
 
     int (*entry)(void) = (int (*)(void)) program;
@@ -180,6 +195,8 @@ command_t commands[] = {
     {"brk", brk},
     {"hdisk", hdisk},
     {"ldprg", ldprg},
+    {"ls", ls},
+    {"pwd", pwd},
     {"help", help}
 };
 

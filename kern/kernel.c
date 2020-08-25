@@ -93,7 +93,8 @@ void syscall_puts(uint32_t* args)
 
 void kernel_late_init()
 {
-    fs_init(sinfo.drive_number);
+    fs_t* fs = fs_init(sinfo.drive_number);
+    env_put("rootfs", fs);
 
     extern int main();
     main();
