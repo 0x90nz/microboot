@@ -1,3 +1,8 @@
+/**
+ * @file ext2.c
+ * @brief Read-only support for an ext2 filesystem
+ */
+
 #include "ext2.h"
 #include "../stdlib.h"
 #include "../alloc.h"
@@ -5,6 +10,13 @@
 
 #ifdef EXT2_ENABLE
 
+/**
+ * @brief Read a single block from an ext2 filesystem
+ * 
+ * @param fs the filesystem
+ * @param block the block number
+ * @param buffer the buffer to read into
+ */
 void read_block(struct ext2_fs* fs, uint32_t block, void* buffer)
 {
     uint32_t sectors_per_block = fs->block_size / 512;
@@ -17,8 +29,12 @@ void read_block(struct ext2_fs* fs, uint32_t block, void* buffer)
 }
 
 /**
- * Read the inode metadata for a given inode index (starts from 1!)
- */ 
+ * @brief Read the inode metadata for a given inode index, 1 indexed
+ * 
+ * @param fs the filesystem
+ * @param inode the inode to read data into
+ * @param inode_num the inode number to read from
+ */
 void read_inode(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t inode_num)
 {
     // The group to which this inode belongs
@@ -50,7 +66,7 @@ void read_inode(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t inode_num
  * index of the block as it is on disk). Note: triply indirect references will
  * cause 3 reads! This could get slow if used too often
  */ 
-uint32_t disk_block_num(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t iblock)
+static uint32_t disk_block_num(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t iblock)
 {
     uint32_t* tmp = kalloc(fs->block_size);
     uint32_t ret = -1;
@@ -97,10 +113,15 @@ cleanup:
 }
 
 /**
- * Read the actual data for a given inode.
+ * @brief Read data from a given inode
  * 
- * Note: `offset` refers to the offset within the file
- */ 
+ * @param fs the filesystem
+ * @param inode the inode to read from
+ * @param offset the offset within the data to read from
+ * @param size the size of data to read
+ * @param buffer the buffer to read into
+ * @return uint32_t the number of bytes read
+ */
 uint32_t read_inode_data(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t offset, uint32_t size, void* buffer)
 {
     // Limit the end offset we want to read to the length of the inode if it
@@ -143,6 +164,12 @@ uint32_t read_inode_data(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t 
     return end_off - offset;
 }
 
+/**
+ * @brief List a directory
+ * 
+ * @param fs the filesystem
+ * @param inode the directory inode
+ */
 void ext2_listdir(struct ext2_fs* fs, struct ext2_inode* inode)
 {
     struct ext2_dir_entry* dirent = kalloc(inode->size_lo);
@@ -159,6 +186,14 @@ void ext2_listdir(struct ext2_fs* fs, struct ext2_inode* inode)
     kfree(dirent);
 }
 
+/**
+ * @brief get the inode number of a file within a directory
+ * 
+ * @param fs the filesystem
+ * @param inode the inode number of the directory
+ * @param name the name of the file
+ * @return uint32_t the inode number of the file within the directory
+ */
 uint32_t get_dir(struct ext2_fs* fs, struct ext2_inode* inode, const char* name)
 {
     struct ext2_dir_entry* dirent = kalloc(inode->size_lo);
@@ -180,6 +215,19 @@ uint32_t get_dir(struct ext2_fs* fs, struct ext2_inode* inode, const char* name)
     return num;
 }
 
+uint32_t ext2_find_file(struct ext2_fs* fs, const char* fname, struct ext2_inode* inode)
+{
+
+}
+
+/**
+ * @brief Initialise the ext2 filesystem
+ * 
+ * @param drive_num the bios drive number (e.g. 0x80 for the first disk)
+ * @param start_lba the start lba of the ext2 partition
+ * @param num_sectors the number of sectors for the whole filesystem
+ * @return struct ext2_fs* a pointer to filesystem info
+ */
 struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors)
 {
     struct ext2_fs* fs = kallocz(sizeof(struct ext2_fs));
