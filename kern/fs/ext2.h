@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "fs.h"
 #define EXT2_ENABLE
 
 // Extended information. Missing journal support
@@ -131,4 +132,4 @@ struct ext2_fs {
 };
 
 struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_sectors);
-void ext2_listdir(struct ext2_fs* fs, struct ext2_inode* inode);
+const fs_ops_t* ext2_get_ops();

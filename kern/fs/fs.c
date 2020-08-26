@@ -24,9 +24,8 @@ struct fs* fs_init(uint8_t drive_num)
             );
 
             fs->type = FS_EXT2;
-            fs->root_dir = kalloc(sizeof(struct fs_dir));
-            fs->root_dir->_internal_dir = efs->root_inode;
-            fs->_internal_fs = efs;
+            fs->fs_priv = efs;
+            fs->ops = ext2_get_ops();
 #endif
         }
     }
@@ -36,39 +35,32 @@ struct fs* fs_init(uint8_t drive_num)
     return fs;
 }
 
-void fs_list_dir(fs_t* fs, fs_dir_t* dir)
+void fs_list_dir(fs_t* fs, fs_dir_t dir)
 {
-    switch (fs->type) {
-    case FS_EXT2:
-        ext2_listdir(
-            (struct ext2_fs*)fs->_internal_fs, 
-            (struct ext2_inode*)dir->_internal_dir
-        );
-        break;
-
-    case FS_INVALID:
-    default:
-        break;
-    }
+    fs->ops->ls(fs, dir);
 }
 
-void fs_get_root(fs_t* fs, fs_dir_t* dir)
+const fs_dir_t fs_get_root(fs_t* fs)
 {
-    switch (fs->type) {
-    case FS_EXT2:
-    {
-        struct ext2_fs* efs = (struct ext2_fs*)fs->_internal_fs;
-        dir->_internal_dir = efs->root_inode;
-        break;
-    }
-
-    default:
-    case FS_INVALID:
-        break;
-    }
+    return fs->ops->get_root(fs);
 }
 
-fs_dir_t* fs_traverse(fs_t* fs, const char* path)
+uint32_t fs_fsize(fs_t* fs, fs_file_t file)
+{
+    return fs->ops->fsize(fs, file);
+}
+
+fs_file_t fs_getfile(fs_t* fs, fs_dir_t dir, const char* name)
+{
+    return fs->ops->getfile(fs, dir, name);
+}
+
+uint32_t fs_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* buffer)
+{
+    return fs->ops->read(fs, file, offset, size, buffer);
+}
+
+const fs_dir_t fs_traverse(fs_t* fs, const char* path)
 {
     size_t len = strlen(path) * sizeof(char) + 1;
     char* buffer = kallocz(len + 2);
@@ -86,14 +78,12 @@ fs_dir_t* fs_traverse(fs_t* fs, const char* path)
         tmp += strlen(tmp) + 1;
     }
 
-    fs_dir_t* current = kalloc(sizeof(fs_dir_t));
-    fs_get_root(fs, current);
+    fs_dir_t root = fs_get_root(fs);
 
     for (int i = 0; i < count; i++) {
         
     }
 
-    kfree(current);
     kfree(parts);
     kfree(buffer);
 

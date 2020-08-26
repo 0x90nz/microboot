@@ -131,6 +131,7 @@ void help(int argc, char** argv)
     puts("hdisk       - show the root disk number\n");
     puts("ls          - list the current directory [WIP]\n");
     puts("pwd         - print the working directory [WIP]\n");
+    puts("cat         - print out the contents of a file [WIP]\n");
     puts("help        - this help message\n");
 }
 
@@ -173,13 +174,37 @@ void ls(int argc, char** argv)
 {
     fs_t* fs = env_get("rootfs", fs_t*);
     if (fs) {
-        fs_list_dir(fs, fs->root_dir);
+        fs_list_dir(fs, fs_get_root(fs));
     }
 }
 
 void pwd(int argc, char** argv)
 {
     printf("%s\n", current_dir);
+}
+
+void cat(int argc, char** argv)
+{
+    if (argc != 2) {
+        printf("Usage: %s file_name\n", argv[0]);
+        return;
+    }
+
+    fs_t* fs = env_get("rootfs", fs_t*);
+    if (fs) {
+        fs_dir_t root = fs_get_root(fs);
+        fs_file_t file = fs_getfile(fs, root, argv[1]);
+        if (file) {
+            uint32_t fsize = fs_fsize(fs, file);
+            char* c = kallocz(fsize + 1);
+            fs_read(fs, file, 0, fsize, c);
+            printf("%s\n", c);
+            kfree(c);
+            kfree(file);
+        } else {
+            printf("No such file: %s\n", argv[1]);
+        }
+    }
 }
 
 void ldprg(int argc, char** argv)
@@ -229,6 +254,7 @@ command_t commands[] = {
     {"hdisk", hdisk},
     {"ldprg", ldprg},
     {"ls", ls},
+    {"cat", cat},
     {"pwd", pwd},
     {"echo", echo},
     {"pathtest", pathtest},

@@ -15,7 +15,7 @@ if $(mkdir mnt) ; then
     LOOP=$(sudo losetup -fP --show "$IMAGE")
     sudo mkfs.ext2 "${LOOP}p1"
     sudo mount "${LOOP}p1" mnt
-    sudo cp -r rootfs mnt
+    sudo cp -r rootfs/* mnt
     sudo umount mnt
     sudo losetup -d "$LOOP"
     rmdir mnt
