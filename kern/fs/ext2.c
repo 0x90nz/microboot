@@ -4,11 +4,14 @@
  */
 
 #include "ext2.h"
+#include "fs.h"
 #include "../stdlib.h"
 #include "../alloc.h"
 #include "../io/bios_drive.h"
 
 #ifdef EXT2_ENABLE
+
+static fs_ops_t ops;
 
 /**
  * @brief Read a single block from an ext2 filesystem
@@ -165,28 +168,6 @@ uint32_t read_inode_data(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t 
 }
 
 /**
- * @brief List a directory
- * 
- * @param fs the filesystem
- * @param inode the directory inode
- */
-void ext2_listdir(struct ext2_fs* fs, struct ext2_inode* inode)
-{
-    struct ext2_dir_entry* dirent = kalloc(inode->size_lo);
-    read_inode_data(fs, inode, 0, inode->size_lo, dirent);
-
-    struct ext2_dir_entry* current = dirent;
-    uint32_t size = 0;
-    while (size < inode->size_lo) {
-        printf("%s\n", &current->first_name_char);
-        size += current->size;
-        current =  (void*)current + current->size;        
-    }
-
-    kfree(dirent);
-}
-
-/**
  * @brief get the inode number of a file within a directory
  * 
  * @param fs the filesystem
@@ -194,7 +175,7 @@ void ext2_listdir(struct ext2_fs* fs, struct ext2_inode* inode)
  * @param name the name of the file
  * @return uint32_t the inode number of the file within the directory
  */
-uint32_t get_dir(struct ext2_fs* fs, struct ext2_inode* inode, const char* name)
+static uint32_t get_filedir(struct ext2_fs* fs, struct ext2_inode* inode, const char* name)
 {
     struct ext2_dir_entry* dirent = kalloc(inode->size_lo);
     read_inode_data(fs, inode, 0, inode->size_lo, dirent);
@@ -215,9 +196,72 @@ uint32_t get_dir(struct ext2_fs* fs, struct ext2_inode* inode, const char* name)
     return num;
 }
 
-uint32_t ext2_find_file(struct ext2_fs* fs, const char* fname, struct ext2_inode* inode)
+static fs_file_t ext2_getfile(fs_t* fs, fs_dir_t dir, const char* name)
 {
+    ASSERT(fs && fs->fs_priv && dir, "Null fs or dir");
 
+    struct ext2_fs* efs = (struct ext2_fs*)fs->fs_priv;
+    struct ext2_inode* search_inode = (struct ext2_inode*)dir;
+
+    uint32_t inode_num = get_filedir(efs, search_inode, name);
+
+    if (inode_num != -1) {
+        struct ext2_inode* tmp = kalloc(sizeof(struct ext2_inode));
+        read_inode(efs, tmp, inode_num);
+        return tmp;   
+    }
+
+    return NULL;
+}
+
+static uint32_t ext2_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* buffer)
+{
+    ASSERT(fs && fs->fs_priv && file, "Null fs or file");
+
+    struct ext2_fs* efs = (struct ext2_fs*)fs->fs_priv;
+    struct ext2_inode* inode = (struct ext2_inode*)file;
+
+    return read_inode_data(efs, inode, offset, size, buffer);
+}
+
+static uint32_t ext2_fsize(fs_t* fs, fs_file_t file)
+{
+    ASSERT(fs && fs->fs_priv && file, "Null fs or file");
+
+    struct ext2_inode* inode = (struct ext2_inode*)file;
+    return inode->size_lo;
+}
+
+static void ext2_ls(fs_t* fs, fs_dir_t dir)
+{
+    ASSERT(fs && dir, "Null fs or dir");
+
+    struct ext2_fs* efs = (struct ext2_fs*)fs->fs_priv;
+    struct ext2_inode* inode = (struct ext2_inode*)dir;
+
+    struct ext2_dir_entry* dirent = kalloc(inode->size_lo);
+    read_inode_data(efs, inode, 0, inode->size_lo, dirent);
+
+    struct ext2_dir_entry* current = dirent;
+    uint32_t size = 0;
+    while (size < inode->size_lo) {
+        printf("%s\n", &current->first_name_char);
+        size += current->size;
+        current =  (void*)current + current->size;        
+    }
+
+    kfree(dirent);
+}
+
+static fs_dir_t get_root(fs_t* fs)
+{
+    struct ext2_fs* efs = (struct ext2_fs*)fs->fs_priv;
+    return efs->root_inode;
+}
+
+const fs_ops_t* ext2_get_ops()
+{
+    return &ops;
 }
 
 /**
@@ -267,6 +311,12 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
 
     fs->root_inode = kallocz(sizeof(struct ext2_inode));
     read_inode(fs, fs->root_inode, 2);
+
+    ops.get_root = get_root;
+    ops.ls = ext2_ls;
+    ops.read = ext2_read;
+    ops.fsize = ext2_fsize;
+    ops.getfile = ext2_getfile;
 
     return fs;
 }
