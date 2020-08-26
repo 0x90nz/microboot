@@ -139,8 +139,8 @@ buffer equ 07e00h
 kern_start equ 07e02h
 disk_num: db 0
 
-# The disk address packet structure that is required for
-# int 13h ah=42h
+; The disk address packet structure that is required for
+; int 13h ah=42h
 dsk_addr:
 db 10h
 db 0
@@ -149,13 +149,9 @@ dsk_buf dd 0
 dsk_lo_lba dd 0
 dsk_hi_lba dd 0
 
-# The starting **logical block** of the kernel on disk
+; The starting **logical block** of the kernel on disk
 kimage_start dw 1
 
 msg db `Loading binary\r\n`, 0
 verinfo db `\xe6boot v0.1.0\r\n`,0
 s2msg db `Entering second stage\r\n`, 0
-
-; Boot signature and padding
-; times	510-($-$$) db 0
-; dw 0xaa55
