@@ -1,3 +1,8 @@
+/**
+ * @file fs.c
+ * @brief provides a filesystem independent interface for disk operations
+ */
+
 #include "fs.h"
 #include "mbr.h"
 #include "ext2.h"
@@ -6,6 +11,12 @@
 
 #include "../stdlib.h"
 
+/**
+ * @brief Initialise a filesystem. Currently only supports one ext2 partition
+ * 
+ * @param drive_num the drive number to search for the filesystem on
+ * @return struct fs* the filesystem which was found on that drive
+ */
 struct fs* fs_init(uint8_t drive_num)
 {
     struct mbr_sector* bootsect = kalloc(512);
@@ -35,31 +46,77 @@ struct fs* fs_init(uint8_t drive_num)
     return fs;
 }
 
+/**
+ * @brief List the contents of the provided directory
+ * 
+ * @param fs the filesystem
+ * @param dir the directory to list
+ */
 void fs_list_dir(fs_t* fs, fs_dir_t dir)
 {
     fs->ops->ls(fs, dir);
 }
 
+/**
+ * @brief Get the root directory of a filesystem
+ * 
+ * @param fs the filesystem
+ * @return const fs_dir_t the root directory **do not** attempt to free this pointer
+ */
 const fs_dir_t fs_get_root(fs_t* fs)
 {
     return fs->ops->get_root(fs);
 }
 
+/**
+ * @brief Get the size (in bytes) of a given file
+ * 
+ * @param fs the filesystem
+ * @param file the file
+ * @return uint32_t the size of the file in bytes
+ */
 uint32_t fs_fsize(fs_t* fs, fs_file_t file)
 {
     return fs->ops->fsize(fs, file);
 }
 
+/**
+ * @brief Get a file which resides within the given directory
+ * 
+ * @param fs the filesystem
+ * @param dir the directory in which the file is
+ * @param name the name of the file
+ * @return fs_file_t the file, this should be freed once no longer needed
+ */
 fs_file_t fs_getfile(fs_t* fs, fs_dir_t dir, const char* name)
 {
     return fs->ops->getfile(fs, dir, name);
 }
 
+/**
+ * @brief Read data from a given file
+ * 
+ * @param fs the filesystem
+ * @param file the file to read from
+ * @param offset the offset (in bytes) from the start of the file at which
+ * reading should begin
+ * @param size the size (in bytes) to read
+ * @param buffer the buffer into which the data should be read
+ * @return uint32_t the number of bytes actually read
+ */
 uint32_t fs_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* buffer)
 {
     return fs->ops->read(fs, file, offset, size, buffer);
 }
 
+/**
+ * @brief Traverse a path from the root directory to a directory
+ * @warning This function is a work in progress. Do not expect it to work
+ * 
+ * @param fs the filesystem
+ * @param path the path to traverse
+ * @return const fs_dir_t the final directory of the traversed path
+ */
 const fs_dir_t fs_traverse(fs_t* fs, const char* path)
 {
     size_t len = strlen(path) * sizeof(char) + 1;
