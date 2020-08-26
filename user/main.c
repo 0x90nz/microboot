@@ -207,22 +207,6 @@ void cat(int argc, char** argv)
     }
 }
 
-void ldprg(int argc, char** argv)
-{
-    char csz[4];
-    serial_clear_input();
-    fill_buffer(serial_getc, csz, 4);
-    uint32_t* size = (uint32_t*)csz;
-
-    printf("file size: %d bytes\n", *size);
-    char* program = (char*)0x7e00;
-    fill_buffer(serial_getc, program, *size);
-
-    int (*entry)(void) = (int (*)(void)) program;
-    int ret = entry();
-    printf("program exited with status %d\n", ret);
-}
-
 void echo(int argc, char** argv)
 {
     for (int i = 1; i < argc - 1; i++) {
@@ -252,7 +236,6 @@ command_t commands[] = {
     {"verb", verb},
     {"brk", brk},
     {"hdisk", hdisk},
-    {"ldprg", ldprg},
     {"ls", ls},
     {"cat", cat},
     {"pwd", pwd},
