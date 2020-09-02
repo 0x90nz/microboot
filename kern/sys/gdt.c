@@ -19,13 +19,15 @@ static struct gdt_entry gdt[] = {
 
 // Create a buffer for our GDT. It is 8-byte aligned as per vol3 3.5.1 intel
 // developer manual
-uint8_t gdt_buffer[(sizeof(gdt) / sizeof(struct gdt_entry)) * 8] __attribute__((aligned(8)));
+static uint8_t gdt_buffer[(sizeof(gdt) / sizeof(struct gdt_entry)) * 8] __attribute__((aligned(8)));
+static struct gdt_ptr pointer __attribute__((aligned(8)));
 
-__attribute__((naked)) static void load_gdt(struct gdt_ptr* gdt)
+static void load_gdt(struct gdt_ptr* gdt)
 {
-    asm("mov    4(%esp), %eax");
+    asm("cli");
+    asm("mov %0, %%eax" :: "m" (gdt));
     asm("lgdt   (%eax)");
-    asm("ret");
+    asm("sti");
 }
 
 /**
@@ -68,9 +70,7 @@ static void encode()
 void gdt_init()
 {
     encode();
-    struct gdt_ptr pointer;
     pointer.base = (uint32_t)gdt_buffer;
     pointer.limit = sizeof(gdt_buffer) - 1;
-    debugf("Loaded GDT at %08x with %d entries", gdt_buffer, sizeof(gdt) / sizeof(struct gdt_entry));
     load_gdt(&pointer);
 }
