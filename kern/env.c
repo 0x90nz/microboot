@@ -7,22 +7,23 @@
 #include "alloc.h"
 #include "stdlib.h"
 
-static env_item_t* items;
-static int item_count;
 
 /**
  * @brief Initialise the environment
  */
-void env_init()
+env_t* env_init()
 {
-    items = kallocz(sizeof(env_item_t) * 5);
-    item_count = 0;
+    env_t* env = kallocz(sizeof(env_t));
+    env->current = 0;
+    env->max = ENV_SIZE;
+    env->items = kallocz(sizeof(env_item_t) * ENV_SIZE);
+    return env;
 }
 
-static int env_index(const char* key)
+static int env_index(env_t* env, const char* key)
 {
-    for (int i = 0; i < item_count; i++) {
-        if (strcmp(key, items[i].key) == 0) {
+    for (int i = 0; i < env->current; i++) {
+        if (strcmp(key, env->items[i].key) == 0) {
             return i;
         }
     }
@@ -35,15 +36,17 @@ static int env_index(const char* key)
  * @param key the key which the item should be associated with
  * @param value the item
  */
-void env_put(const char* key, void* value)
+void env_put(env_t* env, const char* key, void* value)
 {
-    ASSERT(items, "Trued to 'put' before items was initialised");
-    int index = env_index(key);
+    ASSERT(env, "Trued to 'put' before environment");
+    int index = env_index(env, key);
     if (index != -1) {
-        items[index].value = value;
+        env->items[index].value = value;
     } else {
-        items[item_count].key = key;
-        items[item_count++].value = value;
+        ASSERT(strlen(key) < ENV_KEY_LEN, "Key too long for environment");
+        strcpy(env->items[env->current].key, key);
+        env->items[env->current].value = value;
+        env->current++;
     }
 }
 
@@ -55,12 +58,12 @@ void env_put(const char* key, void* value)
  * @return void* a pointer to the items value. `NULL` if no item with such a
  * name exists
  */
-void* _env_get(const char* key)
+void* _env_get(env_t* env, const char* key)
 {
-    ASSERT(items, "Tried to 'get' before items was initialised");
-    int index = env_index(key);
+    ASSERT(env, "Tried to 'get' before environment was initialised");
+    int index = env_index(env, key);
     if (index != -1) 
-        return items[index].value;
+        return env->items[index].value;
     else
         return NULL;
 }
