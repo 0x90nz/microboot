@@ -26,9 +26,22 @@ char* debug_names[] = {
 static struct kstart_info sinfo;
 static env_t* env;
 
+/**
+ * @brief Hang the system forever. Useful to prevent the system from executing
+ * random code in an error condition
+ */
 void hang() { while (1) { asm("hlt"); } }
+
+/**
+ * @brief Execute the asm 'hlt' instruction once
+ */
 void hlt() { asm("hlt"); }
 
+/**
+ * @brief Get the current value of the esp (stack pointer) register
+ * 
+ * @return uint32_t the value of the esp registers
+ */
 uint32_t get_esp()
 {
     uint32_t esp;
@@ -51,6 +64,12 @@ void display_logo()
     vga_pad(offset); vga_puts(" ##\n");
 }
 
+/**
+ * @brief Dump a buffer of memory to output
+ * 
+ * @param input_buffer the buffer to dump
+ * @param length the length to dump in bytes
+ */
 void dump_memory(void* input_buffer, size_t length)
 {
     uint8_t* startaddr = (uint8_t*)input_buffer;
@@ -126,7 +145,7 @@ void kernel_main(struct kstart_info* start_info)
 
     register_syscall_static("puts", syscall_puts, 0);
 
-    // Save start info because when we switch stacks it'll get destroied
+    // Save start info because when we switch stacks it'll get destroyed
     memcpy(&sinfo, start_info, sizeof(struct kstart_info));
 
     /**
