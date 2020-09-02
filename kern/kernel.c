@@ -24,6 +24,7 @@ char* debug_names[] = {
 };
 
 static struct kstart_info sinfo;
+static env_t* env;
 
 void hang() { while (1) { asm("hlt"); } }
 void hlt() { asm("hlt"); }
@@ -80,6 +81,11 @@ void dump_memory(void* input_buffer, size_t length)
     printf("\n");
 }
 
+env_t* get_rootenv()
+{
+    return env;
+}
+
 __attribute__((naked)) void switch_stacks(void* new)
 {
     asm("mov    4(%esp), %esp");
@@ -94,7 +100,7 @@ void syscall_puts(uint32_t* args)
 void kernel_late_init()
 {
     fs_t* fs = fs_init(sinfo.drive_number);
-    env_put("rootfs", fs);
+    env_put(env, "rootfs", fs);
 
     extern int main();
     main();
@@ -112,10 +118,11 @@ void kernel_main(struct kstart_info* start_info)
     keyboard_init();
     serial_init(SP_COM0_PORT);
     gdt_init();
-    env_init();
     display_logo();
-    env_put("prompt", "# ");
-    env_put("root", &start_info->drive_number);
+
+    env = env_init();
+    env_put(env, "prompt", "# ");
+    env_put(env, "root", &start_info->drive_number);
 
     register_syscall_static("puts", syscall_puts, 0);
 

@@ -167,12 +167,12 @@ void brk(int argc, char** argv)
 
 void hdisk(int argc, char** argv)
 {
-    printf("Root disk @ %02x\n", *env_get("root", uint16_t*));
+    printf("Root disk @ %02x\n", *env_get(get_rootenv(), "root", uint16_t*));
 }
 
 void ls(int argc, char** argv)
 {
-    fs_t* fs = env_get("rootfs", fs_t*);
+    fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
     if (fs) {
         fs_list_dir(fs, fs_get_root(fs));
     }
@@ -190,7 +190,7 @@ void cat(int argc, char** argv)
         return;
     }
 
-    fs_t* fs = env_get("rootfs", fs_t*);
+    fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
     if (fs) {
         fs_dir_t root = fs_get_root(fs);
         fs_file_t file = fs_getfile(fs, root, argv[1]);
@@ -258,7 +258,7 @@ void main()
 
     while (1)
     {
-        puts(env_get("prompt", const char*));
+        puts(env_get(get_rootenv(), "prompt", const char*));
         gets(cmdbuf);
         
         if (*cmdbuf)

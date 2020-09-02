@@ -12,6 +12,7 @@ char getc();
 void puts(const char* str);
 void putc(char c);
 int strcmp(const char* a, const char* b);
+char* strcpy(char* dst, const char* src);
 char* strtok(char* str, const char* delim);
 size_t strlen(const char* str);
 void memset(void* memory, uint8_t value, size_t len);

@@ -163,6 +163,13 @@ int strcmp(const char* a, const char* b)
     return *(const unsigned char*)a - *(const unsigned char*)b;
 }
 
+char* strcpy(char* dst, const char* src)
+{
+    char* tmp = dst;
+    while((*dst++ = *src++) != '\0');
+    return tmp;
+}
+
 void memset(void* memory, uint8_t value, size_t len)
 {
     uint8_t* ptr = memory;

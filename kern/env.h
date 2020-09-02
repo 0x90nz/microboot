@@ -1,16 +1,23 @@
 #pragma once
 
+#define ENV_SIZE        128
+#define ENV_KEY_LEN     64
+
 typedef struct env_item {
-    const char* key;
+    char key[ENV_KEY_LEN];
     void* value;
 } env_item_t;
 
-void env_put(const char* key, void* value);
-void* _env_get(const char* key);
+typedef struct env {
+    int max;
+    int current;
+    env_item_t* items;
+} env_t;
+
+void env_put(env_t* env, const char* key, void* value);
+void* _env_get(env_t* env, const char* key);
 
 
-#define env_get(k, t)      ((t)_env_get(k))
+#define env_get(e, k, t)      ((t)_env_get(e, k))
 
-void env_init();
-
-#define ENV_SIZE        128
+env_t* env_init();
