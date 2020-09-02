@@ -20,6 +20,13 @@ void reverse(char* buffer, int i, int j)
         swap(&buffer[i++], &buffer[j--]);
 }
 
+/**
+ * @brief Convert an integer to an ascii value
+ * 
+ * @param value the integer value
+ * @param buffer the buffer to place the result in
+ * @param base the base to output the number in
+ */
 void itoa(int value, char* buffer, int base)
 {
     if (base < 2 || base > 32)
@@ -49,6 +56,14 @@ void itoa(int value, char* buffer, int base)
     reverse(buffer, 0, i - 1);
 }
 
+/**
+ * @brief Convert an ASCII string which is a base 10 number into its integer
+ * representation. If the string contains non-digit characters, the behaviour 
+ * is undefined.
+ * 
+ * @param str the string to convert
+ * @return int the integer result
+ */
 int atoi(const char* str)
 {
     int n = 0;
@@ -65,6 +80,13 @@ int atoi(const char* str)
     return neg_flag ? n : -n;
 }
 
+/**
+ * @brief Tokenise a string
+ * 
+ * @param str pointer to the string, may be null on subsequent calls
+ * @param delim a string containing all possible delimiters
+ * @return char* the pointer to the next token
+ */
 char* strtok(char* str, const char* delim)
 {
     static char* buf;
@@ -93,6 +115,12 @@ char* strtok(char* str, const char* delim)
     return buf;
 }
 
+/**
+ * @brief Determine the length of a given string
+ * 
+ * @param str the string
+ * @return size_t the length of the string
+ */
 size_t strlen(const char* str)
 {
     size_t len = 0;
@@ -100,31 +128,64 @@ size_t strlen(const char* str)
     return len;
 }
 
+/**
+ * @brief Print a string
+ * 
+ * @param str the string to print
+ */
 void puts(const char* str)
 {
     vga_puts(str);
 }
 
+/**
+ * @brief Print a single character
+ * 
+ * @param c the character to print
+ */
 void putc(char c)
 {
     vga_putc(c);
 }
 
+/**
+ * @brief Get a single character. Blocks awaiting input
+ * 
+ * @return char the character
+ */
 char getc()
 {
     return keyboard_getchar(1);
 }
 
+/**
+ * @brief Print a single character to the debug output
+ * 
+ * @param c the character
+ * @param ignore a pointer to nothing, which is ignored. Used for compatability
+ * with the printf library
+ */
 void debug_putc(char c, void* ignore)
 {
     serial_putc(c);
 }
 
+/**
+ * @brief Set whether input is echoed back to the user. A non-zero indicates
+ * input should be echoed while a zero value indicates it should not
+ * 
+ * @param echo the value to set echo as
+ */
 void set_echo(int echo)
 {
     should_echo = echo;
 }
 
+/**
+ * @brief Read a string from input into the provided buffer
+ * 
+ * @param str the buffer
+ */
 void gets(char* str)
 {
     const char* start = str;
@@ -154,6 +215,14 @@ void gets(char* str)
     *--str = '\0';
 }
 
+/**
+ * @brief Compare two strings. A non-zero return value indicates that the strings
+ * differ in at least one location
+ * 
+ * @param a the first string
+ * @param b the second string
+ * @return int zero if identical, non-zero otherwise
+ */
 int strcmp(const char* a, const char* b)
 {
     while (*a && (*a == *b))
@@ -163,6 +232,13 @@ int strcmp(const char* a, const char* b)
     return *(const unsigned char*)a - *(const unsigned char*)b;
 }
 
+/**
+ * @brief Copy a string to the location pointed to by dst
+ * 
+ * @param dst where to copy the string to
+ * @param src where to copy the string from
+ * @return char* where the string was copied to
+ */
 char* strcpy(char* dst, const char* src)
 {
     char* tmp = dst;
@@ -170,6 +246,13 @@ char* strcpy(char* dst, const char* src)
     return tmp;
 }
 
+/**
+ * @brief Set a region of memory to a specific value
+ * 
+ * @param memory a pointer to the start of the memory to set
+ * @param value the value to set the region of memory to
+ * @param len the amount of memory (in bytes) to set
+ */
 void memset(void* memory, uint8_t value, size_t len)
 {
     uint8_t* ptr = memory;
@@ -179,6 +262,13 @@ void memset(void* memory, uint8_t value, size_t len)
     }
 }
 
+/**
+ * @brief Copy one region of memory to another
+ * 
+ * @param dst the destination to copy memory to
+ * @param src the area to copy memory from
+ * @param len the amount (in bytes) of memory to set
+ */
 void memcpy(void* dst, const void* src, size_t len)
 {
     uint8_t* lsrc = (uint8_t*)src;
@@ -190,11 +280,21 @@ void memcpy(void* dst, const void* src, size_t len)
     }
 }
 
+/**
+ * @brief Set the debug log level
+ * 
+ * @param level the level to set
+ */
 void set_log_level(enum log_level level)
 {
     log_level = level;
 }
 
+/**
+ * @brief Get the current debug log level
+ * 
+ * @return enum log_level the current log level
+ */
 enum log_level get_log_level()
 {
     return log_level;
