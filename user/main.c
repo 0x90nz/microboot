@@ -44,8 +44,7 @@ const char* colours[] = {
 
 int colour_from_str(const char* str)
 {
-    for (int i = 0; i < sizeof(colours) / sizeof(const char*); i++)
-    {
+    for (int i = 0; i < sizeof(colours) / sizeof(const char*); i++) {
         if (strcmp(colours[i], str) == 0)
             return i;
     }
@@ -85,10 +84,8 @@ void listcolours(int argc, char** argv)
 
 void clock(int argc, char** argv)
 {
-    while (1)
-    {
-        if (keyboard_available())
-        {
+    while (1) {
+        if (keyboard_available()) {
             if (keyboard_getchar(0) == 'q')
                 break;
         }
@@ -138,8 +135,7 @@ void help(int argc, char** argv)
 void scancode(int argc, char** argv)
 {
     puts("esc to exit\n");
-    while (1)
-    {
+    while (1) {
         uint8_t code = keyboard_poll_scancode();
         itoa(code, main_scratch, 10);
         puts(main_scratch);
@@ -256,13 +252,11 @@ void main()
 
     char cmdbuf[64];
 
-    while (1)
-    {
+    while (1) {
         puts(env_get(get_rootenv(), "prompt", const char*));
         gets(cmdbuf);
         
-        if (*cmdbuf)
-        {
+        if (*cmdbuf) {
             int argc = 1;
             char* token = strtok(cmdbuf, " ");
             while (strtok(NULL, " ") != NULL) { argc++; }
@@ -276,18 +270,15 @@ void main()
             }
 
             int found = 0;
-            for (int i = 0; i < sizeof(commands) / sizeof(command_t); i++)
-            {
-                if (strcmp(commands[i].name, token) == 0)
-                {
+            for (int i = 0; i < sizeof(commands) / sizeof(command_t); i++) {
+                if (strcmp(commands[i].name, token) == 0) {
                     commands[i].fn(argc, argv);
                     found = 1;
                     break;
                 }
             }
 
-            if (!found)
-            {
+            if (!found) {
                 printf("? %s\n", cmdbuf);
             }
         }
