@@ -133,10 +133,10 @@ void kernel_main(struct kstart_info* start_info)
     init_alloc(start_info->memory_start, start_info->free_memory * 64 * KiB);
 
     interrupts_init();
+    gdt_init();
     syscall_init();
     keyboard_init();
     serial_init(SP_COM0_PORT);
-    gdt_init();
     display_logo();
 
     env = env_init();
