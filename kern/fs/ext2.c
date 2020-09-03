@@ -206,6 +206,7 @@ static fs_file_t ext2_getfile(fs_t* fs, fs_dir_t dir, const char* name)
     uint32_t inode_num = get_filedir(efs, search_inode, name);
 
     if (inode_num != -1) {
+        debugf("inode number %d", inode_num);
         struct ext2_inode* tmp = kalloc(sizeof(struct ext2_inode));
         read_inode(efs, tmp, inode_num);
         return tmp;   

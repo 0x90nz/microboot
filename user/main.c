@@ -171,9 +171,16 @@ void hdisk(int argc, char** argv)
 
 void ls(int argc, char** argv)
 {
+    if (argc != 2) {
+        printf("Usage: %s path\n", argv[0]);
+        return;
+    }
+
     fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
     if (fs) {
-        fs_list_dir(fs, fs_get_root(fs));
+        fs_dir_t dir = fs_traverse(fs, argv[1]);
+        if (dir)
+            fs_list_dir(fs, dir);
     }
 }
 
