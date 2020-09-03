@@ -119,6 +119,8 @@ uint32_t fs_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* b
  */
 const fs_dir_t fs_traverse(fs_t* fs, const char* path)
 {
+    fs_dir_t root = fs_get_root(fs);
+
     size_t len = strlen(path) * sizeof(char) + 1;
     char* buffer = kallocz(len + 2);
     memcpy(buffer, path, len);
@@ -135,14 +137,25 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
         tmp += strlen(tmp) + 1;
     }
 
-    // fs_dir_t root = fs_get_root(fs);
+    fs_dir_t current = root;
 
-    // for (int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
+        fs_dir_t new_dir = fs_getfile(fs, current, parts[i]);
+
+        if (current != root)
+            kfree(current);
         
-    // }
+        if (new_dir) {
+            current = new_dir;
+        } else {
+            break;
+        }
+    }
 
     kfree(parts);
     kfree(buffer);
 
-    return NULL;
+    // return NULL;
+    printf("%d", ((struct ext2_inode*)current));
+    return current;
 }
