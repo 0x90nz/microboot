@@ -100,6 +100,36 @@ void dump_memory(void* input_buffer, size_t length)
     printf("\n");
 }
 
+/**
+ * @brief Power off the computer using the BIOS APM interface
+ * 
+ */
+void kpoweroff()
+{
+    printf("shutting down!\n");
+    debug("shutting down!\n");
+
+    struct int_regs* regs = kallocz(sizeof(*regs));
+    
+    // Connect BIOS APM
+    regs->eax = 0x5301;
+    bios_interrupt(0x15, regs);
+
+    ASSERT(!(regs->flags & EFL_CF), "APM not supported");
+    
+    // Connect to interface
+    regs->eax = 0x530f;
+    regs->ebx = 1;
+    regs->ecx = 1;
+    bios_interrupt(0x15, regs);
+
+    // Execute command (shutdown)
+    regs->eax = 0x5307;
+    regs->ebx = 1;
+    regs->ecx = 3;
+    bios_interrupt(0x15, regs);
+}
+
 env_t* get_rootenv()
 {
     return env;

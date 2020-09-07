@@ -129,6 +129,8 @@ void help(int argc, char** argv)
     puts("ls          - list the current directory [WIP]\n");
     puts("pwd         - print the working directory [WIP]\n");
     puts("cat         - print out the contents of a file [WIP]\n");
+    puts("poweroff    - shut down the computer\n");
+    puts("exit        - alias to poweroff\n");
     puts("help        - this help message\n");
 }
 
@@ -211,6 +213,11 @@ void echo(int argc, char** argv)
     printf("%s\n", argv[argc - 1]);
 }
 
+void poweroff(int argc, char** argv)
+{
+    kpoweroff();
+}
+
 command_t commands[] = {
     {"uptime", uptime},
     {"clear", clear},
@@ -226,6 +233,8 @@ command_t commands[] = {
     {"cat", cat},
     {"pwd", pwd},
     {"echo", echo},
+    {"poweroff", poweroff},
+    {"exit", poweroff},
     {"help", help}
 };
 
