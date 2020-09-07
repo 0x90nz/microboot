@@ -159,16 +159,29 @@ void kfree(void* ptr)
 /**
  * @brief Get the currently used amount of memory
  * 
+ * @param all a non-zero value indicates that freed memory should also 
+ * be counted
  * @return size_t the amount of memory currently in use, in bytes
  */
-size_t alloc_used()
+size_t alloc_used(int all)
 {
     size_t total = 0;
     for (mem_block_t* current = head; current; current = current->next)
     {
-        total += current->size;
+        if (current->state != MEM_STATE_FREE || all)
+            total += current->size;
     }
     return total;
+}
+
+/**
+ * @brief Get the total amount of memory available
+ * 
+ * @return size_t the total amount of memory available
+ */
+size_t alloc_total()
+{
+    return mem_size;
 }
 
 /**
