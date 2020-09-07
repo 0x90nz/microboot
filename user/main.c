@@ -119,6 +119,7 @@ void dino(int argc, char** argv)
 void help(int argc, char** argv)
 {
     puts("uptime      - display uptime in seconds\n");
+    puts("mem         - get memory status\n");
     puts("clear       - clear the display\n");
     puts("clock       - updating clock demo\n");
     puts("setcolour   - set the display colour\n");
@@ -218,8 +219,16 @@ void poweroff(int argc, char** argv)
     kpoweroff();
 }
 
+void mem(int argc, char** argv)
+{
+    size_t used = alloc_used(0);
+    size_t total = alloc_total();
+    printf("%d bytes / %d KiB used\n", used, total / KiB);
+}
+
 command_t commands[] = {
     {"uptime", uptime},
+    {"mem", mem},
     {"clear", clear},
     {"clock", clock},
     {"setcolour", setcolour},
@@ -290,6 +299,8 @@ void main()
             if (!found) {
                 printf("? %s\n", cmdbuf);
             }
+
+            kfree(argv);
         }
     }
 }

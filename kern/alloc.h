@@ -4,12 +4,13 @@
 #include <stdint.h>
 
 void init_alloc(void* start, size_t size);
-size_t alloc_used();
 void* kalloc(size_t size);
 void* kallocz(size_t size);
 void kfree(void* ptr);
 void kdumpmm();
 void* krealloc(void* ptr, size_t new_size);
+size_t alloc_total();
+size_t alloc_used(int all);
 
 #define MEM_BLOCK_MAGIC         0xbadbaddd
 #define ALIGNMENT       64
