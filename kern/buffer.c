@@ -99,3 +99,33 @@ uint8_t ringbuffer_get(struct ringbuffer* rbuf)
     decrement_ptr(rbuf);
     return data;
 }
+
+/**
+ * @brief Get a number of bytes into a buffer
+ * 
+ * @param rbuf the ringbuffer to get the data from
+ * @param out the buffer to put the bytes into
+ * @param size the number of bytes to get
+ */
+void ringbuffer_get_obj(struct ringbuffer* rbuf, void* out, size_t size)
+{
+    uint8_t* data = out;
+    for (size_t i = 0; i < size; i++) {
+        *data++ = ringbuffer_get(rbuf);
+    }
+}
+
+/**
+ * @brief Put a number of bytes into a buffer
+ * 
+ * @param rbuf the ringbuffer to put the data into
+ * @param data the data to write
+ * @param size the number of bytes from the data to write
+ */
+void ringbuffer_put_obj(struct ringbuffer* rbuf, void* data, size_t size)
+{
+    uint8_t* bytes = data;
+    for (int i = 0; i < size; i++) {
+        ringbuffer_put(rbuf, bytes[i]);
+    }
+}
