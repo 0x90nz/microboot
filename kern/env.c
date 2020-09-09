@@ -38,7 +38,7 @@ static int env_index(env_t* env, const char* key)
  */
 void env_put(env_t* env, const char* key, void* value)
 {
-    ASSERT(env, "Trued to 'put' before environment");
+    ASSERT(env, "Trued to 'put' before environment was initialised");
     int index = env_index(env, key);
     if (index != -1) {
         env->items[index].value = value;
