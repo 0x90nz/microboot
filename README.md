@@ -71,6 +71,18 @@ necessarily compatible with) the POSIX standard library are provided in
 `stdlib.h`. In addition the devices and kernel functions are accessible by their
 respective headers.
 
+## Philosophy
+
+Once control is handed over to the user program, it can do whatever it wants
+(including crashing the system, intentionally or unintentionally). It is not a
+'user' program in the traditional sense of an operating system, where it would
+run at a lower privilege level and perhaps be subject to preemption. It is
+simply a user defined program that can be run.
+
+The functions provided allow for convenient use of peripherals, but they're in
+no way mandatory. It would be entirely possible to rewrite all of these within
+the user program and only use those local copies.
+
 ## Documentation
 
 I'm using this project as an opportunity to learn about
