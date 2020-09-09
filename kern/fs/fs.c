@@ -135,11 +135,11 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
         tmp += strlen(tmp) + 1;
     }
 
-    fs_dir_t root = fs_get_root(fs);
+    // fs_dir_t root = fs_get_root(fs);
 
-    for (int i = 0; i < count; i++) {
+    // for (int i = 0; i < count; i++) {
         
-    }
+    // }
 
     kfree(parts);
     kfree(buffer);
