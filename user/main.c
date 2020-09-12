@@ -176,6 +176,7 @@ void ls(int argc, char** argv)
         fs_dir_t dir = fs_traverse(fs, argc > 1 ? argv[1] : "");
         if (dir)
             fs_list_dir(fs, dir);
+        fs_destroy(fs, dir);
     }
 }
 
@@ -200,7 +201,7 @@ void cat(int argc, char** argv)
             fs_read(fs, file, 0, fsize, c);
             printf("%s\n", c);
             kfree(c);
-            kfree(file);
+            fs_destroy(fs, file);
         } else {
             printf("No such file: %s\n", argv[1]);
         }

@@ -110,6 +110,17 @@ uint32_t fs_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* b
 }
 
 /**
+ * @brief Destroy a file reference
+ * 
+ * @param fs the filesystem
+ * @param file the file to destroy
+ */
+void fs_destroy(fs_t* fs, fs_file_t file)
+{
+    fs->ops->destroy(fs, file);
+}
+
+/**
  * @brief Traverse a path from the root directory to a directory
  * @warning This function is a work in progress. Do not expect it to work
  * 
