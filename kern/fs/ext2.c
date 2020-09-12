@@ -241,12 +241,16 @@ static void ext2_ls(fs_t* fs, fs_dir_t dir)
 
     struct ext2_dir_entry* current = dirent;
     uint32_t size = 0;
+    char* buffer = kalloc(512);
     while (size < inode->size_lo) {
-        printf("%s\n", &current->first_name_char);
+        memcpy(buffer, &current->first_name_char, current->name_length);
+        buffer[current->name_length] = '\0';
+        printf("%s\n", buffer);
         size += current->size;
-        current =  (void*)current + current->size;        
+        current = (void*)current + current->size;        
     }
-
+    
+    kfree(buffer);
     kfree(dirent);
 }
 
