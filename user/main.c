@@ -173,7 +173,10 @@ void ls(int argc, char** argv)
 {
     fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
     if (fs) {
-        fs_list_dir(fs, fs_get_root(fs));
+        fs_dir_t dir = fs_traverse(fs, argc > 1 ? argv[1] : "");
+        if (dir)
+            fs_list_dir(fs, dir);
+        fs_destroy(fs, dir);
     }
 }
 
@@ -191,15 +194,14 @@ void cat(int argc, char** argv)
 
     fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
     if (fs) {
-        fs_dir_t root = fs_get_root(fs);
-        fs_file_t file = fs_getfile(fs, root, argv[1]);
+        fs_file_t file = fs_traverse(fs, argv[1]);
         if (file) {
             uint32_t fsize = fs_fsize(fs, file);
             char* c = kallocz(fsize + 1);
             fs_read(fs, file, 0, fsize, c);
             printf("%s\n", c);
             kfree(c);
-            kfree(file);
+            fs_destroy(fs, file);
         } else {
             printf("No such file: %s\n", argv[1]);
         }
