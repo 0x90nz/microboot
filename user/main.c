@@ -244,7 +244,7 @@ void exec(int argc, char** argv)
             char* c = kallocz(fsize + 1);
             fs_read(fs, file, 0, fsize, c);
             
-            elf_run(c);
+            elf_run(c, argc, argv);
 
             kfree(c);
             fs_destroy(fs, file);

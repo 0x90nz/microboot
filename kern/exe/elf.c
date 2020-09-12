@@ -19,7 +19,7 @@ size_t get_elf_size(struct elf_header* hdr)
     return total_size;
 }
 
-void elf_run(void* elf)
+void elf_run(void* elf, int argc, char** argv)
 {
     struct elf_header* hdr = (struct elf_header*)elf;
     struct elf_program_header* phdr = (struct elf_program_header*)(elf + hdr->phoff);
@@ -34,8 +34,8 @@ void elf_run(void* elf)
         }
     }
 
-    void (*entry)(void) = (void (*)(void))(base + hdr->entry);
-    entry();
+    void (*entry)(int, char**) = (void (*)(int, char**))(base + hdr->entry);
+    entry(argc, argv);
 
     kfree(base);
 }
