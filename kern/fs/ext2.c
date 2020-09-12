@@ -40,27 +40,22 @@ void read_block(struct ext2_fs* fs, uint32_t block, void* buffer)
  */
 void read_inode(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t inode_num)
 {
-    // The group to which this inode belongs
-    uint32_t group = inode_num / fs->inodes_per_group;
-    // The block which points to the inode table
+    // The group and index that our inode is at
+    uint32_t group = (inode_num - 1) / fs->sb->inodes_per_group;
+    uint32_t index = (inode_num - 1) % fs->sb->inodes_per_group;
+
     uint32_t inode_tbl_block = fs->bgd_table[group].addr_block_inode_table;
-    uint32_t group_idx = inode_num - (group * fs->inodes_per_group);
-    
+
     // TODO: either account for extended properties not being present, or just
     // throw a tantrum if they're not present
-    uint32_t block_off = (group_idx - 1) * fs->sb->ext.inode_size / fs->block_size;
-
-    // The offset _within_ the block that we're going to read
-    uint32_t internal_offset = (group_idx - 1) 
-            - block_off * (fs->block_size / fs->sb->ext.inode_size);
-
-    debugf("group: %d, tbl_block: %d, group_idx: %d, block_off: %d, internal_off: %d",
-        group, inode_tbl_block, group_idx, block_off, internal_offset
-    );
+    uint32_t block = (index * fs->sb->ext.inode_size) / fs->block_size;
 
     char* buffer = kalloc(fs->block_size);
-    read_block(fs, inode_tbl_block + block_off, buffer);
-    memcpy(inode, buffer + internal_offset * fs->sb->ext.inode_size, fs->sb->ext.inode_size);
+    read_block(fs, inode_tbl_block + block, buffer);
+
+    uint32_t inode_offset = index % (fs->block_size / fs->sb->ext.inode_size);
+    memcpy(inode, buffer + inode_offset * fs->sb->ext.inode_size, fs->sb->ext.inode_size);
+
     kfree(buffer);
 }
 
@@ -183,8 +178,9 @@ static uint32_t get_filedir(struct ext2_fs* fs, struct ext2_inode* inode, const 
     struct ext2_dir_entry* current = dirent;
     uint32_t num = -1;
     uint32_t size = 0;
+
     while (size < inode->size_lo) {
-        if (strcmp(name, &current->first_name_char) == 0) {
+        if (memcmp(name, &current->first_name_char, current->name_length) == 0) {
             num = current->inode;
             break;
         }
@@ -303,11 +299,13 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
         bgd_table_blocks++;
 
     debugf("num_groups: %d, bgd_table_blocks: %d", fs->num_groups, bgd_table_blocks);
-    
+    debugf("first_data_block: %d", fs->sb->first_data_block);
+
+    uint32_t bdgt_block = fs->sb->first_data_block + (1024 / fs->block_size);
     // Allocate space for the BGD table, and then fill it with data from disk
     fs->bgd_table = kallocz(bgd_table_blocks * fs->block_size * sizeof(struct ext2_bgd));
     for (uint32_t i = 0; i < bgd_table_blocks; i++) {
-        read_block(fs, 2, (void*)fs->bgd_table + i * fs->block_size);
+        read_block(fs, bdgt_block + i, (void*)fs->bgd_table + (i * fs->block_size));
     }
 
     fs->root_inode = kallocz(sizeof(struct ext2_inode));
