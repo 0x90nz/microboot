@@ -1,9 +1,8 @@
-int foo()
-{
-    return 100;
-}
+#include <stdarg.h>
+#include "common.h"
 
 void main()
 {
-    for (int i = 0; i < foo(); i++) { asm("hlt"); }
+    int puts = SYSCALL1(0, "puts");
+    SYSCALL1(puts, "Hello!\n");
 }
