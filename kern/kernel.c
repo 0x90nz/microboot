@@ -135,11 +135,16 @@ env_t* get_rootenv()
     return env;
 }
 
-__attribute__((naked)) void switch_stacks(void* new)
-{
-    asm("mov    4(%esp), %esp");
-    asm("jmp    kernel_late_init");
-}
+// Why not just use __attribute__((naked))? Because it's not
+// supported on older versions of GCC for the x86 arch
+void switch_stacks(void* new);
+
+asm(
+    ".global switch_stacks\n\t"
+    "switch_stacks:\n\t"
+    "mov    4(%esp), %esp\n\t"
+    "jmp    kernel_late_init"
+);
 
 void syscall_puts(uint32_t* args)
 {

@@ -83,8 +83,8 @@ _internal_bios_interrupt:
 
 	# We need to use a long jump to load %cs to our 16 bit code segment
 	ljmp	$0x18,$0f	
-0:
 .code16
+0:
 	# Disable protected mode
 	mov	%cr0, %eax
 	and	0xfffe, %ax
