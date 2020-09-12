@@ -113,6 +113,7 @@ struct ext2_bgd {
     uint16_t free_blocks;
     uint16_t free_inodes;
     uint16_t directories;
+    uint8_t reserved0[14]
 } __attribute__((packed));
 
 /**

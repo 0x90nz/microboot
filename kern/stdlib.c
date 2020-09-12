@@ -280,6 +280,19 @@ void memcpy(void* dst, const void* src, size_t len)
     }
 }
 
+int memcmp(const void* a, const void* b, size_t len)
+{
+    const uint8_t* la = a;
+    const uint8_t* lb = b;
+
+    for (size_t i = 0; i < len; i++) {
+        if (la[i] != lb[i])
+            return la[i] - lb[i];
+    }
+
+    return 0;
+}
+
 /**
  * @brief Set the debug log level
  * 

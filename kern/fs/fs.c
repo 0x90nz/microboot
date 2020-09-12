@@ -138,7 +138,6 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
     }
 
     fs_dir_t current = root;
-
     for (int i = 0; i < count; i++) {
         fs_dir_t new_dir = fs_getfile(fs, current, parts[i]);
 
@@ -155,7 +154,5 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
     kfree(parts);
     kfree(buffer);
 
-    // return NULL;
-    printf("%d", ((struct ext2_inode*)current));
     return current;
 }

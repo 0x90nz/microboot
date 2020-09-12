@@ -17,6 +17,7 @@ char* strtok(char* str, const char* delim);
 size_t strlen(const char* str);
 void memset(void* memory, uint8_t value, size_t len);
 void memcpy(void* dst, const void* src, size_t len);
+int memcmp(const void* a, const void* b, size_t len);
 
 void debug_putc(char c, void* ignore);
 void set_log_level(enum log_level level);
