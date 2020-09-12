@@ -13,6 +13,7 @@
 #include "kernel.h"
 #include "alloc.h"
 #include "env.h"
+#include "list.h"
 
 char* debug_names[] = {
     "FATAL",
@@ -147,6 +148,10 @@ asm(
     "jmp    kernel_late_init"
 );
 
+void it_handle(int i, struct list_node* item)
+{
+    printf("%d: %s\n", i, item->value);
+}
 
 void kernel_late_init()
 {
