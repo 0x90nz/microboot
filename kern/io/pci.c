@@ -34,19 +34,15 @@ uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t func)
 void pci_check(uint8_t bus, uint8_t device)
 {
     uint16_t vid = pci_cfg_read_word(bus, device, 0, 0);
-    if (vid != 0xFFFF)
-    {
+    if (vid != 0xFFFF) {
         // The device actually exists, do something with int
         pci_check_func(bus, device, 0);
 
         // If this is a multi-function device, we need to check the rest of the
         // functions that it might support
-        if (pci_get_header_type(bus, device, 0) & 0x80)
-        {
-            for (int i = 1; i < 8; i++)
-            {
-                if (pci_cfg_read_word(bus, device, i, 0) != 0xFFFF)
-                {
+        if (pci_get_header_type(bus, device, 0) & 0x80) {
+            for (int i = 1; i < 8; i++) {
+                if (pci_cfg_read_word(bus, device, i, 0) != 0xFFFF) {
                     pci_check_func(bus, device, i);
                 }
             }
@@ -60,10 +56,8 @@ void pci_enumerate()
     // be scanning, but that's complicated, and I can't be bothered.
     // Brute force is fast enough for me.
 
-    for (uint16_t bus = 0; bus < 256; bus++)
-    {
-        for (uint8_t device = 0; device < 32; device++)
-        {
+    for (uint16_t bus = 0; bus < 256; bus++) {
+        for (uint8_t device = 0; device < 32; device++) {
             pci_check(bus, device);
         }
     }
