@@ -7,7 +7,6 @@
 #include "alloc.h"
 #include "stdlib.h"
 
-
 /**
  * @brief Initialise the environment
  */

@@ -64,4 +64,4 @@ struct elf_section_header
 
 } __attribute__((packed));
 
-void elf_run(void* elf);
+void elf_run(void* elf, int argc, char** argv);
