@@ -17,7 +17,7 @@ void syscall_handle(intr_frame_t* frame)
             args[2] = frame->ebx;
             args[3] = frame->esi;
             args[4] = frame->edi;
-            syscall_table[syscall_nr].fn(args);
+            frame->eax = syscall_table[syscall_nr].fn(args);
         } else {
             debugf("spurious syscall %d", syscall_nr);
         }
@@ -56,23 +56,22 @@ int register_syscall_static(const char* name, syscall_fn_t func, int nr)
     return 0;
 }
 
-__attribute__((naked)) void do_syscall(uint32_t nr, int arg0, int arg1, int arg2, int arg3, int arg4)
+int get_syscall_dynamic(const char* name)
 {
-    asm(
-        "pushal\n\t"
-        "mov 36(%esp), %eax\n\t"
-        "mov 40(%esp), %ecx\n\t"
-        "mov 44(%esp), %edx\n\t"
-        "mov 48(%esp), %ebx\n\t"
-        "mov 52(%esp), %esi\n\t"
-        "mov 56(%esp), %edi\n\t"
-        "int $128\n\t"
-        "popal\n\t"
-        "ret\n\t"
-    );
+    for (int i = 0; i < syscall_max; i++) {
+        if (syscall_table[i].fn && syscall_table[i].name) {
+            if (strcmp(syscall_table[i].name, name) == 0)
+                return i;
+        }
+    }
+    return -1;
 }
 
 void syscall_init()
 {
+    for (int i = 0; i < SYSCALL_NR_RESERVED; i++) {
+        syscall_table[i].fn = NULL;
+        syscall_table[i].name = NULL;   
+    }
     register_ll_handler(128, syscall_handle);
 }

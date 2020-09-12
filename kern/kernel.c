@@ -8,6 +8,7 @@
 #include "sys/gdt.h"
 #include "sys/bios.h"
 #include "sys/syscall.h"
+#include "syscalls.h"
 #include "stdlib.h"
 #include "kernel.h"
 #include "alloc.h"
@@ -146,10 +147,6 @@ asm(
     "jmp    kernel_late_init"
 );
 
-void syscall_puts(uint32_t* args)
-{
-    puts((const char*)*args);   
-}
 
 void kernel_late_init()
 {
@@ -173,12 +170,11 @@ void kernel_main(struct kstart_info* start_info)
     keyboard_init();
     serial_init(SP_COM0_PORT);
     display_logo();
+    syscalls_init();
 
     env = env_init();
     env_put(env, "prompt", "# ");
     env_put(env, "root", &start_info->drive_number);
-
-    register_syscall_static("puts", syscall_puts, 0);
 
     // Save start info because when we switch stacks it'll get destroyed
     memcpy(&sinfo, start_info, sizeof(struct kstart_info));
