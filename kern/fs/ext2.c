@@ -256,6 +256,13 @@ static fs_dir_t get_root(fs_t* fs)
     return efs->root_inode;
 }
 
+static void ext2_destroy(fs_t* fs, fs_dir_t file)
+{
+    if (file != get_root(fs))
+        kfree(file);
+}
+
+
 const fs_ops_t* ext2_get_ops()
 {
     return &ops;
@@ -316,6 +323,7 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
     ops.read = ext2_read;
     ops.fsize = ext2_fsize;
     ops.getfile = ext2_getfile;
+    ops.destroy = ext2_destroy;
 
     return fs;
 }
