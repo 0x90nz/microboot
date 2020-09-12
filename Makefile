@@ -21,7 +21,7 @@ loader:
 .PHONY: user
 user:
 	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern -Ilib
-	$(CC) $(CFLAGS) -static user/test.c -o rootfs/test.elf -T user/process.ld -Ikern -Ilib
+	$(CC) $(CFLAGS) -static -fPIC user/test.c -o rootfs/test.elf -T user/process.ld -Ikern -Ilib
 
 stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
