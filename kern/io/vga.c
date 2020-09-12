@@ -44,18 +44,15 @@ void vga_set_cursor(int x, int y)
 
 void vga_clear_row(int row)
 {
-    for (int x = 0; x < VGA_WIDTH; x++) 
-    {
+    for (int x = 0; x < VGA_WIDTH; x++) {
         vga_buffer[row * VGA_WIDTH + x] = vga_entry(' ', default_colour);
     }
 }
 
 void vga_scroll()
 {
-    for(int y = 0; y < VGA_HEIGHT; y++)
-    {
-        for(int x = 0; x < VGA_WIDTH; x++)
-        {
+    for(int y = 0; y < VGA_HEIGHT; y++) {
+        for(int x = 0; x < VGA_WIDTH; x++) {
             vga_buffer[(y * VGA_WIDTH) + x] = vga_buffer[(y + 1) * VGA_WIDTH + x];
         }
     }
@@ -65,16 +62,12 @@ void vga_scroll()
 
 void vga_erase()
 {
-    if (x_pos == 0)
-    {
-        if (y_pos > 0)
-        {
+    if (x_pos == 0) {
+        if (y_pos > 0) {
             y_pos--;
             x_pos = 0;
         }
-    }
-    else if (x_pos > 0)
-    {
+    } else if (x_pos > 0) {
         x_pos--;
     }
     vga_putc(' ');
@@ -83,26 +76,20 @@ void vga_erase()
 
 void vga_putc(unsigned char c)
 {
-    if (c == '\n')
-    {
+    if (c == '\n') {
         x_pos = 0;
         y_pos++;
-        if (y_pos >= VGA_HEIGHT)
-        {
+        if (y_pos >= VGA_HEIGHT) {
             y_pos--;
             vga_scroll();
         }
         vga_set_cursor(x_pos, y_pos);
         return;
-    }
-    else if (c == '\b')
-    {
+    } else if (c == '\b') {
         vga_erase();
         vga_set_cursor(x_pos, y_pos);
         return;
-    }
-    else if(c == '\r')
-    {
+    } else if(c == '\r') {
         x_pos = 0;
         vga_set_cursor(x_pos, y_pos);
         return;
@@ -111,12 +98,10 @@ void vga_putc(unsigned char c)
     vga_buffer[y_pos * VGA_WIDTH + x_pos] = vga_entry(c, default_colour);
     x_pos++;
 
-    if (x_pos > VGA_WIDTH)
-    {
+    if (x_pos > VGA_WIDTH) {
         x_pos = 0;
         y_pos++;
-        if (y_pos >= VGA_HEIGHT)
-        {
+        if (y_pos >= VGA_HEIGHT) {
             y_pos--;
             vga_scroll();
         }
@@ -135,8 +120,7 @@ void vga_pad(int n)
 void vga_puts(const char* str)
 {
     char* s = (char*)str;
-    while (*s != '\0')
-    {
+    while (*s != '\0') {
         vga_putc(*s);
         s++;
     }
@@ -150,10 +134,8 @@ void vga_init(uint16_t colour)
     vga_cursor_width(14, 15);
 
     // Clear the whole screen
-    for (int y = 0; y < VGA_HEIGHT; y++)
-    {
-        for (int x = 0; x < VGA_WIDTH; x++)
-        {
+    for (int y = 0; y < VGA_HEIGHT; y++) {
+        for (int x = 0; x < VGA_WIDTH; x++) {
             vga_buffer[y * VGA_WIDTH + x] = vga_entry(' ', default_colour);
         }
     }
