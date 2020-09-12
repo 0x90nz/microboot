@@ -110,6 +110,17 @@ uint32_t fs_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* b
 }
 
 /**
+ * @brief Destroy a file reference
+ * 
+ * @param fs the filesystem
+ * @param file the file to destroy
+ */
+void fs_destroy(fs_t* fs, fs_file_t file)
+{
+    fs->ops->destroy(fs, file);
+}
+
+/**
  * @brief Traverse a path from the root directory to a directory
  * @warning This function is a work in progress. Do not expect it to work
  * 
@@ -119,6 +130,8 @@ uint32_t fs_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* b
  */
 const fs_dir_t fs_traverse(fs_t* fs, const char* path)
 {
+    fs_dir_t root = fs_get_root(fs);
+
     size_t len = strlen(path) * sizeof(char) + 1;
     char* buffer = kallocz(len + 2);
     memcpy(buffer, path, len);
@@ -135,14 +148,22 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
         tmp += strlen(tmp) + 1;
     }
 
-    // fs_dir_t root = fs_get_root(fs);
+    fs_dir_t current = root;
+    for (int i = 0; i < count; i++) {
+        fs_dir_t new_dir = fs_getfile(fs, current, parts[i]);
 
-    // for (int i = 0; i < count; i++) {
+        if (current != root)
+            kfree(current);
         
-    // }
+        if (new_dir) {
+            current = new_dir;
+        } else {
+            break;
+        }
+    }
 
     kfree(parts);
     kfree(buffer);
 
-    return NULL;
+    return current;
 }
