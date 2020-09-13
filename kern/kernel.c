@@ -171,7 +171,7 @@ void kernel_late_init()
 
     env = env_init();
     env_put(env, "prompt", "# ");
-    env_put(env, "root", sinfo.drive_number);
+    env_put(env, "root", &sinfo.drive_number);
 
     fs_t* fs = fs_init(sinfo.drive_number);
     env_put(env, "rootfs", fs);

@@ -167,7 +167,7 @@ void brk(int argc, char** argv)
 
 void hdisk(int argc, char** argv)
 {
-    printf("Root disk @ %02x\n", *env_get(get_rootenv(), "root", uint16_t*));
+    printf("Root disk @ %02x\n", *env_get(get_rootenv(), "root", uint8_t*));
 }
 
 void ls(int argc, char** argv)

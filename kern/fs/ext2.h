@@ -104,7 +104,7 @@ struct ext2_dir_entry {
     uint8_t name_length;
     uint8_t type_indicator;
     char first_name_char;
-} __attribute__((packed));
+};
 
 struct ext2_bgd {
     uint32_t addr_block_usage_bitmap;
@@ -113,7 +113,7 @@ struct ext2_bgd {
     uint16_t free_blocks;
     uint16_t free_inodes;
     uint16_t directories;
-    uint8_t reserved0[14]
+    uint8_t reserved0[14];
 } __attribute__((packed));
 
 /**

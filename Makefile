@@ -1,4 +1,5 @@
-CFLAGS=-m32 -march=i386 -nostdlib -nostdinc -ffreestanding -fno-pie -mgeneral-regs-only -mno-red-zone -msoft-float -Wall -fno-asynchronous-unwind-tables -Ilib
+CFLAGS=-m32 -march=i386 -nostdlib -nostdinc -ffreestanding -fno-pie \
+ -mgeneral-regs-only -mno-red-zone -msoft-float -Wall -fno-asynchronous-unwind-tables -Ilib
 CC=gcc
 
 KSRC=$(shell find kern -type f -name "*.c")
