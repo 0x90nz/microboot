@@ -59,7 +59,7 @@ void uptime(int argc, char** argv)
 
 void clear(int argc, char** argv)
 {
-    vga_init(colour);
+    // console_clear();
 }
 
 void setcolour(int argc, char** argv)
@@ -294,8 +294,6 @@ void main()
 
     ticks = 0;
     register_handler(IRQ_TO_INTR(0), handle_irq0);
-
-    colour = vga_get_default();
 
     char cmdbuf[64];
 
