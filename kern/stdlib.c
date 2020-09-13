@@ -139,7 +139,6 @@ void puts(const char* str)
         putc(*str++);
 }
 
-extern console_t* stdout;
 /**
  * @brief Print a single character
  * 
@@ -149,7 +148,7 @@ void putc(char c)
 {
     if (!stdout)
         return;
-        
+
     console_putc(stdout, c);
 }
 

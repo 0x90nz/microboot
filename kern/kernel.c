@@ -55,17 +55,16 @@ uint32_t get_esp()
 
 void display_logo()
 {
-    // vga_puts("\n");
-    // int offset = 16;
-    // vga_pad(offset); vga_puts("           ##                            ##\n");
-    // vga_pad(offset); vga_puts("           ##                            ##\n");
-    // vga_pad(offset); vga_puts(" ##    ##  ########   #######   ####### #####\n");
-    // vga_pad(offset); vga_puts(" ##    ##  ##    ### ###   ### ###   ### ##\n");
-    // vga_pad(offset); vga_puts(" ##    ##  ##     ## ##     ## ##     ## ##\n");
-    // vga_pad(offset); vga_puts(" ##    ##  ###   ### ###   ### ###   ### ##\n");
-    // vga_pad(offset); vga_puts(" # ####  # ########   #######   #######  #####\n");
-    // vga_pad(offset); vga_puts(" ##\n");
-    // vga_pad(offset); vga_puts(" ##\n");
+    printf("\n");    
+    printf("%-16s           ##                            ##\n", "");
+    printf("%-16s           ##                            ##\n", "");
+    printf("%-16s ##    ##  ########   #######   ####### #####\n", "");
+    printf("%-16s ##    ##  ##    ### ###   ### ###   ### ##\n", "");
+    printf("%-16s ##    ##  ##     ## ##     ## ##     ## ##\n", "");
+    printf("%-16s ##    ##  ###   ### ###   ### ###   ### ##\n", "");
+    printf("%-16s # ####  # ########   #######   #######  #####\n", "");
+    printf("%-16s ##\n", "");
+    printf("%-16s ##\n", "");
 }
 
 /**
@@ -176,7 +175,7 @@ void kernel_main(struct kstart_info* start_info)
     syscall_init();
     keyboard_init();
     serial_init(SP_COM0_PORT);
-    stdout = vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
+    stdout = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
     display_logo();
     syscalls_init();
 

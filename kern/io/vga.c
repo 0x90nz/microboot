@@ -39,7 +39,7 @@ void vga_cursor_width(uint8_t start, uint8_t end)
 
 void vga_set_cursor(console_t* con, int x, int y)
 {
-    uint16_t pos = y * VGA_WIDTH + x;
+    uint16_t pos = y * con->width + x;
 
     outb(0x3d4, 0x0f);
     outb(0x3d5, pos & 0xff);
@@ -56,14 +56,14 @@ void vga_put_xy(console_t* con, int x, int y, char c)
 
 void vga_scroll(console_t* con)
 {
-    // struct vga_state* state = con->priv;
-    // for(int y = 0; y < VGA_HEIGHT; y++) {
-    //     for(int x = 0; x < VGA_WIDTH; x++) {
-    //         state->vga_buffer[(y * VGA_WIDTH) + x] = state->vga_buffer[(y + 1) * VGA_WIDTH + x];
-    //     }
-    // }
+    struct vga_state* state = con->priv;
+    for(int y = 0; y < con->height; y++) {
+        for(int x = 0; x < con->width; x++) {
+            state->vga_buffer[(y * con->width) + x] = state->vga_buffer[(y + 1) * con->width + x];
+        }
+    }
 
-    // vga_clear_row(y_pos);
+    console_clear_row(con, con->y_pos);
 }
 
 void vga_set_mode(uint8_t mode)
@@ -73,6 +73,13 @@ void vga_set_mode(uint8_t mode)
 
     regs.eax = mode; // ah=00, al=mode
     bios_interrupt(0x10, &regs);
+}
+
+void vga_set_colour(console_t* con, uint16_t colour)
+{
+    struct vga_state* state = con->priv;
+    state->colour = colour;
+    debugf("%04x", colour);
 }
 
 console_t* vga_init(uint16_t colour)
@@ -87,9 +94,10 @@ console_t* vga_init(uint16_t colour)
     con->put_xy = vga_put_xy;
     con->set_cursor = vga_set_cursor;
     con->scroll = vga_scroll;
+    con->set_colour = vga_set_colour;
 
-    con->width = VGA_WIDTH;
-    con->height = VGA_HEIGHT;
+    con->width = 80;
+    con->height = 25;
 
     vga_cursor_width(14, 15);
 

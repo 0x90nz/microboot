@@ -79,3 +79,8 @@ void console_clear_row(console_t* con, int row)
         con->put_xy(con, x, row, ' ');
     }
 }
+
+void console_colour(console_t* con, uint16_t colour)
+{
+    con->set_colour(con, colour);
+}
