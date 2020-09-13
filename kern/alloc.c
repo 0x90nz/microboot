@@ -6,6 +6,7 @@
 #include "alloc.h"
 #include "stdlib.h"
 #include "kernel.h"
+#include <export.h>
 #include <stdint.h>
 
 static void* mem_start = NULL;
@@ -94,6 +95,7 @@ void* kalloc(size_t size)
 
     return next->addr;
 }
+EXPORT_SYM(kalloc);
 
 /**
  * @brief Attempt to resize a dynamically allocated pointer to memory. If the
@@ -120,6 +122,7 @@ void* krealloc(void* ptr, size_t new_size)
         return new_block;
     }
 }
+EXPORT_SYM(krealloc);
 
 /**
  * @brief Allocate memory and clear it
@@ -133,6 +136,7 @@ void* kallocz(size_t size)
     memset(data, 0, size);
     return data;
 }
+EXPORT_SYM(kallocz);
 
 /**
  * @brief Free allocated memory
@@ -155,6 +159,7 @@ void kfree(void* ptr)
 
     block->state = MEM_STATE_FREE;
 }
+EXPORT_SYM(kfree);
 
 /**
  * @brief Get the currently used amount of memory

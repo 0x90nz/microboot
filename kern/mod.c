@@ -1,3 +1,8 @@
+/**
+ * @file mod.c
+ * @brief Module system
+ */
+
 #include <export.h>
 #include "mod.h"
 #include "list.h"
@@ -8,13 +13,40 @@
 struct list exports;
 struct list modules;
 
+/**
+ * @brief Initialise the module system
+ * 
+ */
 void mod_init()
 {
     list_init(&exports);
     list_init(&modules);
 }
 
-static void mod_symtab_add(void* base, void* symtab, size_t szsymtab)
+/**
+ * @brief Add the kernel symbol table to the list of exports
+ * 
+ * @param symtab the symbol table
+ * @param szsymtab the size of the symbol table (in bytes)
+ */
+void mod_ksymtab_add(void* symtab, size_t szsymtab)
+{
+    int num_syms = szsymtab / sizeof(struct symbol);
+    struct symbol* sym = symtab;
+
+    for (int i = 0; i < num_syms; i++, sym++) {
+        list_append(&exports, list_node(sym));
+    }
+}
+
+/**
+ * @brief Add a symbol table from a module to the list of exports
+ * 
+ * @param base the base address of the module
+ * @param symtab the symbol table
+ * @param szsymtab the size of the symbol table (in bytes)
+ */
+void mod_symtab_add(void* base, void* symtab, size_t szsymtab)
 {
     int num_syms = szsymtab / sizeof(struct symbol);
     struct symbol* sym = symtab;
@@ -33,22 +65,35 @@ static void mod_symtab_add(void* base, void* symtab, size_t szsymtab)
     }
 }
 
-void mod_list_callback(struct list_node* node)
+static void mod_list_callback(struct list_node* node)
 {
     struct symbol* mod = node->value;
-    printf("%s: %08x\n", mod->name, mod->fn);
+    printf("%-20s %08x\n", mod->name, mod->fn);
 }
 
+/**
+ * @brief List all of the currently loaded modules
+ * 
+ */
 void mod_list()
 {
     list_iterate(&modules, mod_list_callback);
 }
 
+/**
+ * @brief List all of the currently exported symbols
+ * 
+ */
 void mod_sym_list()
 {
     list_iterate(&exports, mod_list_callback);
 }
 
+/**
+ * @brief Load an ELF module
+ * 
+ * @param module the module file contents, must be an ELF file
+ */
 void mod_load(void* module)
 {
     elf_load_mod(module, mod_symtab_add);

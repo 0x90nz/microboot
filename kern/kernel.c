@@ -166,6 +166,14 @@ void kernel_late_init()
     hang();
 }
 
+extern int _kexp_start, _kexp_end;
+void ksyms_init()
+{
+    void* ksymtab = &_kexp_start;
+    size_t ksymtab_size = (void*)&_kexp_end - (void*)&_kexp_start;
+    mod_ksymtab_add(ksymtab, ksymtab_size);
+}
+
 void kernel_main(struct kstart_info* start_info)
 {
     stdout = NULL;
@@ -180,6 +188,7 @@ void kernel_main(struct kstart_info* start_info)
     display_logo();
     syscalls_init();
     mod_init();
+    ksyms_init();
 
     env = env_init();
     env_put(env, "prompt", "# ");
