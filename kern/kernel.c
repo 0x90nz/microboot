@@ -2,6 +2,7 @@
 #include "io/vga.h"
 #include "io/pci.h"
 #include "io/serial.h"
+#include "io/console.h"
 #include "io/keyboard.h"
 #include "fs/fs.h"
 #include "sys/interrupts.h"
@@ -27,6 +28,7 @@ char* debug_names[] = {
 
 static struct kstart_info sinfo;
 static env_t* env;
+console_t* stdout;
 
 /**
  * @brief Hang the system forever. Useful to prevent the system from executing
@@ -53,17 +55,17 @@ uint32_t get_esp()
 
 void display_logo()
 {
-    vga_puts("\n");
-    int offset = 16;
-    vga_pad(offset); vga_puts("           ##                            ##\n");
-    vga_pad(offset); vga_puts("           ##                            ##\n");
-    vga_pad(offset); vga_puts(" ##    ##  ########   #######   ####### #####\n");
-    vga_pad(offset); vga_puts(" ##    ##  ##    ### ###   ### ###   ### ##\n");
-    vga_pad(offset); vga_puts(" ##    ##  ##     ## ##     ## ##     ## ##\n");
-    vga_pad(offset); vga_puts(" ##    ##  ###   ### ###   ### ###   ### ##\n");
-    vga_pad(offset); vga_puts(" # ####  # ########   #######   #######  #####\n");
-    vga_pad(offset); vga_puts(" ##\n");
-    vga_pad(offset); vga_puts(" ##\n");
+    // vga_puts("\n");
+    // int offset = 16;
+    // vga_pad(offset); vga_puts("           ##                            ##\n");
+    // vga_pad(offset); vga_puts("           ##                            ##\n");
+    // vga_pad(offset); vga_puts(" ##    ##  ########   #######   ####### #####\n");
+    // vga_pad(offset); vga_puts(" ##    ##  ##    ### ###   ### ###   ### ##\n");
+    // vga_pad(offset); vga_puts(" ##    ##  ##     ## ##     ## ##     ## ##\n");
+    // vga_pad(offset); vga_puts(" ##    ##  ###   ### ###   ### ###   ### ##\n");
+    // vga_pad(offset); vga_puts(" # ####  # ########   #######   #######  #####\n");
+    // vga_pad(offset); vga_puts(" ##\n");
+    // vga_pad(offset); vga_puts(" ##\n");
 }
 
 /**
@@ -166,7 +168,7 @@ void kernel_late_init()
 
 void kernel_main(struct kstart_info* start_info)
 {
-    vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
+    stdout = NULL;
     init_alloc(start_info->memory_start, start_info->free_memory * 64 * KiB);
 
     interrupts_init();
@@ -174,6 +176,7 @@ void kernel_main(struct kstart_info* start_info)
     syscall_init();
     keyboard_init();
     serial_init(SP_COM0_PORT);
+    stdout = vga_init(vga_colour(VGA_WHITE, VGA_BLUE));
     display_logo();
     syscalls_init();
 
