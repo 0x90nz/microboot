@@ -15,6 +15,7 @@
 #include "alloc.h"
 #include "env.h"
 #include "list.h"
+#include "mod.h"
 
 char* debug_names[] = {
     "FATAL",
@@ -178,6 +179,7 @@ void kernel_main(struct kstart_info* start_info)
     stdout = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
     display_logo();
     syscalls_init();
+    mod_init();
 
     env = env_init();
     env_put(env, "prompt", "# ");

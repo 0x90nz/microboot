@@ -60,7 +60,7 @@ struct list_node* list_prev(struct list_node* item)
 void list_iterate(struct list* list, list_consumer consumer)
 {
     struct list_node* current = &list->head;
-    while ((current = list_next(current))->next) {
+    while ((current = list_next(current)) && current->next) {
         consumer(current);
     }
 }

@@ -13,6 +13,7 @@
 #include <alloc.h>
 #include <printf.h>
 #include <exe/elf.h>
+#include <mod.h>
 
 int ticks;
 char main_scratch[64];
@@ -243,7 +244,8 @@ void exec(int argc, char** argv)
             char* c = kallocz(fsize + 1);
             fs_read(fs, file, 0, fsize, c);
             
-            elf_run(c, argc, argv);
+            // elf_run(c, argc, argv);
+            mod_load(c);
 
             kfree(c);
             fs_destroy(fs, file);
@@ -253,8 +255,20 @@ void exec(int argc, char** argv)
     }
 }
 
+void lsmod(int argc, char** argv)
+{
+    mod_list();
+}
+
+void lssym(int argc, char** argv)
+{
+    mod_sym_list();
+}
+
 command_t commands[] = {
     {"exec", exec},
+    {"lsmod", lsmod},
+    {"lssym", lssym},
     {"uptime", uptime},
     {"mem", mem},
     {"clear", clear},

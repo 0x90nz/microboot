@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 struct elf_header
 {
@@ -64,4 +65,7 @@ struct elf_section_header
 
 } __attribute__((packed));
 
+typedef void (*symtab_handler)(void* base, void* symtab, size_t szsymtab);
+
 void elf_run(void* elf, int argc, char** argv);
+void elf_load_mod(void* elf, symtab_handler add_to_symtab);
