@@ -6,3 +6,4 @@ void mod_list();
 void mod_sym_list();
 void mod_symtab_add(void* base, void* symtab, size_t szsymtab);
 void mod_ksymtab_add(void* symtab, size_t szsymtab);
+void* mod_sym_get(const char* name);

@@ -58,9 +58,9 @@ void elf_load_mod(void* elf, symtab_handler add_to_symtab)
         }
     }
 
-    void (*entry)(void) = (void (*)(void))(base + hdr->entry);
+    void (*entry)(void*) = base + hdr->entry;
     if (entry)
-        entry();
+        entry(base);
 
     kfree(base);
 }

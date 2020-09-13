@@ -1,27 +1,19 @@
 #include <stdarg.h>
 #include <export.h>
+#include <printf.h>
 #include "common.h"
 
-MODULE(TEST);
+MODULE(test_mod);
+USE(printf);
 
-void main(int argc, char** argv)
+void main(void* base)
 {
-    int puts = SYSCALL1(0, "puts");
-    SYSCALL1(puts, "Filename was: ");
-    SYSCALL1(puts, argv[1]);
-    SYSCALL1(puts, "\n");
+    module_init();
+    INIT(printf);
 }
 
-void hello()
+void stuff()
 {
-    int puts = SYSCALL1(0, "puts");
-    SYSCALL1(puts, "Hello World!");
+    printf("Hello World!");
 }
-EXPORT_SYM(hello);
-
-void hello2()
-{
-    int puts = SYSCALL1(0, "puts");
-    SYSCALL1(puts, "Hello (the second) World!");
-}
-EXPORT_SYM(hello2);
+EXPORT_SYM(stuff);

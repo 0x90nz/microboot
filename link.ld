@@ -17,12 +17,11 @@ SECTIONS
 
 	.text ALIGN(4K) :  AT(ADDR(.text) - _kload_addr + _low_end) { *(.text) }
 
-	exports : { 
+	exports ALIGN(4K) : { 
 			_kexp_start = .;
 			*(exports)
 			_kexp_end = .;
 	}
-	
 
 	.rodata ALIGN(4K) :  { *(.rodata) }
 	.data ALIGN(4K) : { *(.data) }

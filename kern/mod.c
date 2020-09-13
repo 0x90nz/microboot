@@ -89,6 +89,18 @@ void mod_sym_list()
     list_iterate(&exports, mod_list_callback);
 }
 
+void* mod_sym_get(const char* name)
+{
+    struct list_node* current = &exports.head;
+    while ((current = list_next(current)) && current->next) {
+        struct symbol* sym = current->value;
+        if (strcmp(sym->name, name) == 0)
+            return sym->fn;
+    }
+
+    return NULL;
+}
+
 /**
  * @brief Load an ELF module
  * 

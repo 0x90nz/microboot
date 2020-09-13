@@ -1,3 +1,4 @@
+#include <export.h>
 #include "stdlib.h"
 #include "io/vga.h"
 #include "io/serial.h"
@@ -138,6 +139,10 @@ void puts(const char* str)
     while (*str)
         putc(*str++);
 }
+EXPORT_SYM(puts);
+EXPORT_SYM(printf);
+
+__attribute__((weak)) void puts(const char* str);
 
 /**
  * @brief Print a single character
@@ -151,6 +156,7 @@ void putc(char c)
 
     console_putc(stdout, c);
 }
+EXPORT_SYM(putc);
 
 /**
  * @brief Get a single character. Blocks awaiting input

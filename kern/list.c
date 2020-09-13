@@ -5,6 +5,7 @@
 
 void list_init(struct list* list)
 {
+    ASSERT(list, "Initializing null list");
     list->head.prev = NULL;
     list->head.next = NULL;
     list->tail.prev = NULL;

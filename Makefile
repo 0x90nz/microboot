@@ -21,7 +21,7 @@ loader:
 .PHONY: user
 user:
 	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern -Ilib
-	$(CC) $(CFLAGS) -static -fPIC user/test.c user/crt0.S -o rootfs/test.elf -T user/process.ld -Ilib
+	$(CC) $(CFLAGS) -static -fPIC user/test.c user/crt0.S -o rootfs/test.elf -T user/process.ld -Ilib -Ikern
 
 stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
@@ -40,7 +40,7 @@ stage2: $(KOBJS)
 run: image
 	qemu-system-i386 \
 		-drive format=raw,file=build/microboot.img,index=0 \
-		-serial stdio \
+		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap
 

@@ -155,23 +155,34 @@ void it_handle(int i, struct list_node* item)
     printf("%d: %s\n", i, item->value);
 }
 
-void kernel_late_init()
-{
-    fs_t* fs = fs_init(sinfo.drive_number);
-    env_put(env, "rootfs", fs);
-
-    extern int main();
-    main();
-
-    hang();
-}
-
 extern int _kexp_start, _kexp_end;
 void ksyms_init()
 {
     void* ksymtab = &_kexp_start;
     size_t ksymtab_size = (void*)&_kexp_end - (void*)&_kexp_start;
     mod_ksymtab_add(ksymtab, ksymtab_size);
+}
+
+void kernel_late_init()
+{
+    stdout = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
+    display_logo();
+    syscalls_init();
+
+    env = env_init();
+    env_put(env, "prompt", "# ");
+    env_put(env, "root", sinfo.drive_number);
+
+    fs_t* fs = fs_init(sinfo.drive_number);
+    env_put(env, "rootfs", fs);
+
+    mod_init();
+    ksyms_init();
+
+    extern int main();
+    main();
+
+    hang();
 }
 
 void kernel_main(struct kstart_info* start_info)
@@ -184,15 +195,6 @@ void kernel_main(struct kstart_info* start_info)
     syscall_init();
     keyboard_init();
     serial_init(SP_COM0_PORT);
-    stdout = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
-    display_logo();
-    syscalls_init();
-    mod_init();
-    ksyms_init();
-
-    env = env_init();
-    env_put(env, "prompt", "# ");
-    env_put(env, "root", &start_info->drive_number);
 
     // Save start info because when we switch stacks it'll get destroyed
     memcpy(&sinfo, start_info, sizeof(struct kstart_info));

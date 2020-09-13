@@ -13,4 +13,3 @@ do_syscall:
 	popal
 	mov	tmp, %eax
 	ret
-

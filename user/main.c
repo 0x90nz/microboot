@@ -229,6 +229,31 @@ void mem(int argc, char** argv)
     printf("%d bytes / %d KiB used\n", used, total / KiB);
 }
 
+void ldmod(int argc, char** argv)
+{
+    if (argc != 2) {
+        printf("Usage: %s file_name\n", argv[0]);
+        return;
+    }
+
+    fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
+    if (fs) {
+        fs_file_t file = fs_traverse(fs, argv[1]);
+        if (file) {
+            uint32_t fsize = fs_fsize(fs, file);
+            char* c = kallocz(fsize + 1);
+            fs_read(fs, file, 0, fsize, c);
+            
+            mod_load(c);
+
+            kfree(c);
+            fs_destroy(fs, file);
+        } else {
+            printf("No such file: %s\n", argv[1]);
+        }
+    }
+}
+
 void exec(int argc, char** argv)
 {
     if (argc != 2) {
@@ -244,8 +269,7 @@ void exec(int argc, char** argv)
             char* c = kallocz(fsize + 1);
             fs_read(fs, file, 0, fsize, c);
             
-            // elf_run(c, argc, argv);
-            mod_load(c);
+            elf_run(c, argc, argv);
 
             kfree(c);
             fs_destroy(fs, file);
@@ -268,6 +292,7 @@ void lssym(int argc, char** argv)
 command_t commands[] = {
     {"exec", exec},
     {"lsmod", lsmod},
+    {"ldmod", ldmod},
     {"lssym", lssym},
     {"uptime", uptime},
     {"mem", mem},
