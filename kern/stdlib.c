@@ -135,7 +135,8 @@ size_t strlen(const char* str)
  */
 void puts(const char* str)
 {
-    vga_puts(str);
+    while (*str)
+        putc(*str++);
 }
 
 /**
@@ -145,7 +146,10 @@ void puts(const char* str)
  */
 void putc(char c)
 {
-    vga_putc(c);
+    if (!stdout)
+        return;
+
+    console_putc(stdout, c);
 }
 
 /**
