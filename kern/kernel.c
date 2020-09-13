@@ -188,10 +188,11 @@ void kernel_late_init()
 void kernel_main(struct kstart_info* start_info)
 {
     stdout = NULL;
+    gdt_init();
+
     init_alloc(start_info->memory_start, start_info->free_memory * 64 * KiB);
 
     interrupts_init();
-    gdt_init();
     syscall_init();
     keyboard_init();
     serial_init(SP_COM0_PORT);

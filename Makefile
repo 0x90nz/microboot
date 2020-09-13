@@ -4,8 +4,6 @@ CC=gcc
 KSRC=$(shell find kern -type f -name "*.c")
 KOBJS=$(KSRC:.c=.o)
 
-.suffixes: .o .c
-
 image: build_dir user stage2 loader
 	./mkimg.sh build/microboot.img
 	dd if=build/load.bin of=build/microboot.img conv=notrunc
@@ -19,9 +17,9 @@ loader:
 	nasm -f bin -o build/load.bin loader/load.S
 
 .PHONY: user
-user:
+user: user/info.elf
 	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern -Ilib
-	$(CC) $(CFLAGS) -static -fPIC user/test.c user/crt0.S -o rootfs/test.elf -T user/process.ld -Ilib -Ikern
+	
 
 stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
@@ -31,8 +29,11 @@ stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -lgcc build/stage2_hl.o build/interrupts_stubs.o build/bios.o  build/main.o \
 		$(addprefix build/, $(notdir $^)) -T link.ld -Wl,-Map=build/stage2.map -o build/stage2.bin
 
-.c.o:
+%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
+
+%.elf: %.c
+	$(CC) $(CFLAGS) -static -fPIC $< user/crt0.S -o rootfs/$(notdir $@) -T user/process.ld -Ilib -Ikern
 
 # Load program with `netcat localhost 1234 < loadable.bin 
 # and replace `-serial ...` with `-serial tcp::1234,server,nowait \`

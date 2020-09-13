@@ -25,13 +25,15 @@ realmode_gdt_ptr:
 pic1_saved_mask: .byte 0
 pic2_saved_mask: .byte 0
 
-# Is this really needed if we don't point to it?
-.global realmode_gdt
-realmode_gdt:
-.rept 10
-.long 0
-.long 0
-.endr
+.align 8
+gdt:
+.quad 0x0000000000000000	# Null segment, because we have to
+.quad 0x00cf9a000000ffff	# Code segment, 0x08
+.quad 0x00cf92000000ffff	# Data segment, 0x10
+
+gdt_desc:
+.word gdt_desc - gdt - 1	# Size
+.long gdt			# Address
 
 saved_esp: .long 0
 saved_ebp: .long 0
@@ -62,7 +64,7 @@ _internal_bios_interrupt:
 
 	# Eventually we'll want to allow for a GDT which might be outside
 	# of low memory, for now it works without that
-	# lgdt	(realmode_gdt_ptr)
+	# lgdt	(gdt_desc)
 	lidt	(realmode_idt_ptr)
 
 	# When we go into real mode, it'll pess with the PICs, so we save the
@@ -82,12 +84,12 @@ _internal_bios_interrupt:
 	movb	%al, 1(%ebx)	# Patch the instruction with the interrupt number
 
 	# We need to use a long jump to load %cs to our 16 bit code segment
-	ljmp	$0x18,$0f	
+	ljmp	$0x18,$0f
 .code16
 0:
 	# Disable protected mode
 	mov	%cr0, %eax
-	and	0xfffe, %ax
+	and	$0xfffe, %eax
 	mov	%eax, %cr0
 
 	# Load %cs to 0
@@ -120,7 +122,7 @@ _internal_bios_interrupt:
 	
 intr:	int	$0
 	cli			# Some BIOS' enable interrupts, don't let 'em do that
-	
+
 	# Save the registers we'll clobber while saving the other registers
 	mov	%eax, saved_eax
 	mov	%ds, saved_ds
@@ -196,6 +198,7 @@ intr:	int	$0
 	# FINALLY! We're done, restore all the registers and hand back off
 	popal
 	pop	%ebp
+
 	ret
 
 # Get the interrupt flag

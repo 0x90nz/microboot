@@ -67,10 +67,24 @@ static void encode()
     }
 }
 
+void reload_segments()
+{
+    asm(
+        "ljmp $0x08,$0f\n\t"
+        "0: mov $0x10, %ax\n\t"
+        "mov %ax, %ds\n\t"
+        "mov %ax, %es\n\t"
+        "mov %ax, %fs\n\t"
+        "mov %ax, %gs\n\t"
+        "mov %ax, %ss\n\t"
+    );
+}
+
 void gdt_init()
 {
     encode();
     pointer.base = (uint32_t)gdt_buffer;
-    pointer.limit = sizeof(gdt_buffer) - 1;
+    pointer.limit = sizeof(gdt_buffer);
     load_gdt(&pointer);
+    reload_segments();
 }

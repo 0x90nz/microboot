@@ -7,7 +7,8 @@ struct fs* fs_init(uint8_t drive_num);
 
 enum fs_type {
     FS_INVALID,
-    FS_EXT2
+    FS_EXT2,
+    FS_KFS
 };
 
 typedef void* fs_priv_t;

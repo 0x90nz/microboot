@@ -54,7 +54,8 @@ struct fs* fs_init(uint8_t drive_num)
  */
 void fs_list_dir(fs_t* fs, fs_dir_t dir)
 {
-    fs->ops->ls(fs, dir);
+    if (fs->ops->ls)
+        fs->ops->ls(fs, dir);
 }
 
 /**
@@ -65,7 +66,9 @@ void fs_list_dir(fs_t* fs, fs_dir_t dir)
  */
 const fs_dir_t fs_get_root(fs_t* fs)
 {
-    return fs->ops->get_root(fs);
+    if (fs->ops->get_root)
+        return fs->ops->get_root(fs);
+    return NULL;
 }
 
 /**
@@ -77,7 +80,9 @@ const fs_dir_t fs_get_root(fs_t* fs)
  */
 uint32_t fs_fsize(fs_t* fs, fs_file_t file)
 {
-    return fs->ops->fsize(fs, file);
+    if (fs->ops->fsize)
+        return fs->ops->fsize(fs, file);
+    return 0;
 }
 
 /**
@@ -90,7 +95,9 @@ uint32_t fs_fsize(fs_t* fs, fs_file_t file)
  */
 fs_file_t fs_getfile(fs_t* fs, fs_dir_t dir, const char* name)
 {
-    return fs->ops->getfile(fs, dir, name);
+    if (fs->ops->getfile)
+        return fs->ops->getfile(fs, dir, name);
+    return NULL;
 }
 
 /**
@@ -106,7 +113,9 @@ fs_file_t fs_getfile(fs_t* fs, fs_dir_t dir, const char* name)
  */
 uint32_t fs_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* buffer)
 {
-    return fs->ops->read(fs, file, offset, size, buffer);
+    if (fs->ops->read)
+        return fs->ops->read(fs, file, offset, size, buffer);
+    return 0;
 }
 
 /**
@@ -117,7 +126,8 @@ uint32_t fs_read(fs_t* fs, fs_file_t file, uint32_t offset, size_t size, void* b
  */
 void fs_destroy(fs_t* fs, fs_file_t file)
 {
-    fs->ops->destroy(fs, file);
+    if (fs->ops->destroy)
+        fs->ops->destroy(fs, file);
 }
 
 /**
