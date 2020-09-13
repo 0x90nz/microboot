@@ -17,7 +17,7 @@ loader:
 	nasm -f bin -o build/load.bin loader/load.S
 
 .PHONY: user
-user: user/info.elf
+user: user/info.elf user/dino.elf
 	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern -Ilib
 	
 

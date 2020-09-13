@@ -167,6 +167,7 @@ char getc()
 {
     return keyboard_getchar(1);
 }
+EXPORT_SYM(getc);
 
 /**
  * @brief Print a single character to the debug output
@@ -224,6 +225,7 @@ void gets(char* str)
     } while (*str++ != '\n');
     *--str = '\0';
 }
+EXPORT_SYM(gets);
 
 /**
  * @brief Compare two strings. A non-zero return value indicates that the strings
