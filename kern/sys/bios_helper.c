@@ -19,7 +19,7 @@ void int_dump_regs(struct int_regs* frame)
 
 void bios_interrupt(int number, struct int_regs* regs)
 {
-    int_dump_regs(regs);
+    // int_dump_regs(regs);
     memcpy(&bios_regs, regs, sizeof(struct int_regs));
     _internal_bios_interrupt(number);
     memcpy(regs, &bios_regs, sizeof(struct int_regs));
