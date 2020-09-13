@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "printf.h"
 #include "kernel.h"
+#include "io/console.h"
 
 // Standard library - ish functions
 void itoa(int value, char* buffer, int base);
@@ -36,3 +37,5 @@ void _debug_printf(enum log_level level, const char* file, int line, const char*
 #define logf(l, x, ...)     _debug_printf(l, __FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);
 #define debug(x)            _debug_printf(LOG_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, x);
 #define debugf(x, ...)      _debug_printf(LOG_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);
+
+extern console_t* stdout;

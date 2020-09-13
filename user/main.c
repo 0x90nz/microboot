@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <sys/interrupts.h>
-#include <io/vga.h>
+#include <io/console.h>
 #include <io/pio.h>
 #include <io/serial.h>
 #include <io/keyboard.h>
@@ -14,7 +14,6 @@
 #include <printf.h>
 #include <exe/elf.h>
 
-uint16_t colour;
 int ticks;
 char main_scratch[64];
 char current_dir[256];
@@ -59,7 +58,7 @@ void uptime(int argc, char** argv)
 
 void clear(int argc, char** argv)
 {
-    // console_clear();
+    console_clear(stdout);
 }
 
 void setcolour(int argc, char** argv)
@@ -72,8 +71,8 @@ void setcolour(int argc, char** argv)
     uint8_t fg = colour_from_str(argv[1]);
     uint8_t bg = colour_from_str(argv[2]);
 
-    colour = vga_colour(fg, bg);
-    vga_init(colour);
+    console_colour(stdout, fg | bg << 4);
+    console_clear(stdout);
 }
 
 void listcolours(int argc, char** argv)
