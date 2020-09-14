@@ -1,5 +1,5 @@
 # μboot
-A small (and very limited) bootloader
+A small bootloader and operating environment
 
 ![μboot on boot](.images/microboot_1.png)
 
