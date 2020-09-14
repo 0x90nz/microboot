@@ -153,7 +153,8 @@ void kfree(void* ptr)
 #endif
 
     mem_block_t* block = ptr - sizeof(mem_block_t);
-    
+
+    ASSERT(!(block->flags & MEM_CRITICAL), "Tried to free critical memory");
     ASSERT(block->state == MEM_STATE_USED, "Tried to free already free memory");
     ASSERT(block->magic == MEM_BLOCK_MAGIC, "Memory corruption detected, magic value not present");
 
@@ -187,6 +188,18 @@ size_t alloc_used(int all)
 size_t alloc_total()
 {
     return mem_size;
+}
+
+/**
+ * @brief Mark a region as critical. Attempts to free will fault
+ * 
+ * @param ptr the critical region
+ */
+void kmmcritical(void* ptr)
+{
+    ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried mark as critical an invalid address");
+    mem_block_t* block = ptr - sizeof(mem_block_t);
+    block->flags |= MEM_CRITICAL;
 }
 
 /**

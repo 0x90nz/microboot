@@ -16,6 +16,7 @@ if $(mkdir mnt) ; then
     sudo mkfs.ext2 "${LOOP}p1"
     sudo mount "${LOOP}p1" mnt
     sudo cp -r rootfs/* mnt
+    ls -li mnt
     sudo umount mnt
     sudo losetup -d "$LOOP"
     rmdir mnt

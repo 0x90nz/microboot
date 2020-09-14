@@ -45,7 +45,6 @@ void read_inode(struct ext2_fs* fs, struct ext2_inode* inode, uint32_t inode_num
     uint32_t index = (inode_num - 1) % fs->sb->inodes_per_group;
 
     uint32_t inode_tbl_block = fs->bgd_table[group].addr_block_inode_table;
-
     // TODO: either account for extended properties not being present, or just
     // throw a tantrum if they're not present
     uint32_t block = (index * fs->sb->ext.inode_size) / fs->block_size;
@@ -202,7 +201,6 @@ static fs_file_t ext2_getfile(fs_t* fs, fs_dir_t dir, const char* name)
     uint32_t inode_num = get_filedir(efs, search_inode, name);
 
     if (inode_num != -1) {
-        debugf("inode number %d", inode_num);
         struct ext2_inode* tmp = kalloc(sizeof(struct ext2_inode));
         read_inode(efs, tmp, inode_num);
         return tmp;   
@@ -292,7 +290,6 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
     fs->block_size = 1024;
 
     // Read in the superblock, and initialise fields from that
-    // bdrive_read(drive_num, 2, start_lba + 2, fs->sb);
     read_block(fs, 1, fs->sb);
     fs->block_size = (1 << 10) << fs->sb->log_block_size;
     fs->blocks_per_group = fs->sb->blocks_per_group;
@@ -309,9 +306,6 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
     if (bgd_table_blocks * fs->block_size < fs->num_groups * sizeof(struct ext2_bgd))
         bgd_table_blocks++;
 
-    debugf("num_groups: %d, bgd_table_blocks: %d", fs->num_groups, bgd_table_blocks);
-    debugf("first_data_block: %d", fs->sb->first_data_block);
-
     uint32_t bdgt_block = fs->sb->first_data_block + (1024 / fs->block_size);
     // Allocate space for the BGD table, and then fill it with data from disk
     fs->bgd_table = kallocz(bgd_table_blocks * fs->block_size * sizeof(struct ext2_bgd));
@@ -321,6 +315,7 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
 
     fs->root_inode = kallocz(sizeof(struct ext2_inode));
     read_inode(fs, fs->root_inode, 2);
+    kmmcritical(fs->root_inode);
 
     ops.get_root = get_root;
     ops.ls = ext2_ls;

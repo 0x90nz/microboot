@@ -150,6 +150,10 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
     char* token = strtok(buffer, FS_PATH_SEPARATOR);
     while (strtok(NULL, FS_PATH_SEPARATOR) != NULL) { count++; }
 
+    // If the path is empty, we just return the root dir
+    if (!token)
+        return root;
+
     char** parts = kalloc(sizeof(char*) * count);
 
     char* tmp = token;
@@ -160,7 +164,7 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
 
     fs_dir_t current = root;
     for (int i = 0; i < count; i++) {
-        fs_dir_t new_dir = fs_getfile(fs, current, parts[i]);
+        fs_file_t new_dir = fs_getfile(fs, current, parts[i]);
 
         if (current != root)
             kfree(current);
@@ -168,6 +172,7 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
         if (new_dir) {
             current = new_dir;
         } else {
+            current = NULL;
             break;
         }
     }
