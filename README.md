@@ -11,15 +11,12 @@ designed to work with a normal installation of `gcc` on an x86_64 computer. This
 solution is somewhat unstable however, and is only used because it greatly
 reduces the complexity to get started.
 
-Calling it a "bootloader" is (currently) a bit of a misnomer because it can't
-load any user defined applications at run time. This however is the end goal.
-
 ## How to use
 
-To use μboot, you'll at the very minimum need some linux environment, which has
-the tools `qemu`, `gcc`, `nasm`, and `dd` available. Once all the tools are
-installed, you can run `make` to build or `make run` to both build and launch
-qemu.
+To use μboot, you'll at the very minimum need some Linux (or possibly Unix if
+you can find the tools) environment, which has the tools `qemu`, `gcc`, `nasm`,
+`losetup`, ext2 tools and `dd` available. Once all the tools are installed, you
+can run `make` to build or `make run` to both build and launch qemu.
 
 By default a hard disk image is created, 32MiB large (see `mkimg.sh` for more 
 details). The bootloader's core image is stored within the space between the MBR
@@ -27,20 +24,21 @@ and the first partition.
 
 ## Architecture
 
-There are 3 main components:
+There are 4 main components:
 
  1. First stage loader (boot sector)
  2. Second stage loader
- 3. User program
+ 3. Main program
+ 4. User programs
 
-The second stage loader and user program are linked together into one binary
-file at compile time. To use this as a more general bootloader, this
-functionality would need to be separated out further.
+The second stage loader and main program are linked together into one binary
+file at compile time. The main program currently implements a minimal command
+line.
 
-The second stage loader is stored in the space between the MBR and the first
-partition. Currently work is ongoing to support the ext2 filesystem which should
-enable loadable modules. Once these are supported, proper user programs which
-are not linked at compile time should be fairly simple to implement.
+The user programs are position independent ELF files which are compiled
+and may be loaded from disk at runtime. To use symbols from the kernel, or export
+their own symbols for use by the kernel the `export.h` header must be used. See
+this file for more detail on how symbols are handled.
 
 ### First Stage Loader
 
@@ -56,13 +54,22 @@ The second stage takes care of the platform initialisation. This includes
 enabling the A20 gate, setting up a very simple GDT, and switching to protected
 mode. The second stage is written in gnu `as` assembly (AT&T syntax).
 
-### User program
+### Main program
 
-This is the program which is given control once the second stage has set
-everything up. The entry point is `kernel_main`. This sets up the devices and
-initialises the IDT so that interrupts can be used. Once setup is done, it jumps
-to `main`, which should be defined in `user/main.c`. This is the actual user
-program.
+Once all the devices are setup, execution will be transferred to the `main`
+function. This is defined in `kern/main.c`. From here user programs can be
+loaded and executed through the `exec` command.
+
+### User programs
+
+User programs are loaded and executed at runtime. They may either be a module,
+or an executable. Both types follow the same general format.
+
+Any kernel symbols to use must be declared and initialised. This is done with
+the `USE` macro for declaration and the `INIT` macro for initialisation. In this
+way the kernel does not need to do any linking before loading, this is taken
+care of by the user program. This does add extra complication to the user
+program, but it simplifies the kernel design.
 
 ## Environment
 
