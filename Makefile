@@ -19,15 +19,13 @@ loader:
 
 .PHONY: user
 user: user/info.elf user/dino.elf
-	$(CC) $(CFLAGS) -c user/main.c -o build/main.o -Ikern -Ilib
 	
-
 stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
 	$(CC) $(CFLAGS) -c kern/sys/bios.S -o build/bios.o
 	$(CC) $(CFLAGS) -c loader/stage2_hl.c -o build/stage2_hl.o
 	$(CC) $(CFLAGS) -c kern/sys/interrupts_stubs.S -o build/interrupts_stubs.o
-	$(CC) $(CFLAGS) -lgcc build/stage2_hl.o build/interrupts_stubs.o build/bios.o  build/main.o \
+	$(CC) $(CFLAGS) -lgcc build/stage2_hl.o build/interrupts_stubs.o build/bios.o \
 		$(addprefix build/, $(notdir $^)) -T link.ld -Wl,-Map=build/stage2.map -o build/stage2.bin
 
 %.o: %.c
@@ -36,9 +34,7 @@ stage2: $(KOBJS)
 %.elf: %.c
 	$(CC) $(CFLAGS) -static -fPIC $< user/crt0.S -o rootfs/$(notdir $@) -T user/process.ld -Ilib -Ikern
 
-# Load program with `netcat localhost 1234 < loadable.bin 
-# and replace `-serial ...` with `-serial tcp::1234,server,nowait \`
-
+run: CLFAGS += -O3
 run: image
 	qemu-system-i386 \
 		-drive format=raw,file=build/microboot.img,index=0 \
@@ -46,7 +42,7 @@ run: image
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap
 
-# debug: CFLAGS += -g
+debug: CFLAGS += -g
 debug: image
 	qemu-system-i386 \
 		-drive format=raw,file=build/microboot.img,index=0 \

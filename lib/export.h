@@ -6,7 +6,9 @@ struct symbol
     void* fn;
 } __attribute__((packed));
 
-#define MODULE(name) struct symbol symbol_mod_ ## name __attribute__((section("exports"))) = { #name, NULL }; \
+// Define a module. A separate section is used because the order of variables is
+// not guaranteed when optimisation is enabled
+#define MODULE(name) struct symbol symbol_mod_ ## name __attribute__((section("exports.start"))) = { #name, NULL }; \
 int getexport; \
 void module_init() \
 { \
