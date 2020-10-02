@@ -283,22 +283,6 @@ void memcpy(void* dst, const void* src, size_t len)
     }
 }
 
-/**
- * @brief Execute the cpuid instruction and return the resultant registers
- * 
- * @param i the value of the register eax for cpuid
- * @param regs 4 32 bit integers, eax, ebx, ecx, and edx
- */
-void cpuid(int i, uint32_t* regs)
-{
-    asm volatile(
-        "cpuid" 
-        : "=a" (regs[0]), "=b" (regs[1]), "=c" (regs[2]), "=d" (regs[3])
-        : "a" (i), "c" (0)
-    );
-}
-
-
 int memcmp(const void* a, const void* b, size_t len)
 {
     const uint8_t* la = a;
