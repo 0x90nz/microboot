@@ -325,14 +325,12 @@ enum log_level get_log_level()
     return log_level;
 }
 
-void _assert(const char* file, int line, const char* func, int expr, const char* message)
+void _assert(const char* expr_str, const char* file, int line, const char* func, int expr, const char* message)
 {
-    if (!expr)
-    {
-        char* assert_fmt = "%s() @ %s:%d [%s]";
-        puts("Assertion failed!\n");
-        printf(assert_fmt, func, file, line, message);
-        logf(LOG_FATAL, assert_fmt, func, file, line, message);
+    if (!expr) {
+        char* assert_fmt = "ASSERT(%s) failed!\n%s() @ %s:%d\n: %s";
+        printf(assert_fmt, expr_str, func, file, line, message);
+        logf(LOG_FATAL, assert_fmt, expr_str, func, file, line, message);
 
         hang();
     }

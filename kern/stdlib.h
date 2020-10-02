@@ -26,8 +26,8 @@ enum log_level get_log_level();
 
 // Assertions. Note that we use a ternary to force evaluation as an if, from which return an int
 // to be used in the actual __assert function
-void _assert(const char* file, int line, const char* func, int expr, const char* message);
-#define ASSERT(expr, message)       _assert(__FILE__, __LINE__, __PRETTY_FUNCTION__, expr ? 1 : 0, message);
+void _assert(const char* expr_str, const char* file, int line, const char* func, int expr, const char* message);
+#define ASSERT(expr, message)       _assert(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__, expr ? 1 : 0, message);
 
 // Debug logging
 
