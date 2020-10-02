@@ -142,8 +142,6 @@ void puts(const char* str)
 EXPORT_SYM(puts);
 EXPORT_SYM(printf);
 
-__attribute__((weak)) void puts(const char* str);
-
 /**
  * @brief Print a single character
  * 
@@ -203,18 +201,14 @@ void gets(char* str)
     do {
         *str = keyboard_getchar(1);
 
-        if (*str == '\b')
-        {
-            if (str > start)
-            {
+        if (*str == '\b') {
+            if (str > start) {
                 if (should_echo)
                     putc(*str);
 
                 *str-- = '\0'; // Blank over \b
                 *str-- = '\0'; // blank over the character to erase
-            }
-            else if (str == start)
-            {
+            } else if (str == start) {
                 *str-- = '\0'; // in this case just blank over the \b
             }
             continue;
@@ -237,8 +231,7 @@ EXPORT_SYM(gets);
  */
 int strcmp(const char* a, const char* b)
 {
-    while (*a && (*a == *b))
-    {
+    while (*a && (*a == *b)) {
         a++; b++;
     }
     return *(const unsigned char*)a - *(const unsigned char*)b;
@@ -268,8 +261,7 @@ char* strcpy(char* dst, const char* src)
 void memset(void* memory, uint8_t value, size_t len)
 {
     uint8_t* ptr = memory;
-    for (int i = 0; i < len; i++)
-    {
+    for (int i = 0; i < len; i++) {
         ptr[i] = value;
     }
 }
@@ -286,8 +278,7 @@ void memcpy(void* dst, const void* src, size_t len)
     uint8_t* lsrc = (uint8_t*)src;
     uint8_t* ldst = (uint8_t*)dst;
 
-    for (size_t i = 0; i < len; i++)
-    {
+    for (size_t i = 0; i < len; i++) {
         ldst[i] = lsrc[i];
     }
 }
