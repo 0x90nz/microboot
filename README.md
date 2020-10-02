@@ -86,9 +86,12 @@ Once control is handed over to the user program, it can do whatever it wants
 run at a lower privilege level and perhaps be subject to preemption. It is
 simply a user defined program that can be run.
 
-The functions provided allow for convenient use of peripherals, but they're in
-no way mandatory. It would be entirely possible to rewrite all of these within
-the user program and only use those local copies.
+A core set of functions are provided in the standard library, and in the rest of
+the kernel. These can be exported to be used in the user program. The functions
+provided allow for convenient use of peripherals, as well as being able to
+complete common tasks but they're in no way mandatory. It would be entirely
+possible to rewrite all of these within the user program and only use those
+local copies.
 
 ## Documentation
 
