@@ -289,6 +289,20 @@ void lssym(int argc, char** argv)
     mod_sym_list();
 }
 
+void cmd_cpuid(int argc, char** argv)
+{
+    char buf[13];
+    uint32_t res[4];
+    cpuid(0, res);
+    memcpy(buf, res + 1, 4);        // ebx
+    memcpy(buf + 4, res + 3, 4);    // edx
+    memcpy(buf + 8, res + 2, 4);    // ecx
+    buf[12] = '\0';
+
+    printf("cpuid : %s\n", buf);
+    printf("max_id: %d\n", res[0]);
+}
+
 command_t commands[] = {
     {"exec", exec},
     {"lsmod", lsmod},
@@ -296,6 +310,7 @@ command_t commands[] = {
     {"lssym", lssym},
     {"uptime", uptime},
     {"mem", mem},
+    {"cpuid", cmd_cpuid},
     {"clear", clear},
     {"clock", clock},
     {"setcolour", setcolour},
