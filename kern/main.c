@@ -175,7 +175,7 @@ void ls(int argc, char** argv)
 {
     fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
     if (fs) {
-        fs_dir_t dir = fs_traverse(fs, argc > 1 ? argv[1] : "");
+        fs_file_t dir = fs_traverse(fs, argc > 1 ? argv[1] : "");
         if (dir)
             fs_list_dir(fs, dir);
         fs_destroy(fs, dir);

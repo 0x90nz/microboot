@@ -52,7 +52,7 @@ struct fs* fs_init(uint8_t drive_num)
  * @param fs the filesystem
  * @param dir the directory to list
  */
-void fs_list_dir(fs_t* fs, fs_dir_t dir)
+void fs_list_dir(fs_t* fs, fs_file_t dir)
 {
     if (fs->ops->ls)
         fs->ops->ls(fs, dir);
@@ -62,9 +62,9 @@ void fs_list_dir(fs_t* fs, fs_dir_t dir)
  * @brief Get the root directory of a filesystem
  * 
  * @param fs the filesystem
- * @return const fs_dir_t the root directory **do not** attempt to free this pointer
+ * @return const fs_file_t the root directory **do not** attempt to free this pointer
  */
-const fs_dir_t fs_get_root(fs_t* fs)
+const fs_file_t fs_get_root(fs_t* fs)
 {
     if (fs->ops->get_root)
         return fs->ops->get_root(fs);
@@ -93,7 +93,7 @@ uint32_t fs_fsize(fs_t* fs, fs_file_t file)
  * @param name the name of the file
  * @return fs_file_t the file, this should be freed once no longer needed
  */
-fs_file_t fs_getfile(fs_t* fs, fs_dir_t dir, const char* name)
+fs_file_t fs_getfile(fs_t* fs, fs_file_t dir, const char* name)
 {
     if (fs->ops->getfile)
         return fs->ops->getfile(fs, dir, name);
@@ -136,11 +136,11 @@ void fs_destroy(fs_t* fs, fs_file_t file)
  * 
  * @param fs the filesystem
  * @param path the path to traverse
- * @return const fs_dir_t the final directory of the traversed path
+ * @return const fs_file_t the final directory of the traversed path
  */
-const fs_dir_t fs_traverse(fs_t* fs, const char* path)
+const fs_file_t fs_traverse(fs_t* fs, const char* path)
 {
-    fs_dir_t root = fs_get_root(fs);
+    fs_file_t root = fs_get_root(fs);
 
     size_t len = strlen(path) * sizeof(char) + 1;
     char* buffer = kallocz(len + 2);
@@ -162,7 +162,7 @@ const fs_dir_t fs_traverse(fs_t* fs, const char* path)
         tmp += strlen(tmp) + 1;
     }
 
-    fs_dir_t current = root;
+    fs_file_t current = root;
     for (int i = 0; i < count; i++) {
         fs_file_t new_dir = fs_getfile(fs, current, parts[i]);
 

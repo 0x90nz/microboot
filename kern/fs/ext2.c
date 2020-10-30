@@ -191,7 +191,7 @@ static uint32_t get_filedir(struct ext2_fs* fs, struct ext2_inode* inode, const 
     return num;
 }
 
-static fs_file_t ext2_getfile(fs_t* fs, fs_dir_t dir, const char* name)
+static fs_file_t ext2_getfile(fs_t* fs, fs_file_t dir, const char* name)
 {
     ASSERT(fs && fs->fs_priv && dir, "Null fs or dir");
 
@@ -227,7 +227,7 @@ static uint32_t ext2_fsize(fs_t* fs, fs_file_t file)
     return inode->size_lo;
 }
 
-static void ext2_ls(fs_t* fs, fs_dir_t dir)
+static void ext2_ls(fs_t* fs, fs_file_t dir)
 {
     ASSERT(fs && dir, "Null fs or dir");
 
@@ -252,13 +252,13 @@ static void ext2_ls(fs_t* fs, fs_dir_t dir)
     kfree(dirent);
 }
 
-static fs_dir_t get_root(fs_t* fs)
+static fs_file_t get_root(fs_t* fs)
 {
     struct ext2_fs* efs = (struct ext2_fs*)fs->fs_priv;
     return efs->root_inode;
 }
 
-static void ext2_destroy(fs_t* fs, fs_dir_t file)
+static void ext2_destroy(fs_t* fs, fs_file_t file)
 {
     if (file != get_root(fs))
         kfree(file);
