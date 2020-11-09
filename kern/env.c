@@ -1,6 +1,8 @@
 /**
  * @file env.c
- * @brief An environment which stores a pointer to something keyed by a string
+ * @brief An environment which stores a pointer to something keyed by a string.
+ * **not** hashed, so uses a linear search, so don't use for performance-sensitive
+ * applications.
  */
 
 #include "env.h"
@@ -22,11 +24,25 @@ env_t* env_init()
 static int env_index(env_t* env, const char* key)
 {
     for (int i = 0; i < env->current; i++) {
-        if (strcmp(key, env->items[i].key) == 0) {
+        if (env->items[i].status & ENV_PRESENT 
+                && strcmp(key, env->items[i].key) == 0) {
             return i;
         }
     }
     return -1;
+}
+
+static int env_first_free(env_t* env)
+{
+    for (int i = 0; i < env->current; i++) {
+        if (env->items[i].status & ENV_EMPTY)
+            return i;
+    }
+
+    if (env->current >= env->max)
+        return -1;
+
+    return env->current++;
 }
 
 /**
@@ -37,16 +53,42 @@ static int env_index(env_t* env, const char* key)
  */
 void env_put(env_t* env, const char* key, void* value)
 {
-    ASSERT(env, "Trued to 'put' before environment was initialised");
+    ASSERT(env, "Tried to 'put' before environment was initialised");
     int index = env_index(env, key);
     if (index != -1) {
         env->items[index].value = value;
     } else {
         ASSERT(strlen(key) < ENV_KEY_LEN, "Key too long for environment");
-        strcpy(env->items[env->current].key, key);
-        env->items[env->current].value = value;
-        env->current++;
+        index = env_first_free(env);
+        if (index != -1) {
+            strcpy(env->items[index].key, key);
+            env->items[index].value = value;
+            env->items[index].status = ENV_PRESENT;
+        } else {
+            log(LOG_WARN, "env tried to put to full environment");
+        }
     }
+}
+
+/**
+ * @brief Remove an item from the environment
+ * 
+ * @param env the environment
+ * @param key the key to remove
+ * @return void* the value of the item removed
+ */
+void* env_remove(env_t* env, const char* key)
+{
+    ASSERT(env, "Tried to 'remove' before environment was initialised");
+    int index = env_index(env, key);
+
+    if (index != -1) {
+        env_item_t* item = &env->items[index];
+        item->status = ENV_EMPTY;
+        return item;
+    }
+
+    return NULL;
 }
 
 /**

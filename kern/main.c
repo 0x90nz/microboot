@@ -173,13 +173,10 @@ void hdisk(int argc, char** argv)
 
 void ls(int argc, char** argv)
 {
-    fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
-    if (fs) {
-        fs_file_t dir = fs_traverse(fs, argc > 1 ? argv[1] : "");
-        if (dir)
-            fs_list_dir(fs, dir);
-        fs_destroy(fs, dir);
-    }
+    fs_file_t dir = fs_open(argc > 1 ? argv[1] : "");
+    if (dir != FS_FILE_INVALID)
+        fs_flist(dir);
+    fs_fdestroy(dir);
 }
 
 void pwd(int argc, char** argv)
@@ -194,19 +191,16 @@ void cat(int argc, char** argv)
         return;
     }
 
-    fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
-    if (fs) {
-        fs_file_t file = fs_traverse(fs, argv[1]);
-        if (file) {
-            uint32_t fsize = fs_fsize(fs, file);
-            char* c = kallocz(fsize + 1);
-            fs_read(fs, file, 0, fsize, c);
-            printf("%s\n", c);
-            kfree(c);
-            fs_destroy(fs, file);
-        } else {
-            printf("No such file: %s\n", argv[1]);
-        }
+    fs_file_t file = fs_open(argv[1]);
+    if (file != FS_FILE_INVALID) {
+        uint32_t fsize = fs_fsize(file);
+        char* c = kallocz(fsize + 1);
+        fs_fread(file, 0, fsize, c);
+        printf("%s\n", c);
+        kfree(c);
+        fs_fdestroy(file);
+    } else {
+        printf("No such file: %s\n", argv[1]);
     }
 }
 
@@ -237,21 +231,18 @@ void ldmod(int argc, char** argv)
         return;
     }
 
-    fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
-    if (fs) {
-        fs_file_t file = fs_traverse(fs, argv[1]);
-        if (file) {
-            uint32_t fsize = fs_fsize(fs, file);
-            char* c = kallocz(fsize + 1);
-            fs_read(fs, file, 0, fsize, c);
-            
-            mod_load(c);
+    fs_file_t file = fs_open(argv[1]);
+    if (file != FS_FILE_INVALID) {
+        uint32_t fsize = fs_fsize(file);
+        char* c = kallocz(fsize + 1);
+        fs_fread(file, 0, fsize, c);
+        
+        mod_load(c);
 
-            kfree(c);
-            fs_destroy(fs, file);
-        } else {
-            printf("No such file: %s\n", argv[1]);
-        }
+        kfree(c);
+        fs_fdestroy(file);
+    } else {
+        printf("No such file: %s\n", argv[1]);
     }
 }
 
@@ -262,21 +253,18 @@ void exec(int argc, char** argv)
         return;
     }
 
-    fs_t* fs = env_get(get_rootenv(), "rootfs", fs_t*);
-    if (fs) {
-        fs_file_t file = fs_traverse(fs, argv[1]);
-        if (file) {
-            uint32_t fsize = fs_fsize(fs, file);
-            char* c = kallocz(fsize + 1);
-            fs_read(fs, file, 0, fsize, c);
-            
-            elf_run(c, argc, argv);
+    fs_file_t file = fs_open(argv[1]);
+    if (file != FS_FILE_INVALID) {
+        uint32_t fsize = fs_fsize(file);
+        char* c = kallocz(fsize + 1);
+        fs_fread(file, 0, fsize, c);
+        
+        elf_run(c, argc, argv);
 
-            kfree(c);
-            fs_destroy(fs, file);
-        } else {
-            printf("No such file: %s\n", argv[1]);
-        }
+        kfree(c);
+        fs_fdestroy(file);
+    } else {
+        printf("No such file: %s\n", argv[1]);
     }
 }
 

@@ -238,6 +238,32 @@ int strcmp(const char* a, const char* b)
 }
 
 /**
+ * @brief Compare two strings for a given number of characters
+ * 
+ * @param a the first string
+ * @param b the second string
+ * @param n the number of characters to compare
+ * @return int zero if identical for all indicated characters, non-zero otherwise
+ */
+int strncmp(const char* a, const char* b, size_t n)
+{
+    while (n && *a && (*a == *b) )
+    {
+        ++a;
+        ++b;
+        --n;
+    }
+    if (n == 0)
+    {
+        return 0;
+    }
+    else
+    {
+        return (*(const unsigned char *)a - *(unsigned char *)b);
+    }
+}
+
+/**
  * @brief Copy a string to the location pointed to by dst
  * 
  * @param dst where to copy the string to
@@ -249,6 +275,29 @@ char* strcpy(char* dst, const char* src)
     char* tmp = dst;
     while((*dst++ = *src++) != '\0');
     return tmp;
+}
+
+
+/**
+ * @brief Find the start of the first occurence of a given substring within
+ * a larger string
+ * 
+ * @param haystack the string to search within 
+ * @param needle the substring to search for
+ * @return const char* pointer to the start of the substring within 
+ * the larger string
+ */
+const char* strstr(const char* haystack, const char* needle)
+{
+    size_t nlen = strlen(needle);
+    while (*haystack) {
+        if (*haystack == *needle) {
+            if (strncmp(haystack, needle, nlen) == 0)
+                return haystack;
+        }
+        haystack++;
+    }
+    return NULL;
 }
 
 /**
