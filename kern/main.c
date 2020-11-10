@@ -176,6 +176,8 @@ void ls(int argc, char** argv)
     fs_file_t dir = fs_open(argc > 1 ? argv[1] : "");
     if (dir != FS_FILE_INVALID)
         fs_flist(dir);
+    else
+        printf("Invalid directory\n");
     fs_fdestroy(dir);
 }
 

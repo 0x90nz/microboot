@@ -1,6 +1,6 @@
 /**
  * @file vga.c
- * @brief 
+ * @brief Simple VGA text mode console
  * 
  */
 

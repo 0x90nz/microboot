@@ -18,9 +18,12 @@ typedef struct env {
     env_item_t* items;
 } env_t;
 
+typedef void (*env_iter_func)(const char* k, void* v);
+
 void env_put(env_t* env, const char* key, void* value);
 void* _env_get(env_t* env, const char* key);
 void* env_remove(env_t* env, const char* key);
+void env_iterate(env_t* env, env_iter_func iter);
 
 
 #define env_get(e, k, t)      ((t)_env_get(e, k))

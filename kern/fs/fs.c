@@ -65,6 +65,7 @@ const static fs_file_priv_t fs_traverse(fs_t* fs, const char* path)
     // If the path is empty, we just return the root dir
     if (!token) {
         kfree(buffer);
+        debugf("%08x", root);
         return root;
     }
 
@@ -234,4 +235,15 @@ void fs_fdestroy(fs_file_t file)
         ent->fs->ops->destroy(ent->fs, ent->priv);
     
     oftable[file].state &= ~OFTABLE_OPEN;
+}
+
+/**
+ * @brief Mount a filesystem
+ * 
+ * @param name the name of the filesystem
+ * @param fs the filesystem
+ */
+void fs_mount(const char* name, fs_t* fs)
+{
+    env_put(mounts, name, fs);
 }

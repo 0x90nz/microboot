@@ -6,7 +6,7 @@
 enum fs_type {
     FS_INVALID,
     FS_EXT2,
-    FS_KFS
+    FS_ENVFS
 };
 
 enum fs_ftype {
@@ -44,6 +44,7 @@ void fs_flist(fs_file_t file);
 uint32_t fs_fsize(fs_file_t file);
 uint32_t fs_fread(fs_file_t file, uint32_t offset, size_t size, void* buffer);
 void fs_fdestroy(fs_file_t file);
+void fs_mount(const char* name, fs_t* fs);
 
 #define FS_PATH_SEPARATOR       "/"
 #define FS_PATH_SEPARATOR_CHAR  '/'

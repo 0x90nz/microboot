@@ -5,6 +5,7 @@
 #include "io/console.h"
 #include "io/keyboard.h"
 #include "fs/fs.h"
+#include "fs/envfs.h"
 #include "sys/interrupts.h"
 #include "sys/gdt.h"
 #include "sys/bios.h"
@@ -171,9 +172,9 @@ void kernel_late_init()
 
     env = env_init();
     env_put(env, "prompt", "# ");
-    env_put(env, "root", &sinfo.drive_number);
 
     fs_init(sinfo.drive_number);
+    fs_mount("conf", envfs_init(env));
 
     mod_init();
     ksyms_init();   

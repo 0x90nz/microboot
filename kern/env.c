@@ -112,3 +112,18 @@ void* _env_get(env_t* env, const char* key)
     else
         return NULL;
 }
+
+/**
+ * @brief Iterate over the present keys in the environment, calling
+ * iter for each present key-value pair
+ * 
+ * @param iter the function to call on iteration
+ */
+void env_iterate(env_t* env, env_iter_func iter)
+{
+    for (int i = 0; i < env->current; i++) {
+        if (env->items[i].status & ENV_PRESENT) {
+            iter(env->items[i].key, env->items[i].value);
+        }
+    }
+}
