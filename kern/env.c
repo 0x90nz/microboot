@@ -10,7 +10,9 @@
 #include "stdlib.h"
 
 /**
- * @brief Initialise the environment
+ * @brief Initialise a new environment, will dynamically allocate memory
+ * 
+ * @return env_t* pointer to the new environment
  */
 env_t* env_init()
 {
@@ -48,6 +50,7 @@ static int env_first_free(env_t* env)
 /**
  * @brief Put an item into the environment
  * 
+ * @param env the environment
  * @param key the key which the item should be associated with
  * @param value the item
  */
@@ -95,6 +98,7 @@ void* env_remove(env_t* env, const char* key)
  * @brief Get an item from the environment. Use the `env_get` macro to include
  * an automatic cast to the desired type
  * 
+ * @param env the environment
  * @param key the key which the item is associated with
  * @return void* a pointer to the items value. `NULL` if no item with such a
  * name exists

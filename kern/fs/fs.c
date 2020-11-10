@@ -18,12 +18,12 @@ struct fs_file_entry {
     fs_t* fs;
 };
 
-env_t* mounts;
-fs_t* rootfs;
+static env_t* mounts;
+static fs_t* rootfs;
 
 #define OFTABLE_OPEN    (1 << 0)
 #define OFTABLE_SIZE    64
-struct fs_file_entry oftable[OFTABLE_SIZE];
+static struct fs_file_entry oftable[OFTABLE_SIZE];
 
 // Find the first open entry in the oftable. Return -1 if no open entry exists
 static fs_file_t first_free_entry()
@@ -193,7 +193,6 @@ void fs_flist(fs_file_t dir)
 /**
  * @brief Get the size (in bytes) of a given file
  * 
- * @param fs the filesystem
  * @param file the file
  * @return uint32_t the size of the file in bytes
  */
@@ -208,7 +207,6 @@ uint32_t fs_fsize(fs_file_t file)
 /**
  * @brief Read data from a given file
  * 
- * @param fs the filesystem
  * @param file the file to read from
  * @param offset the offset (in bytes) from the start of the file at which
  * reading should begin

@@ -10,8 +10,8 @@
 #include "printf.h"
 #include "alloc.h"
 
-struct list exports;
-struct list modules;
+static struct list exports;
+static struct list modules;
 
 /**
  * @brief Initialise the module system
@@ -89,6 +89,12 @@ void mod_sym_list()
     list_iterate(&exports, mod_list_callback);
 }
 
+/**
+ * @brief Get a symbol from the currently exported symbols
+ * 
+ * @param name the name of the symbol
+ * @return void* the pointer to the symbol
+ */
 void* mod_sym_get(const char* name)
 {
     struct list_node* current = &exports.head;

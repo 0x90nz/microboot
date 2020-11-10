@@ -264,7 +264,12 @@ static void ext2_destroy(fs_t* fs, fs_file_priv_t file)
         kfree(file);
 }
 
-
+// TODO: do I really need this? maybe it can be replaced with something fs-relative?
+/**
+ * @brief Get the operations supported by this filesystem
+ * 
+ * @return const fs_ops_t* 
+ */
 const fs_ops_t* ext2_get_ops()
 {
     return &ops;

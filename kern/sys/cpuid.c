@@ -7,7 +7,7 @@
 #include "cpuid.h"
 #include "../stdlib.h"
 
-const char* cpuid_features[] = {
+static const char* cpuid_features[] = {
     "fpu",
     "vme",
     "de",

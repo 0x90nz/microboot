@@ -20,10 +20,10 @@ int ticks;
 char main_scratch[64];
 char current_dir[256];
 
-typedef struct {
+struct command {
     const char* name;
     void (*fn)(int, char**);
-} command_t;
+};
 
 const char* colours[] = {
     "black",
@@ -289,7 +289,7 @@ void cmd_cpuid(int argc, char** argv)
     cpuid_verbose_dump();
 }
 
-command_t commands[] = {
+static struct command commands[] = {
     {"exec", exec},
     {"lsmod", lsmod},
     {"ldmod", ldmod},
@@ -354,7 +354,7 @@ void main()
             }
 
             int found = 0;
-            for (int i = 0; i < sizeof(commands) / sizeof(command_t); i++) {
+            for (int i = 0; i < sizeof(commands) / sizeof(struct command); i++) {
                 if (strcmp(commands[i].name, token) == 0) {
                     commands[i].fn(argc, argv);
                     found = 1;
