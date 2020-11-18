@@ -3,6 +3,7 @@
  * @brief provides a filesystem independent interface for disk operations
  */
 
+#include <export.h>
 #include "fs.h"
 #include "mbr.h"
 #include "ext2.h"
@@ -178,6 +179,7 @@ fs_file_t fs_open(const char* name)
     oftable[ent].priv = priv;
     return ent;
 }
+EXPORT_SYM(fs_open);
 
 /**
  * @brief List the contents of the provided directory
@@ -190,6 +192,7 @@ void fs_flist(fs_file_t dir)
     if (ent->fs->ops->ls)
         ent->fs->ops->ls(ent->fs, ent->priv);
 }
+EXPORT_SYM(fs_flist);
 
 /**
  * @brief Get the size (in bytes) of a given file
@@ -204,6 +207,7 @@ uint32_t fs_fsize(fs_file_t file)
         return ent->fs->ops->fsize(ent->fs, ent->priv);
     return 0;
 }
+EXPORT_SYM(fs_fsize);
 
 /**
  * @brief Read data from a given file
@@ -222,6 +226,7 @@ uint32_t fs_fread(fs_file_t file, uint32_t offset, size_t size, void* buffer)
         return ent->fs->ops->read(ent->fs, ent->priv, offset, size, buffer);
     return 0;
 }
+EXPORT_SYM(fs_fread);
 
 /**
  * @brief Destroy a file reference
@@ -236,6 +241,7 @@ void fs_fdestroy(fs_file_t file)
     
     oftable[file].state &= ~OFTABLE_OPEN;
 }
+EXPORT_SYM(fs_fdestroy);
 
 /**
  * @brief Mount a filesystem
@@ -247,3 +253,4 @@ void fs_mount(const char* name, fs_t* fs)
 {
     env_put(mounts, name, fs);
 }
+EXPORT_SYM(fs_mount);

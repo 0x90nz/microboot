@@ -174,7 +174,7 @@ void kernel_late_init()
     env_put(env, "prompt", "# ");
 
     fs_init(sinfo.drive_number);
-    fs_mount("conf", envfs_init(env));
+    fs_mount("sys", envfs_init(env));
 
     mod_init();
     ksyms_init();   

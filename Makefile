@@ -19,7 +19,7 @@ loader:
 	nasm -f bin -o build/load.bin loader/load.S
 
 .PHONY: user
-user: user/info.elf user/dino.elf
+user: user/info.elf user/dino.elf user/hexdump.elf
 
 stage2.bin: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
