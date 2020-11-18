@@ -3,15 +3,16 @@ CFLAGS=-m32 -march=i386 -nostdlib -nostdinc -ffreestanding -fno-pie \
 CC=gcc
 
 KSRC=$(shell find kern -type f -name "*.c")
-KOBJS=$(KSRC:.c=.o)
+BUILD=build
+KOBJS=$(addprefix $(BUILD)/, $(KSRC:%.c=%.o))
 
-image: build_dir user stage2 loader
+image: build_dir user stage2.bin loader
 	./mkimg.sh build/microboot.img
 	dd if=build/load.bin of=build/microboot.img conv=notrunc
 	dd if=build/stage2.bin of=build/microboot.img bs=1 seek=512 conv=notrunc
 
 build_dir:
-	mkdir -p build
+	mkdir -p $(BUILD)
 
 .PHONY: loader
 loader:
@@ -19,17 +20,18 @@ loader:
 
 .PHONY: user
 user: user/info.elf user/dino.elf
-	
-stage2: $(KOBJS)
+
+stage2.bin: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
 	$(CC) $(CFLAGS) -c kern/sys/bios.S -o build/bios.o
 	$(CC) $(CFLAGS) -c loader/stage2_hl.c -o build/stage2_hl.o
 	$(CC) $(CFLAGS) -c kern/sys/interrupts_stubs.S -o build/interrupts_stubs.o
 	$(CC) $(CFLAGS) -lgcc build/stage2_hl.o build/interrupts_stubs.o build/bios.o \
-		$(addprefix build/, $(notdir $^)) -T link.ld -Wl,-Map=build/stage2.map -o build/stage2.bin
+		$^ -T link.ld -Wl,-Map=build/stage2.map -o build/stage2.bin
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
+$(KOBJS): $(BUILD)/%.o: %.c
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.elf: %.c
 	$(CC) $(CFLAGS) -static -fPIC $< user/crt0.S -o rootfs/bin/$(notdir $@) -T user/process.ld -Ilib -Ikern
