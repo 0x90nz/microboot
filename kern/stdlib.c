@@ -130,6 +130,22 @@ size_t strlen(const char* str)
 }
 
 /**
+ * @brief Concatenate two strings together
+ * 
+ * @param dst the destination
+ * @param src the source
+ * @return char* 
+ */
+void strcat(char* dst, const char* src)
+{
+    while (*dst)
+        dst++;
+
+    // Note: assignment _not_ equals, copies until *src == '\0'
+    while ((*dst++ = *src++));
+}
+
+/**
  * @brief Print a string
  * 
  * @param str the string to print

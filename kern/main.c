@@ -248,6 +248,18 @@ void ldmod(int argc, char** argv)
     }
 }
 
+void fexec(fs_file_t file, int argc, char** argv)
+{
+    uint32_t fsize = fs_fsize(file);
+    char* c = kallocz(fsize + 1);
+    fs_fread(file, 0, fsize, c);
+    
+    elf_run(c, argc, argv);
+
+    kfree(c);
+    fs_fdestroy(file);
+}
+
 void exec(int argc, char** argv)
 {
     if (argc != 2) {
@@ -257,14 +269,7 @@ void exec(int argc, char** argv)
 
     fs_file_t file = fs_open(argv[1]);
     if (file != FS_FILE_INVALID) {
-        uint32_t fsize = fs_fsize(file);
-        char* c = kallocz(fsize + 1);
-        fs_fread(file, 0, fsize, c);
-        
-        elf_run(c, argc, argv);
-
-        kfree(c);
-        fs_fdestroy(file);
+        fexec(file, argc, argv);
     } else {
         printf("No such file: %s\n", argv[1]);
     }
@@ -328,6 +333,37 @@ void handle_irq0(uint32_t int_no, uint32_t err_no)
     ticks++;
 }
 
+// Invoke a shell-internal function. Returns a non-zero value if a function
+// was invoked; zero otherwise.
+int invoke_internal(const char* name, int argc, char** argv)
+{
+    for (int i = 0; i < sizeof(commands) / sizeof(struct command); i++) {
+        if (strcmp(commands[i].name, name) == 0) {
+            commands[i].fn(argc, argv);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// Invoke a shell-external program. Returns a non-zero value if the program 
+// was invoked; zero otherwise.
+int invoke_external(const char* name, int argc, char** argv)
+{
+    char bin_name[256];
+    strcpy(bin_name, "bin/");
+    strcat(bin_name, name);
+    strcat(bin_name, ".elf");
+
+    fs_file_t file = fs_open(bin_name);
+    if (file != FS_FILE_INVALID) {
+        fexec(file, argc, argv);
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 void main()
 {
     // Set to roughly 100hz
@@ -355,16 +391,10 @@ void main()
                 tmp += strlen(tmp) + 1;
             }
 
-            int found = 0;
-            for (int i = 0; i < sizeof(commands) / sizeof(struct command); i++) {
-                if (strcmp(commands[i].name, token) == 0) {
-                    commands[i].fn(argc, argv);
-                    found = 1;
-                    break;
-                }
-            }
-
-            if (!found) {
+            if (
+                !invoke_internal(token, argc, argv) 
+                && !invoke_external(token, argc, argv)
+            ) {
                 printf("? %s\n", cmdbuf);
             }
 

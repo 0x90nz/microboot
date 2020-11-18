@@ -32,7 +32,7 @@ stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c $< -o build/$(notdir $@)
 
 %.elf: %.c
-	$(CC) $(CFLAGS) -static -fPIC $< user/crt0.S -o rootfs/$(notdir $@) -T user/process.ld -Ilib -Ikern
+	$(CC) $(CFLAGS) -static -fPIC $< user/crt0.S -o rootfs/bin/$(notdir $@) -T user/process.ld -Ilib -Ikern
 
 run: CLFAGS += -O3
 run: image
