@@ -2,6 +2,7 @@
 *.img
 *.o
 build/**
+rootfs/**
 *.pcap
 .vscode/**
 doc/**

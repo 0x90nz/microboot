@@ -14,12 +14,15 @@ image: build_dir user stage2.bin loader
 build_dir:
 	mkdir -p $(BUILD)
 
+rootfs_dir:
+	mkdir -p rootfs/bin
+
 .PHONY: loader
 loader:
 	nasm -f bin -o build/load.bin loader/load.S
 
 .PHONY: user
-user: user/info.elf user/dino.elf user/hexdump.elf
+user: rootfs_dir user/info.elf user/dino.elf user/hexdump.elf
 
 stage2.bin: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
