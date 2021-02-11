@@ -16,7 +16,6 @@
 #include "exe/elf.h"
 #include "mod.h"
 
-int ticks;
 char main_scratch[64];
 char current_dir[256];
 
@@ -55,6 +54,7 @@ int colour_from_str(const char* str)
 
 void uptime(int argc, char** argv)
 {
+    uint32_t ticks = kticks();
     printf("Up approximately %d.%d seconds\n", ticks / 100, ticks % 100);
 }
 
@@ -92,6 +92,7 @@ void clock(int argc, char** argv)
                 break;
         }
 
+        uint32_t ticks = kticks();
         printf("\r%d.%d", ticks / 100, ticks % 100);
         hlt();
     }
@@ -322,17 +323,6 @@ static struct command commands[] = {
     {"help", help}
 };
 
-void set_timer_reload(uint16_t reload)
-{
-    outb(0x40, reload & 0xff);
-    outb(0x40, reload >> 8);
-}
-
-void handle_irq0(uint32_t int_no, uint32_t err_no)
-{
-    ticks++;
-}
-
 // Invoke a shell-internal function. Returns a non-zero value if a function
 // was invoked; zero otherwise.
 int invoke_internal(const char* name, int argc, char** argv)
@@ -366,12 +356,6 @@ int invoke_external(const char* name, int argc, char** argv)
 
 void main()
 {
-    // Set to roughly 100hz
-    set_timer_reload(11932);
-
-    ticks = 0;
-    register_handler(IRQ_TO_INTR(0), handle_irq0);
-
     char cmdbuf[64];
 
     while (1) {

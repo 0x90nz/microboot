@@ -28,9 +28,18 @@ char* debug_names[] = {
     "OFF"
 };
 
+// Startup information
 static struct kstart_info sinfo;
+
+// The root environment
 static env_t* env;
+
+// Number of ticks of the system clock
+static uint32_t ticks;
+
+// This is globally visible. Consider changing this to a special file handle?
 console_t* stdout;
+
 
 /**
  * @brief Hang the system forever. Useful to prevent the system from executing
@@ -135,6 +144,19 @@ void kpoweroff()
     bios_interrupt(0x15, regs);
 }
 
+/**
+ * @brief Get the number of system ticks.
+ *
+ * A system tick is defined as one invocation of the main system timer, IRQ0,
+ * since boot. By default the rate is around 100Hz
+ *
+ * @return uint64_t the number of ticks
+ */
+uint32_t kticks()
+{
+    return ticks;
+}
+
 env_t* get_rootenv()
 {
     return env;
@@ -164,11 +186,29 @@ void ksyms_init()
     mod_ksymtab_add(ksymtab, ksymtab_size);
 }
 
+
+// Sets the timer reload value for IRQ0
+static void set_timer_reload(uint16_t reload)
+{
+    outb(0x40, reload & 0xff);
+    outb(0x40, reload >> 8);
+}
+
+static void irq0_handle(uint32_t int_no, uint32_t err_no)
+{
+    ticks++;
+}
+
 void kernel_late_init()
 {
     stdout = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
     display_logo();
     syscalls_init();
+
+    // Set to roughly 100hz
+    set_timer_reload(11932);
+    ticks = 0;
+    register_handler(IRQ_TO_INTR(0), irq0_handle);
 
     env = env_init();
     env_put(env, "prompt", "# ");

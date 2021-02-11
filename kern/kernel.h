@@ -35,6 +35,7 @@ extern char* debug_names[];
 void kernel_main(struct kstart_info* start_info);
 void dump_memory(void* input_buffer, size_t length);
 void kpoweroff();
+uint32_t kticks();
 env_t* get_rootenv();
 
 
