@@ -1,6 +1,7 @@
 CFLAGS=-m32 -march=i386 -nostdlib -nostdinc -ffreestanding -fno-pie \
  -mgeneral-regs-only -mno-red-zone -msoft-float -Wall -fno-asynchronous-unwind-tables -Ilib
 CC=gcc
+QEMU="qemu-system-x86_64"
 
 KSRC=$(shell find kern -type f -name "*.c")
 BUILD=build
@@ -41,7 +42,7 @@ $(KOBJS): $(BUILD)/%.o: %.c
 
 run: CLFAGS += -O3
 run: image
-	qemu-system-i386 \
+	$(QEMU) \
 		-drive format=raw,file=build/microboot.img,index=0 \
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
