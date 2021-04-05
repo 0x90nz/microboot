@@ -297,6 +297,44 @@ void cmd_cpuid(int argc, char** argv)
     cpuid_verbose_dump();
 }
 
+void setenv(int argc, char** argv)
+{
+    if (argc < 2) {
+        printf("Usage: %s var \"value\"\n", argv[0]);
+        return;
+    }
+
+    // XXX: this causes a memory leak on overwrite	
+    size_t bufsz = 0;
+    for (int i = 2; i < argc; i++) {
+        bufsz += strlen(argv[i]) + 1;
+    }
+
+    char* buf = kallocz(bufsz);
+    for (int i = 2; i < argc - 1; i++) {
+        strcat(buf, argv[i]);
+        strcat(buf, " ");
+    }
+    strcat(buf, argc[argv - 1]);
+
+    if (buf[0] != '"') {
+        printf("value must start with quote\n");
+        kfree(buf);
+        return;
+    }
+
+    if (buf[bufsz - 2] != '"') {
+        printf("value must end with quote\n");
+        kfree(buf);
+        return;
+    }
+
+    buf[bufsz - 2] = '\0';
+    buf++;
+
+    env_put(get_rootenv(), argv[1], buf); 
+}
+
 static struct command commands[] = {
     {"exec", exec},
     {"lsmod", lsmod},
@@ -318,6 +356,7 @@ static struct command commands[] = {
     {"cat", cat},
     {"pwd", pwd},
     {"echo", echo},
+    {"setenv", setenv},
     {"poweroff", poweroff},
     {"exit", poweroff},
     {"help", help}
