@@ -223,8 +223,14 @@ void poweroff(int argc, char** argv)
 void mem(int argc, char** argv)
 {
     size_t used = alloc_used(0);
+    size_t allocated = alloc_used(1);
     size_t total = alloc_total();
-    printf("%d bytes / %d KiB used\n", used, total / KiB);
+
+    printf("Memory status:\n");
+    printf("Used      = %d bytes\n", used);
+    printf("Allocated = %d bytes (includes freed)\n", allocated);
+    printf("Available = %d bytes\n", total - used); 
+    printf("Total     = %d bytes\n", total);
 }
 
 void ldmod(int argc, char** argv)
