@@ -317,6 +317,24 @@ const char* strstr(const char* haystack, const char* needle)
 }
 
 /**
+ * @brief Return a pointer to the first instance of `c` within `s`. If no such
+ * instance exists, returns NULL.
+ *
+ * @param s the string to search for the character in
+ * @param c the character to search for
+ * @return const char* pointer to the character if it exists; NULL otherwise.
+ */
+char* strchr(const char* s, int c)
+{
+    do {
+        if (*s == c)
+            return (char*)s;
+    } while (*s++);
+    return NULL;
+}
+
+
+/**
  * @brief Set a region of memory to a specific value
  * 
  * @param memory a pointer to the start of the memory to set

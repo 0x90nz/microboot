@@ -17,6 +17,7 @@ char* strcpy(char* dst, const char* src);
 char* strtok(char* str, const char* delim);
 size_t strlen(const char* str);
 const char* strstr(const char* haystack, const char* needle);
+char* strchr(const char* s, int c);
 int strncmp(const char* a, const char* b, size_t n);
 void strcat(char* dst, const char* src);
 void memset(void* memory, uint8_t value, size_t len);

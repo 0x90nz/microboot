@@ -127,3 +127,49 @@ void env_iterate(env_t* env, env_iter_func iter)
         }
     }
 }
+
+/**
+ * @brief Add an equals ('=') separated key-value pair string to the
+ * environment.
+ *
+ * NOTE: the value will not be copied, so any dynamically allocated memory
+ * passed to this function should be considered used until the containing
+ * environment is destroyed.
+ *
+ * @param env the environment to insert the kvp into
+ * @param kvp_string the string containing a key and a value
+ * @return int non-zero if the item was added; zero on failure.
+ */
+int env_kvp_str_add(env_t* env, char* kvp_string)
+{
+    char* mid = strchr(kvp_string, '=');
+    if (!mid)
+        return 0;
+
+    *mid = '\0';
+
+    env_put(env, kvp_string, (void*)mid + 1);
+    return 1;
+}
+
+/**
+ * @brief Add multiple lines of key-value separated text to an environment.
+ *
+ * The same note applies as to env_kvp_str_add.
+ *
+ * On failure, some items may still have been added.
+ *
+ * @param env the environment to add the kvp lines into
+ * @param kvp_lines the lines too add
+ * @return int non-zero if all items were added; zero on failure.
+ */
+int env_kvp_lines_add(env_t* env, char* kvp_lines)
+{
+    char* token = strtok(kvp_lines, "\n");
+    while (token) {
+        if (!env_kvp_str_add(env, token))
+            return 0;
+        token = strtok(NULL, "\n");
+    }
+    return 1;
+}

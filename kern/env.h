@@ -24,7 +24,8 @@ void env_put(env_t* env, const char* key, void* value);
 void* _env_get(env_t* env, const char* key);
 void* env_remove(env_t* env, const char* key);
 void env_iterate(env_t* env, env_iter_func iter);
-
+int env_kvp_str_add(env_t* env, char* kvp_string);
+int env_kvp_lines_add(env_t* env, char* kvp_lines);
 
 #define env_get(e, k, t)      ((t)_env_get(e, k))
 

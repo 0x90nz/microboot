@@ -199,10 +199,37 @@ static void irq0_handle(uint32_t int_no, uint32_t err_no)
     ticks++;
 }
 
+static void read_config()
+{
+    fs_file_t file = fs_open("config.txt");
+    if (file == FS_FILE_INVALID)
+        return;
+
+    size_t size = fs_fsize(file);
+    char* file_contents = kallocz(size + 1);
+    fs_fread(file, 0, size, file_contents);
+
+    env_kvp_lines_add(env, file_contents);
+
+    fs_fdestroy(file);
+}
+
+static void console_init()
+{
+    const char* type = env_get(env, "con", const char*);
+    if (!type || strcmp(type, "vga") == 0) {
+        // We've already initialised the VGA console, so we can just do nothing
+        debug("continuing with VGA console");
+    } else if (strcmp(type, "vesa") == 0) {
+        debug("switching to VESA console");
+    }
+
+    display_logo();
+}
+
 void kernel_late_init()
 {
     stdout = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
-    display_logo();
     syscalls_init();
 
     // Set to roughly 100hz
@@ -217,7 +244,10 @@ void kernel_late_init()
     fs_mount("sys", envfs_init(env));
 
     mod_init();
-    ksyms_init();   
+    ksyms_init();
+
+    read_config();
+    console_init();
 
     extern int main();
     main();
