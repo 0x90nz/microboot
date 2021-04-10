@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include "fs.h"
-#define EXT2_ENABLE
 
 // Extended information. Missing journal support
 struct ext2_extended {

@@ -117,7 +117,6 @@ void fs_init(uint8_t drive_num)
 
     for (int i = 0; i < 4; i++) {
         if (bootsect->partitions[i].drive_attributes == 0x83) {
-#ifdef EXT2_ENABLE
             struct ext2_fs* efs = ext2_init(
                 drive_num, 
                 bootsect->partitions[i].start_lba, 
@@ -129,7 +128,6 @@ void fs_init(uint8_t drive_num)
             fs->ops = ext2_get_ops();
             rootfs = fs;
             env_put(mounts, "hd", fs);
-#endif
         }
     }
     

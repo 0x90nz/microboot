@@ -9,8 +9,6 @@
 #include "../alloc.h"
 #include "../io/bios_drive.h"
 
-#ifdef EXT2_ENABLE
-
 static fs_ops_t ops;
 
 /**
@@ -252,7 +250,7 @@ static void ext2_ls(fs_t* fs, fs_file_priv_t dir)
     kfree(dirent);
 }
 
-static fs_file_priv_t get_root(fs_t* fs)
+static const fs_file_priv_t get_root(fs_t* fs)
 {
     struct ext2_fs* efs = (struct ext2_fs*)fs->fs_priv;
     return efs->root_inode;
@@ -300,6 +298,8 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
     fs->blocks_per_group = fs->sb->blocks_per_group;
     fs->inodes_per_group = fs->sb->inodes_per_group;
 
+    ASSERT(fs->sb->revision_level >= 1, "EXT2 FS with incompatible version");
+
     // total blocks / blocks per group, rounded up gives the number
     // of groups total
     fs->num_groups = fs->sb->total_blocks / fs->blocks_per_group;
@@ -332,4 +332,3 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
     return fs;
 }
 
-#endif
