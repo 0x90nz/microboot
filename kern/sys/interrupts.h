@@ -6,7 +6,6 @@ typedef struct {
     uint16_t offset_low;
     uint16_t selector;
     uint8_t reserved0;
-    // uint8_t type_attr;
     uint8_t gate_type       : 4;
     uint8_t storage_segment : 1;
     uint8_t dpl             : 2;

@@ -9,13 +9,13 @@ idt_entry_t idt[INTR_COUNT] __attribute__((aligned(8)));
  * Interrupt Handlers:
  * Each interrupt may have _either_ a bound handler, or a low-level bound
  * handler associated with it. If a bound handler is present, it takes priority
- * over a low level handler. 
- * 
+ * over a low level handler.
+ *
  * A low level handler has access to the entire state of the interrupted code
  * (all registers). By default all interrupts have a low level handler bound
  * to `exception`, which enforces that if an interrupt is created, it _must_
  * be handled, by registering either a high or low level handler.
- * 
+ *
  * The reason for the separation is that a low level handler may modify the
  * state, and at the end of the interrupt, the state will be restored.
  * Therefore they are much more dangerous than a normal handler, and should
@@ -96,8 +96,7 @@ void make_gate(int i, void (*fn)(void), int dpl, int gate_type)
 
 void register_handler(int int_no, intr_handler* handler)
 {
-    if (int_no >= 0 && int_no < INTR_COUNT)
-    {
+    if (int_no >= 0 && int_no < INTR_COUNT) {
         bound_handlers[int_no] = handler;
     }
 }
@@ -107,8 +106,7 @@ void register_handler(int int_no, intr_handler* handler)
  */
 void register_ll_handler(int int_no, ll_intr_handler* handler)
 {
-    if (int_no >= 0 && int_no < INTR_COUNT)
-    {
+    if (int_no >= 0 && int_no < INTR_COUNT) {
         ll_bound_handlers[int_no] = handler;
     }
 }
@@ -120,8 +118,7 @@ void interrupts_init()
     asm("cli");
     disable_pic();
 
-    for (int i = 0; i < INTR_COUNT; i++)
-    {
+    for (int i = 0; i < INTR_COUNT; i++) {
         make_gate(i, interrupts_stubs[i], 0, 15);
         bound_handlers[i] = 0;
         register_ll_handler(i, exception);
@@ -146,15 +143,14 @@ void interrupts_eoi(int irq)
         outb(PIC1_REG_CTRL, 0x20);
 }
 
-void interrupts_handle_int(intr_frame_t* frame) 
+void interrupts_handle_int(intr_frame_t* frame)
 {
     if (bound_handlers[frame->int_no])
         bound_handlers[frame->int_no](frame->int_no, frame->err_code);
     else if (ll_bound_handlers[frame->int_no])
         ll_bound_handlers[frame->int_no](frame);
 
-    if (frame->int_no >= 0x20 && frame->int_no < 0x30)
-    {
+    if (frame->int_no >= 0x20 && frame->int_no < 0x30) {
         interrupts_eoi(frame->int_no);
     }
 }
