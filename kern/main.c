@@ -86,6 +86,7 @@ void listcolours(int argc, char** argv)
 
 void clock(int argc, char** argv)
 {
+    puts("Clock demo. 'q' to exit\n");
     while (1) {
         if (keyboard_available()) {
             if (keyboard_getchar(0) == 'q')
@@ -121,17 +122,18 @@ void dino(int argc, char** argv)
 
 void help(int argc, char** argv)
 {
+    puts("Help Summary. WIP commands marked with [WIP] or if very unstable, not listed.\n");
     puts("uptime      - display uptime in seconds\n");
     puts("mem         - get memory status\n");
+    puts("cpuid       - display CPU info\n");
+    puts("brk         - cause a #BP interrupt");
     puts("clear       - clear the display\n");
     puts("clock       - updating clock demo\n");
     puts("setcolour   - set the display colour\n");
     puts("listcolours - list all available colours\n");
     puts("scancode    - display raw scancodes\n");
     puts("verb        - set log verbosity\n");
-    puts("hdisk       - show the root disk number\n");
     puts("ls          - list the current directory [WIP]\n");
-    puts("pwd         - print the working directory [WIP]\n");
     puts("cat         - print out the contents of a file [WIP]\n");
     puts("poweroff    - shut down the computer\n");
     puts("exit        - alias to poweroff\n");
@@ -165,11 +167,6 @@ void verb(int argc, char** argv)
 void brk(int argc, char** argv)
 {
 	asm("int $3");
-}
-
-void hdisk(int argc, char** argv)
-{
-    printf("Root disk @ %02x\n", *env_get(get_rootenv(), "root", uint8_t*));
 }
 
 void ls(int argc, char** argv)
@@ -245,7 +242,7 @@ void ldmod(int argc, char** argv)
         uint32_t fsize = fs_fsize(file);
         char* c = kallocz(fsize + 1);
         fs_fread(file, 0, fsize, c);
-        
+
         mod_load(c);
 
         kfree(c);
@@ -260,7 +257,7 @@ void fexec(fs_file_t file, int argc, char** argv)
     uint32_t fsize = fs_fsize(file);
     char* c = kallocz(fsize + 1);
     fs_fread(file, 0, fsize, c);
-    
+
     elf_run(c, argc, argv);
 
     kfree(c);
@@ -297,7 +294,7 @@ void cmd_cpuid(int argc, char** argv)
 {
     char buf[13];
     cpuid_get_vendor(buf);
-    
+
     printf("vendor         %s\n", buf);
     printf("max_id         %d\n", cpuid_get_max_id());
     cpuid_verbose_dump();
@@ -310,7 +307,7 @@ void setenv(int argc, char** argv)
         return;
     }
 
-    // XXX: this causes a memory leak on overwrite	
+    // XXX: this causes a memory leak on overwrite
     size_t bufsz = 0;
     for (int i = 2; i < argc; i++) {
         bufsz += strlen(argv[i]) + 1;
@@ -338,7 +335,7 @@ void setenv(int argc, char** argv)
     buf[bufsz - 2] = '\0';
     buf++;
 
-    env_put(get_rootenv(), argv[1], buf); 
+    env_put(get_rootenv(), argv[1], buf);
 }
 
 static struct command commands[] = {
@@ -357,7 +354,6 @@ static struct command commands[] = {
     {"scancode", scancode},
     {"verb", verb},
     {"brk", brk},
-    {"hdisk", hdisk},
     {"ls", ls},
     {"cat", cat},
     {"pwd", pwd},
@@ -381,7 +377,7 @@ int invoke_internal(const char* name, int argc, char** argv)
     return 0;
 }
 
-// Invoke a shell-external program. Returns a non-zero value if the program 
+// Invoke a shell-external program. Returns a non-zero value if the program
 // was invoked; zero otherwise.
 int invoke_external(const char* name, int argc, char** argv)
 {
