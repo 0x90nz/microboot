@@ -23,7 +23,7 @@ typedef struct {
     uint16_t gs, fs, es, ds, ss;
     uint32_t edi, esi, ebp, ebx, edx, ecx, eax, esp;
     uint32_t int_no, err_code;
-    uint32_t eip, cs, eflags;    
+    uint32_t eip, cs, eflags;
 } __attribute__((packed)) intr_frame_t;
 
 typedef void intr_handler (uint32_t int_no, uint32_t err_no);

@@ -60,7 +60,7 @@ void uptime(int argc, char** argv)
 
 void clear(int argc, char** argv)
 {
-    console_clear(stdout);
+    console_clear(console);
 }
 
 void setcolour(int argc, char** argv)
@@ -73,8 +73,8 @@ void setcolour(int argc, char** argv)
     uint8_t fg = colour_from_str(argv[1]);
     uint8_t bg = colour_from_str(argv[2]);
 
-    console_colour(stdout, fg | bg << 4);
-    console_clear(stdout);
+    console_colour(console, fg | bg << 4);
+    console_clear(console);
 }
 
 void listcolours(int argc, char** argv)
@@ -406,7 +406,7 @@ void main()
     while (1) {
         puts(env_get(get_rootenv(), "prompt", const char*));
         gets(cmdbuf);
-        
+
         if (*cmdbuf) {
             int argc = 1;
             char* token = strtok(cmdbuf, " ");
@@ -421,7 +421,7 @@ void main()
             }
 
             if (
-                !invoke_internal(token, argc, argv) 
+                !invoke_internal(token, argc, argv)
                 && !invoke_external(token, argc, argv)
             ) {
                 printf("? %s\n", cmdbuf);

@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "chardev.h"
 
 typedef struct console_state
 {
@@ -19,6 +20,7 @@ void console_pad(console_t* con, int n);
 void console_clear(console_t* con);
 void console_clear_row(console_t* con, int row);
 void console_colour(console_t* con, uint16_t colour);
+void console_get_chardev(console_t* con, chardev_t* chardev);
 
 #define COLOUR_BLACK           0
 #define COLOUR_BLUE            1

@@ -77,3 +77,16 @@ unsigned char keyboard_getchar(int retry)
     } while(retry && code == 0);
     return code;
 }
+
+static int chardev_getc(chardev_t* dev)
+{
+    (void)dev;
+    return keyboard_getchar(1);
+}
+
+void keyboard_get_chardev(chardev_t* dev)
+{
+    dev->getc = chardev_getc;
+    dev->putc = NULL;
+    dev->priv = NULL;
+}

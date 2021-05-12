@@ -104,7 +104,7 @@ void register_handler(int int_no, intr_handler* handler)
 
 /**
  * Registers a low level handler. See comment at top for details.
- */ 
+ */
 void register_ll_handler(int int_no, ll_intr_handler* handler)
 {
     if (int_no >= 0 && int_no < INTR_COUNT)

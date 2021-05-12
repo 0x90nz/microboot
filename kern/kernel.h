@@ -4,9 +4,12 @@
 #include <stddef.h>
 
 #include "env.h"
+#include "io/chardev.h"
+#include "io/console.h"
 
 void hang();
 void hlt();
+void yield();
 
 struct kstart_info {
     uint8_t drive_number;
@@ -38,5 +41,10 @@ void kpoweroff();
 uint32_t kticks();
 env_t* get_rootenv();
 
+// eventually replace with a more unified device manager or file IO?
+extern console_t* console;
+extern chardev_t* stdout;
+extern chardev_t* stdin;
+extern chardev_t* dbgout;
 
 #define DEBUG_LEVEL LOG_ALL

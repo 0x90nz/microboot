@@ -168,7 +168,7 @@ void putc(char c)
     if (!stdout)
         return;
 
-    console_putc(stdout, c);
+    OOCALL(stdout, putc, c);
 }
 EXPORT_SYM(putc);
 
@@ -179,7 +179,7 @@ EXPORT_SYM(putc);
  */
 char getc()
 {
-    return keyboard_getchar(1);
+    return OOCALL0(stdin, getc);
 }
 EXPORT_SYM(getc);
 
@@ -192,7 +192,10 @@ EXPORT_SYM(getc);
  */
 void debug_putc(char c, void* ignore)
 {
-    serial_putc(c);
+    if (!dbgout)
+        return;
+
+    OOCALL(dbgout, putc, c);
 }
 
 /**
@@ -208,14 +211,14 @@ void set_echo(int echo)
 
 /**
  * @brief Read a string from input into the provided buffer
- * 
+ *
  * @param str the buffer
  */
 void gets(char* str)
 {
     const char* start = str;
     do {
-        *str = keyboard_getchar(1);
+        *str = getc();
 
         if (*str == '\b') {
             if (str > start) {

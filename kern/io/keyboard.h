@@ -1,11 +1,13 @@
 #pragma once
 
 #include <stdint.h>
+#include "chardev.h"
 
 void keyboard_init();
 uint8_t keyboard_poll_scancode();
 unsigned char keyboard_getchar(int retry);
 int keyboard_available();
+void keyboard_get_chardev(chardev_t* chardev);
 
 #define KB_REG_DATA         0x60
 #define KB_REG_STATUS       0x64

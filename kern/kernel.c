@@ -38,7 +38,10 @@ static env_t* env;
 static uint32_t ticks;
 
 // This is globally visible. Consider changing this to a special file handle?
-console_t* stdout;
+chardev_t* stdout;
+chardev_t* stdin;
+chardev_t* dbgout;
+console_t* console;
 
 
 /**
@@ -51,6 +54,12 @@ void hang() { while (1) { asm("hlt"); } }
  * @brief Execute the asm 'hlt' instruction once
  */
 void hlt() { asm("hlt"); }
+
+/**
+ * @brief Block until some indeterminate point in the future. Currently does
+ * exactly the same thing as hlt, but not guaranteed to do so in the future.
+ */
+void yield() { hlt(); }
 
 /**
  * @brief Get the current value of the esp (stack pointer) register
@@ -229,25 +238,32 @@ static void console_init()
 
 void kernel_late_init()
 {
-    stdout = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
+    log(LOG_INFO, "early init complete");
     syscalls_init();
 
     // Set to roughly 100hz
     set_timer_reload(11932);
     ticks = 0;
     register_handler(IRQ_TO_INTR(0), irq0_handle);
+    debug("timer initialised");
 
     env = env_init();
     env_put(env, "prompt", "# ");
 
     fs_init(sinfo.drive_number);
     fs_mount("sys", envfs_init(env));
+    debug("fs initialised");
 
     mod_init();
     ksyms_init();
+    debug("module system initialised");
 
     read_config();
+    debug("read config");
+
     console_init();
+
+    debug("all init done. transferring to main");
 
     extern int main();
     main();
@@ -258,14 +274,33 @@ void kernel_late_init()
 void kernel_main(struct kstart_info* start_info)
 {
     stdout = NULL;
-    gdt_init();
+    dbgout = NULL;
+    console = NULL;
 
+    gdt_init();
     init_alloc(start_info->memory_start, start_info->free_memory * 64 * KiB);
 
+    struct serial_port* sp0 = kalloc(sizeof(*sp0));
+    serial_init(sp0, SP_COM0_PORT, 115200);
+    dbgout = kalloc(sizeof(*dbgout));
+    serial_get_chardev(sp0, dbgout);
+
     interrupts_init();
+    debug("interrupts initialised");
+
+    console = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
+    debug("vga console initialised");
+
+    stdout = kalloc(sizeof(*stdout));
+    console_get_chardev(console, stdout);
+
     syscall_init();
+    debug("syscalls initialised");
+
     keyboard_init();
-    serial_init(SP_COM0_PORT);
+    stdin = kalloc(sizeof(*stdin));
+    keyboard_get_chardev(stdin);
+    debug("keyboard initialised");
 
     // Save start info because when we switch stacks it'll get destroyed
     memcpy(&sinfo, start_info, sizeof(struct kstart_info));
@@ -274,7 +309,8 @@ void kernel_main(struct kstart_info* start_info)
      * Setup and switch to a new stack. After we switch to this, we won't be
      * using any low memory apart from the BIOS interrupt code. This means that
      * we can (mostly) dedicate it to user programs
-     */ 
+     */
+    debug("switching stacks");
     size_t stack_size = 32 * KiB;
     void* stack = kalloc(stack_size);
     *(uint32_t*)stack = STACK_MAGIC;

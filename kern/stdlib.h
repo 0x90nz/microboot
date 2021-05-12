@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "printf.h"
 #include "kernel.h"
-#include "io/console.h"
+#include "io/chardev.h"
 
 // Standard library - ish functions
 void itoa(int value, char* buffer, int base);
@@ -24,11 +24,24 @@ void memset(void* memory, uint8_t value, size_t len);
 void memcpy(void* dst, const void* src, size_t len);
 int memcmp(const void* a, const void* b, size_t len);
 
-void cpuid(int i, uint32_t* regs);
 
+// More specific OS functions
+void cpuid(int i, uint32_t* regs);
 void debug_putc(char c, void* ignore);
 void set_log_level(enum log_level level);
 enum log_level get_log_level();
+
+// Handy macros
+
+// For each `c` in `s`.
+#define STR_FOREACH(c, s) for (int _strfe_i = 0, c = s[0]; s[_strfe_i]; c = s[++_strfe_i])
+
+// Object-oriented(ish) call on a struct with function pointer members with arguments
+#define OOCALL(o, m, ...) o->m(o, __VA_ARGS__)
+
+// Object-oriented(ish) call on a struct with function pointer members with no arguments
+#define OOCALL0(o, m) o->m(o)
+
 
 // Assertions. Note that we use a ternary to force evaluation as an if, from which return an int
 // to be used in the actual __assert function
@@ -43,5 +56,3 @@ void _debug_printf(enum log_level level, const char* file, int line, const char*
 #define logf(l, x, ...)     _debug_printf(l, __FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);
 #define debug(x)            _debug_printf(LOG_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, x);
 #define debugf(x, ...)      _debug_printf(LOG_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);
-
-extern console_t* stdout;

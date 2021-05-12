@@ -1,8 +1,9 @@
 #include "console.h"
+#include "stddef.h"
 
 /**
  * @brief Write a single character to the console device
- * 
+ *
  * @param con the console to write to
  * @param c the character to write
  */
@@ -83,4 +84,18 @@ void console_clear_row(console_t* con, int row)
 void console_colour(console_t* con, uint16_t colour)
 {
     con->set_colour(con, colour);
+}
+
+static int chardev_putc(chardev_t* dev, int c)
+{
+    console_t* con = (console_t*)dev->priv;
+    console_putc(con, c);
+    return 1;
+}
+
+void console_get_chardev(console_t* con, chardev_t* chardev)
+{
+    chardev->putc = chardev_putc;
+    chardev->getc = NULL;
+    chardev->priv = con;
 }
