@@ -126,7 +126,7 @@ void help(int argc, char** argv)
     puts("uptime      - display uptime in seconds\n");
     puts("mem         - get memory status\n");
     puts("cpuid       - display CPU info\n");
-    puts("brk         - cause a #BP interrupt");
+    puts("brk         - cause a #BP interrupt\n");
     puts("clear       - clear the display\n");
     puts("clock       - updating clock demo\n");
     puts("setcolour   - set the display colour\n");
