@@ -23,7 +23,9 @@ void list_enumerate(struct list* list, list_enumerator enumerator);
 struct list_node* list_prev(struct list_node* item);
 struct list_node* list_next(struct list_node* item);
 struct list_node* list_head(struct list* list);
+struct list_node* list_tail(struct list* list);
 struct list_node* list_node(void* data);
+void* list_value(struct list_node* item);
 
 /**
  * @brief Iterate over a list.
@@ -31,5 +33,5 @@ struct list_node* list_node(void* data);
  * i is the current list item and l is the list.
  */
 #define LIST_FOREACH(i, l) \
-struct list_node* i = list_head(l); \
-while (i && (i = list_next(i)) && i->next)
+ \
+for (struct list_node* i = list_head(l); i && list_next(i); i = list_next(i))

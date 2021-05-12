@@ -51,6 +51,17 @@ struct list_node* list_node(void* data)
 }
 
 /**
+ * @brief Get the value associated with a list node
+ *
+ * @param item the item to get the value for
+ * @return void* the value associated with the item
+ */
+void* list_value(struct list_node* item)
+{
+    return item->value;
+}
+
+/**
  * @brief Remove an item from a list.
  *
  * @param item the item to remove
@@ -136,5 +147,16 @@ void list_enumerate(struct list* list, list_enumerator enumerator)
  */
 struct list_node* list_head(struct list* list)
 {
-    return &list->head;
+    return list->head.next;
+}
+
+/**
+ * @brief Get the tail of a list.
+ *
+ * @param list the list to get the tail of
+ * @return struct list_node* the tail node of the list
+ */
+struct list_node* list_tail(struct list* list)
+{
+    return list->tail.prev;
 }
