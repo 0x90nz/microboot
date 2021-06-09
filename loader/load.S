@@ -1,9 +1,10 @@
 ; It might seem odd to mix nasm and gas, but gas is really
 ; absolute garbage at producing 16 bit code, so here we are.
 
-bits 16
-org 0x7c00
-jmp	0:_start
+	bits 16
+	org 0x7c00
+	jmp	0:_start
+
 _start:
 	mov	ax, 0
 	mov	ds, ax
@@ -14,7 +15,7 @@ _start:
 	mov	[disk_num], dl
 
 	; Set sp to be 7000:f000 (which is the end of conventional memory)
-	; so it doesn't mess with our stuff We disable interrupts while doing 
+	; so it doesn't mess with our stuff We disable interrupts while doing
 	; this because apparently they can mess with it in a bad way.
 	cli
 	mov	ax, 0x7000
@@ -26,12 +27,12 @@ _start:
 	call	puts
 	add	esp, 2
 
-	push	msg
+	push	loading_msg
 	call	puts
 	add	esp, 2
 
-        push    0x07e0
-        push    0
+	push    0x07e0
+	push    0
 	push	01h			; num sectors
 	push	WORD [kimage_start]	; start index
 	call	read_sector
@@ -40,7 +41,7 @@ _start:
 	; Get the size and figure out how many more sectors
 	; we need to load from disk
 	mov	ax, WORD [buffer]
-        mov     dx, WORD [buffer + 2]
+	mov     dx, WORD [buffer + 2]
 
 	mov 	bx, 512
 	div	bx
@@ -48,42 +49,42 @@ _start:
 	; ax now contains file size / 512, which is the number of extra
 	; sectors that we need to load
 
-        ; Some BIOS' are picky about reading more than 64k at once so here we
-        ; limit the number of sectors that we copy to 64k and then copy 64k
-        ; chunks until we're done
+	; Some BIOS' are picky about reading more than 64k at once so here we
+	; limit the number of sectors that we copy to 64k and then copy 64k
+	; chunks until we're done
 
 	; skip over loading additional sectors if we don't need to
 	test	ax, ax
 	jz	.xfer
 
-        ; if there's no remainder the image was perfectly aligned,
-        ; so no need to read an additional sector
-        test    dx, dx
-        jz      .read_sectors
+	; if there's no remainder the image was perfectly aligned,
+	; so no need to read an additional sector
+	test    dx, dx
+	jz      .read_sectors
 
 	add	ax, 1                   ; number of sectors left
-        mov     bx, [kimage_start]      ; current sector number
-        mov     cx, 0x07e0              ; sector, offset is always 0
+	mov     bx, [kimage_start]      ; current sector number
+	mov     cx, 0x07e0              ; sector, offset is always 0
 
 .read_sectors:
-        cmp     ax, 0x80
-        jl      .read_last
+	cmp     ax, 0x80
+	jl      .read_last
 
-        push    cx      ; buffer address (seg then off)
-        push    0
-        push    0x80    ; number of sectors (64k)
-        push    bx      ; start sector
-        call    read_sector
-        add     sp, 8
+	push    cx      ; buffer address (seg then off)
+	push    0
+	push    0x80    ; number of sectors (64k)
+	push    bx      ; start sector
+	call    read_sector
+	add     sp, 8
 
-        add     bx, 0x80
-        add     cx, 0x1000
-        sub     ax, 0x80
-        jmp     .read_sectors
+	add     bx, 0x80
+	add     cx, 0x1000
+	sub     ax, 0x80
+	jmp     .read_sectors
 
 .read_last:
-        push    cx
-        push    0
+	push    cx
+	push    0
 	push	ax      ; num sectors
 	push	bx	; start index
 	call	read_sector
@@ -116,45 +117,45 @@ loop:
 	jmp	loop
 
 putcr:
-        push    `\r`
-        call    putc
-        add     sp, 2
-        push    `\n`
-        call    putc
-        add     sp, 2
-        ret
+	push    `\r`
+	call    putc
+	add     sp, 2
+	push    `\n`
+	call    putc
+	add     sp, 2
+	ret
 
 print_hex_word:
-        push    bp
-        mov     bp, sp
-        push    bx
-        push    cx
+	push    bp
+	mov     bp, sp
+	push    bx
+	push    cx
 
-        mov     bx, [bp + 4]
-        mov     cx, 12
+	mov     bx, [bp + 4]
+	mov     cx, 12
 .loop:
-        mov     ax, bx
-        shr     ax, cl
-        and     ax, 0x0f
+	mov     ax, bx
+	shr     ax, cl
+	and     ax, 0x0f
 
-        cmp     ax, 0x0a
-        jl      .nr_offset
-        ; add 39 to ax so that when we add '0' to it we'll be in the alpha
-        ; range instead of the numeric range
-        add     ax, 39
+	cmp     ax, 0x0a
+	jl      .nr_offset
+	; add 39 to ax so that when we add '0' to it we'll be in the alpha
+	; range instead of the numeric range
+	add     ax, 39
 .nr_offset:
-        add     ax, '0'
-        push    ax
-        call    putc
+	add     ax, '0'
+	push    ax
+	call    putc
 
-        sub     cx, 4
-        jns     .loop
+	sub     cx, 4
+	jns     .loop
 
-        pop     cx
-        pop     bx
-        mov     sp, bp
-        pop     bp
-        ret
+	pop     cx
+	pop     bx
+	mov     sp, bp
+	pop     bp
+	ret
 
 puts:
 	push	bx
@@ -188,13 +189,13 @@ putc:
 ; TODO: rewrite to not need esp
 read_sector:
 	pusha
-        ; Address (seg:off) to store at
-        mov     ax, [esp + 24]
-        mov     WORD [dsk_buf + 2], ax
-        mov     ax, [esp + 22]
-        mov     WORD [dsk_buf], ax
+	; Address (seg:off) to store at
+	mov     ax, [esp + 24]
+	mov     WORD [dsk_buf + 2], ax
+	mov     ax, [esp + 22]
+	mov     WORD [dsk_buf], ax
 
-        mov	ax, [esp + 20]
+	mov	ax, [esp + 20]
 	mov	[dsk_num_sec], ax
 
 	mov	ax, [esp + 18]
@@ -207,48 +208,49 @@ read_sector:
 
 	int	13h
 
-        jc      disk_error
+	jc      disk_error
 
 	popa
 	ret
 
 disk_error:
-        push    ax
+	push    ax
 
-	push	errmsg
+	push	disk_error_msg
 	call	puts
 	add	sp, 2
 
-        pop     ax
-        shr     ax, 8
-        push    ax
-        call    print_hex_word
-        add     sp, 2
+	pop     ax
+	shr     ax, 8
+	push    ax
+	call    print_hex_word
+	add     sp, 2
 
 .hang:  cli
-        hlt
-        jmp     .hang
+	hlt
+	jmp     .hang
 
 ; Disk stuff
-buffer equ 07e00h
-kern_start equ 07e04h
-disk_num: db 0
+buffer		equ 07e00h
+kern_start	equ 07e04h
+disk_num:
+	db 0
 
 ; The disk address packet structure that is required for
 ; int 13h ah=42h
-align 4
+	align 4
 dsk_addr:
-db 10h
-db 0
-dsk_num_sec dw 0
-dsk_buf dd 0
-dsk_lo_lba dd 0
-dsk_hi_lba dd 0
+		db 10h
+		db 0
+dsk_num_sec 	dw 0
+dsk_buf 	dd 0
+dsk_lo_lba 	dd 0
+dsk_hi_lba 	dd 0
 
 ; The starting **logical block** of the kernel on disk
-kimage_start dw 1
+kimage_start 	dw 1
 
-msg db `Loading binary\r\n`, 0
-verinfo db `\xe6boot v0.1.0\r\n`,0
-s2msg db `Entering second stage\r\n`, 0
-errmsg db `Disk read error, error code: `, 0
+loading_msg	db `Loading binary\r\n`, 0
+verinfo		db `\xe6boot v0.1.0\r\n`,0
+s2msg		db `Entering second stage\r\n`, 0
+disk_error_msg	db `Disk read error, error code: `, 0
