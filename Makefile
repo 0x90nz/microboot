@@ -9,8 +9,6 @@ KOBJS=$(addprefix $(BUILD)/, $(KSRC:%.c=%.o))
 
 image: build_dir user stage2.bin loader
 	./mkimg.sh build/microboot.img
-	dd if=build/load.bin of=build/microboot.img conv=notrunc
-	dd if=build/stage2.bin of=build/microboot.img bs=1 seek=512 conv=notrunc
 
 build_dir:
 	mkdir -p $(BUILD)
