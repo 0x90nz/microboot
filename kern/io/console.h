@@ -8,6 +8,7 @@ typedef struct console_state
     void (*set_cursor)(struct console_state*, int, int);
     void (*scroll)(struct console_state*);
     void (*set_colour)(struct console_state*, uint16_t);
+    void (*invalidate)(struct console_state* con, int x, int y, int width, int height);
 
     int x_pos, y_pos;
     int width, height;

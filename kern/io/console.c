@@ -15,6 +15,7 @@ void console_putc(console_t* con, char c)
         if (con->y_pos >= con->height) {
             con->y_pos--;
             con->scroll(con);
+            con->invalidate(con, 0, 0, con->width, con->height);
         }
         con->set_cursor(con, con->x_pos, con->y_pos);
         return;
@@ -29,6 +30,7 @@ void console_putc(console_t* con, char c)
     }
 
     con->put_xy(con, con->x_pos, con->y_pos, c);
+    con->invalidate(con, con->x_pos, con->y_pos, 1, 1);
     con->x_pos++;
 
     if (con->x_pos > con->width) {
@@ -37,6 +39,7 @@ void console_putc(console_t* con, char c)
         if (con->y_pos >= con->height) {
             con->y_pos--;
             con->scroll(con);
+            con->invalidate(con, 0, 0, con->width, con->height);
         }
     }
 
@@ -70,6 +73,7 @@ void console_clear(console_t* con)
             con->put_xy(con, x, y, ' ');
         }
     }
+    con->invalidate(con, 0, 0, con->width, con->height);
     con->x_pos = 0;
     con->y_pos = 0;
 }
@@ -79,6 +83,7 @@ void console_clear_row(console_t* con, int row)
     for (int x = 0; x < con->width; x++) {
         con->put_xy(con, x, row, ' ');
     }
+    con->invalidate(con, row, 0, con->width, 1);
 }
 
 void console_colour(console_t* con, uint16_t colour)

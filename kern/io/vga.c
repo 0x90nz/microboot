@@ -97,17 +97,19 @@ static void vga_set_colour(console_t* con, uint16_t colour)
     debugf("%04x", colour);
 }
 
+static void vga_null() {};
+
 /**
  * @brief initialise a VGA console with the given colour
- * 
- * @param colour 
- * @return console_t* 
+ *
+ * @param colour
+ * @return console_t*
  */
 console_t* vga_init(uint16_t colour)
 {
     console_t* con = kalloc(sizeof(*con));
     con->priv = kalloc(sizeof(struct vga_state));
-    
+
     struct vga_state* state = con->priv;
     state->vga_buffer = (uint16_t*)VGA_BUFFER_ADDR;
     state->colour = colour;
@@ -116,6 +118,7 @@ console_t* vga_init(uint16_t colour)
     con->set_cursor = vga_set_cursor;
     con->scroll = vga_scroll;
     con->set_colour = vga_set_colour;
+    con->invalidate = vga_null;
 
     con->width = 80;
     con->height = 25;

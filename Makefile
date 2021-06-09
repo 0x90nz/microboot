@@ -55,7 +55,7 @@ debug: image
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap -s -S -d cpu_reset &
-	konsole -e "gdb -ex 'target remote localhost:1234'"
+	# xterm -e "gdb -ex 'target remote localhost:1234'"
 
 clean:
 	rm -r build
