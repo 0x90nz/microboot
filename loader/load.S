@@ -12,6 +12,10 @@ _start:
 	mov	fs, ax
 	mov	gs, ax
 
+	; init some values we'll need for the DAP while we still have zero in ax
+	mov	[dsk_pkt_sz], ax
+	mov	[dsk_pkt_zero], ax
+
 	mov	[disk_num], dl
 
 	; Set sp to be 7000:f000 (which is the end of conventional memory)
@@ -33,8 +37,8 @@ _start:
 
 	push    0x07e0
 	push    0
-	push	01h			; num sectors
-	push	WORD [kimage_start]	; start index
+	push	01h		; num sectors
+	push	kimage_start	; start index
 	call	read_sector
 	add	esp, 8
 
@@ -62,18 +66,18 @@ _start:
 	test    dx, dx
 	jz      .read_sectors
 
-	add	ax, 1                   ; number of sectors left
-	mov     bx, [kimage_start]      ; current sector number
-	mov     cx, 0x07e0              ; sector, offset is always 0
+	add	ax, 1			; number of sectors left
+	mov     bx, kimage_start	; current sector number
+	mov     cx, 0x07e0		; sector, offset is always 0
 
 .read_sectors:
 	cmp     ax, 0x80
 	jl      .read_last
 
-	push    cx      ; buffer address (seg then off)
+	push    cx	; buffer address (seg then off)
 	push    0
-	push    0x80    ; number of sectors (64k)
-	push    bx      ; start sector
+	push    0x80	; number of sectors (64k)
+	push    bx	; start sector
 	call    read_sector
 	add     sp, 8
 
@@ -85,7 +89,7 @@ _start:
 .read_last:
 	push    cx
 	push    0
-	push	ax      ; num sectors
+	push	ax	; num sectors
 	push	bx	; start index
 	call	read_sector
 	add	sp, 8
@@ -238,17 +242,16 @@ disk_num:
 
 ; The disk address packet structure that is required for
 ; int 13h ah=42h
-	align 4
-dsk_addr:
-		db 10h
-		db 0
-dsk_num_sec 	dw 0
-dsk_buf 	dd 0
-dsk_lo_lba 	dd 0
-dsk_hi_lba 	dd 0
+dsk_addr 	equ 0x500
+dsk_pkt_sz	equ dsk_addr + 0
+dsk_pkt_zero	equ dsk_addr + 1
+dsk_num_sec 	equ dsk_addr + 2
+dsk_buf 	equ dsk_addr + 4
+dsk_lo_lba 	equ dsk_addr + 8
+dsk_hi_lba 	equ dsk_addr + 10
 
 ; The starting **logical block** of the kernel on disk
-kimage_start 	dw 1
+kimage_start	equ 1
 
 loading_msg	db `Loading binary\r\n`, 0
 verinfo		db `\xe6boot v0.1.0\r\n`,0
