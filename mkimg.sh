@@ -1,6 +1,13 @@
 #!/bin/sh
 IMAGE="$1"
 FS_SIZE="30M"
+BS_SIZE=$(stat -c "%s" build/load.bin)
+
+if [ $BS_SIZE -gt 446 ] ; then
+    tput setaf 3
+    echo "WARNING: bootsector is more than 446 bytes ($BS_SIZE) may overflow onto partition table!"
+    tput sgr0
+fi
 
 rm -f "$IMAGE"
 dd if=/dev/zero of="$IMAGE" bs=1M count=32
