@@ -29,18 +29,18 @@ _start:
 
 	push	verinfo
 	call	puts
-	add	esp, 2
+	add	sp, 2
 
 	push	loading_msg
 	call	puts
-	add	esp, 2
+	add	sp, 2
 
 	push    0x07e0
 	push    0
 	push	01h		; num sectors
 	push	kimage_start	; start index
 	call	read_sector
-	add	esp, 8
+	add	sp, 8
 
 	; Get the size and figure out how many more sectors
 	; we need to load from disk
@@ -116,18 +116,10 @@ _start:
 
 	; If for some reason we get back here, just hang
 	cli
-loop:
-	hlt
-	jmp	loop
 
-putcr:
-	push    `\r`
-	call    putc
-	add     sp, 2
-	push    `\n`
-	call    putc
-	add     sp, 2
-	ret
+halt_forever:
+	hlt
+	jmp	halt_forever
 
 print_hex_word:
 	push    bp
@@ -162,8 +154,11 @@ print_hex_word:
 	ret
 
 puts:
+	push    bp
+	mov     bp, sp
 	push	bx
-	mov	bx, [esp + 4]
+
+	mov	bx, [bp + 4]
 
 puts_loop:
 	mov	al, [bx]
@@ -172,37 +167,47 @@ puts_loop:
 
 	push	ax
 	call	putc
-	add	esp, 2
+	add	sp, 2
 	inc	bx
 	jmp	puts_loop
 
 puts_done:
-	pop	bx
+	pop     bx
+	mov     sp, bp
+	pop     bp
 	ret
 
 putc:
+	push    bp
+	mov     bp, sp
 	push	bx
-	mov	al, [esp + 4]	; char to print
+
+	mov	al, [bp + 4]	; char to print
 	mov	ah, 0eh		; function (write text)
 	mov	bx, 0		; zero out page number
 	int	10h
-	pop	bx
+
+	pop     bx
+	mov     sp, bp
+	pop     bp
 	ret
 
 ; Read a n sectors
-; TODO: rewrite to not need esp
 read_sector:
+	push    bp
+	mov     bp, sp
 	pusha
+
 	; Address (seg:off) to store at
-	mov     ax, [esp + 24]
+	mov     ax, [bp + 10]
 	mov     WORD [dsk_buf + 2], ax
-	mov     ax, [esp + 22]
+	mov     ax, [bp + 8]
 	mov     WORD [dsk_buf], ax
 
-	mov	ax, [esp + 20]
+	mov	ax, [bp + 6]
 	mov	[dsk_num_sec], ax
 
-	mov	ax, [esp + 18]
+	mov	ax, [bp + 4]
 	mov	[dsk_lo_lba], ax
 
 	mov	dl, [disk_num]
@@ -215,6 +220,8 @@ read_sector:
 	jc      disk_error
 
 	popa
+	mov     sp, bp
+	pop     bp
 	ret
 
 disk_error:
@@ -230,9 +237,7 @@ disk_error:
 	call    print_hex_word
 	add     sp, 2
 
-.hang:  cli
-	hlt
-	jmp     .hang
+	jmp	halt_forever
 
 ; Disk stuff
 buffer		equ 07e00h
