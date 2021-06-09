@@ -12,7 +12,7 @@ _start:
 	mov	gs, ax
 
 	mov	[disk_num], dl
-	
+
 	; Set sp to be 7000:f000 (which is the end of conventional memory)
 	; so it doesn't mess with our stuff We disable interrupts while doing 
 	; this because apparently they can mess with it in a bad way.
@@ -30,38 +30,69 @@ _start:
 	call	puts
 	add	esp, 2
 
+        push    0x07e0
+        push    0
 	push	01h			; num sectors
 	push	WORD [kimage_start]	; start index
 	call	read_sector
-	add	esp, 4
+	add	esp, 8
 
 	; Get the size and figure out how many more sectors
 	; we need to load from disk
 	mov	ax, WORD [buffer]
+        mov     dx, WORD [buffer + 2]
 
-	mov	dx, 0
 	mov 	bx, 512
-
 	div	bx
 
 	; ax now contains file size / 512, which is the number of extra
 	; sectors that we need to load
 
+        ; Some BIOS' are picky about reading more than 64k at once so here we
+        ; limit the number of sectors that we copy to 64k and then copy 64k
+        ; chunks until we're done
+
 	; skip over loading additional sectors if we don't need to
 	test	ax, ax
-	jz	xfer
+	jz	.xfer
 
-	add	ax, 1
+        ; if there's no remainder the image was perfectly aligned,
+        ; so no need to read an additional sector
+        test    dx, dx
+        jz      .read_sectors
 
-	push	ax			; num sectors
-	push	WORD [kimage_start]	; start index
+	add	ax, 1                   ; number of sectors left
+        mov     bx, [kimage_start]      ; current sector number
+        mov     cx, 0x07e0              ; sector, offset is always 0
+
+.read_sectors:
+        cmp     ax, 0x80
+        jl      .read_last
+
+        push    cx      ; buffer address (seg then off)
+        push    0
+        push    0x80    ; number of sectors (64k)
+        push    bx      ; start sector
+        call    read_sector
+        add     sp, 8
+
+        add     bx, 0x80
+        add     cx, 0x1000
+        sub     ax, 0x80
+        jmp     .read_sectors
+
+.read_last:
+        push    cx
+        push    0
+	push	ax      ; num sectors
+	push	bx	; start index
 	call	read_sector
-	add	esp, 4
+	add	sp, 8
 
-xfer:
+.xfer:
 	push	s2msg
 	call	puts
-	add	esp, 2
+	add	sp, 2
 
 	; Get memory info to use later
 	mov	ax, 0e801h
@@ -76,7 +107,6 @@ xfer:
 	mov	al, [disk_num]
 	push	ax	; disk number
 
-	cli
 	jmp 	kern_start
 
 	; If for some reason we get back here, just hang
@@ -84,6 +114,47 @@ xfer:
 loop:
 	hlt
 	jmp	loop
+
+putcr:
+        push    `\r`
+        call    putc
+        add     sp, 2
+        push    `\n`
+        call    putc
+        add     sp, 2
+        ret
+
+print_hex_word:
+        push    bp
+        mov     bp, sp
+        push    bx
+        push    cx
+
+        mov     bx, [bp + 4]
+        mov     cx, 12
+.loop:
+        mov     ax, bx
+        shr     ax, cl
+        and     ax, 0x0f
+
+        cmp     ax, 0x0a
+        jl      .nr_offset
+        ; add 39 to ax so that when we add '0' to it we'll be in the alpha
+        ; range instead of the numeric range
+        add     ax, 39
+.nr_offset:
+        add     ax, '0'
+        push    ax
+        call    putc
+
+        sub     cx, 4
+        jns     .loop
+
+        pop     cx
+        pop     bx
+        mov     sp, bp
+        pop     bp
+        ret
 
 puts:
 	push	bx
@@ -96,7 +167,7 @@ puts_loop:
 
 	push	ax
 	call	putc
-	add	esp, 2 
+	add	esp, 2
 	inc	bx
 	jmp	puts_loop
 
@@ -114,15 +185,21 @@ putc:
 	ret
 
 ; Read a n sectors
+; TODO: rewrite to not need esp
 read_sector:
 	pusha
-	mov	ax, [esp + 20]
+        ; Address (seg:off) to store at
+        mov     ax, [esp + 24]
+        mov     WORD [dsk_buf + 2], ax
+        mov     ax, [esp + 22]
+        mov     WORD [dsk_buf], ax
+
+        mov	ax, [esp + 20]
 	mov	[dsk_num_sec], ax
 
 	mov	ax, [esp + 18]
 	mov	[dsk_lo_lba], ax
 
-	mov	DWORD [dsk_buf], buffer
 	mov	dl, [disk_num]
 
 	mov	si, dsk_addr
@@ -130,17 +207,36 @@ read_sector:
 
 	int	13h
 
+        jc      disk_error
+
 	popa
 	ret
 
+disk_error:
+        push    ax
+
+	push	errmsg
+	call	puts
+	add	sp, 2
+
+        pop     ax
+        shr     ax, 8
+        push    ax
+        call    print_hex_word
+        add     sp, 2
+
+.hang:  cli
+        hlt
+        jmp     .hang
 
 ; Disk stuff
 buffer equ 07e00h
-kern_start equ 07e02h
+kern_start equ 07e04h
 disk_num: db 0
 
 ; The disk address packet structure that is required for
 ; int 13h ah=42h
+align 4
 dsk_addr:
 db 10h
 db 0
@@ -155,3 +251,4 @@ kimage_start dw 1
 msg db `Loading binary\r\n`, 0
 verinfo db `\xe6boot v0.1.0\r\n`,0
 s2msg db `Entering second stage\r\n`, 0
+errmsg db `Disk read error, error code: `, 0

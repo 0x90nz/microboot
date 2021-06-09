@@ -1,6 +1,6 @@
 .section bootstrap, "ax"
 
-.word KERNEL_SIZE
+.long KERNEL_SIZE
 jmp	_start
 
 .align 16
@@ -48,7 +48,7 @@ _start:
 	call	stage2_hl
 
 	# We should never get here. If we do, just hang
-	cli	
+	cli
 1:
 	hlt
 	jmp	1b
