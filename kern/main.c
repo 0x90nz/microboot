@@ -15,6 +15,7 @@
 #include "sys/cpuid.h"
 #include "exe/elf.h"
 #include "mod.h"
+#include "version.h"
 
 char main_scratch[64];
 char current_dir[256];
@@ -338,6 +339,11 @@ void setenv(int argc, char** argv)
     env_put(get_rootenv(), argv[1], buf);
 }
 
+void ver(int argc, char** argv)
+{
+    printf("%s - %s (built %s)\n", VER_NAME, VER_GIT_REV, VER_BUILD_DATE);
+}
+
 static struct command commands[] = {
     {"exec", exec},
     {"lsmod", lsmod},
@@ -345,6 +351,7 @@ static struct command commands[] = {
     {"lssym", lssym},
     {"uptime", uptime},
     {"mem", mem},
+    {"ver", ver},
     {"cpuid", cmd_cpuid},
     {"clear", clear},
     {"clock", clock},
