@@ -25,6 +25,11 @@ By default a hard disk image is created, 32MiB large (see `mkimg.sh` for more
 details). The bootloader's core image is stored within the space between the MBR
 and the first partition.
 
+To debug, just type `make debug` which will drop you to a `gdb` prompt (using
+QEMU's gdb stub), this of course needs `gdb` installed. Once here you can do
+most of the things you'd normally be able to do with a C program, like set
+breakpoints (e.g. `b main`) etc.
+
 ## Architecture
 
 There are 4 main components:

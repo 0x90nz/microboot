@@ -11,12 +11,11 @@ KSRC=$(shell find kern -type f -name "*.c")
 BUILD=build
 KOBJS=$(addprefix $(BUILD)/, $(KSRC:%.c=%.o))
 
-image: build_dir user stage2.bin loader
-	./mkimg.sh build/microboot.img
-
+.PHONY: build_dir
 build_dir:
 	mkdir -p $(BUILD)
 
+.PHONY: rootfs_dir
 rootfs_dir:
 	mkdir -p rootfs/bin
 
@@ -27,7 +26,8 @@ loader:
 .PHONY: user
 user: rootfs_dir user/info.elf user/dino.elf user/hexdump.elf
 
-stage2.bin: $(KOBJS)
+.PHONY: stage2
+stage2: $(KOBJS)
 	$(CC) $(CFLAGS) -c loader/stage2.S -o build/stage2.o
 	$(CC) $(CFLAGS) -c kern/sys/bios.S -o build/bios.o
 	$(CC) $(CFLAGS) -c loader/stage2_hl.c -o build/stage2_hl.o
@@ -42,6 +42,18 @@ $(KOBJS): $(BUILD)/%.o: %.c
 %.elf: %.c
 	$(CC) $(CFLAGS) -static -fPIC $< user/crt0.S -o rootfs/bin/$(notdir $@) -T user/process.ld -Ilib -Ikern
 
+$(BUILD)/debugimg.elf: $(KOBJS)
+	$(CC) $(CFLAGS) -lgcc $(BUILD)/stage2_hl.o $(BUILD)/interrupts_stubs.o $(BUILD)/bios.o \
+		$^ -T link.ld -Wl,--oformat=elf32-i386 -o $(BUILD)/debugimage.elf
+
+.PHONY: image
+image: build_dir user stage2 loader
+	./mkimg.sh build/microboot.img
+
+.PHONY: debugimg
+debugimage: build_dir stage2 loader $(BUILD)/debugimg.elf
+
+.PHONY: run
 run: CLFAGS += -O3
 run: image
 	$(QEMU) \
@@ -50,14 +62,16 @@ run: image
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap
 
+.PHONY: debug
 debug: CFLAGS += -g
-debug: image
+debug: image debugimage
 	qemu-system-i386 \
 		-drive format=raw,file=build/microboot.img,index=0 \
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap -s -S -d cpu_reset &
-	# xterm -e "gdb -ex 'target remote localhost:1234'"
+	gdb -ex 'target remote localhost:1234' -ex 'symbol-file $(BUILD)/debugimage.elf'
 
+.PHONY: clean
 clean:
 	rm -r build
