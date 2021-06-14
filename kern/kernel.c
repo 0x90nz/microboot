@@ -76,20 +76,6 @@ uint32_t get_esp()
     return esp;
 }
 
-void display_logo()
-{
-    printf("\n");
-    printf("%-16s           ##                            ##\n", "");
-    printf("%-16s           ##                            ##\n", "");
-    printf("%-16s ##    ##  ########   #######   ####### #####\n", "");
-    printf("%-16s ##    ##  ##    ### ###   ### ###   ### ##\n", "");
-    printf("%-16s ##    ##  ##     ## ##     ## ##     ## ##\n", "");
-    printf("%-16s ##    ##  ###   ### ###   ### ###   ### ##\n", "");
-    printf("%-16s # ####  # ########   #######   #######  #####\n", "");
-    printf("%-16s ##\n", "");
-    printf("%-16s ##\n", "");
-}
-
 /**
  * @brief Dump a buffer of memory to output
  * 
@@ -226,11 +212,6 @@ static void read_config()
     fs_fdestroy(file);
 }
 
-static void console_init()
-{
-    display_logo();
-}
-
 void kernel_late_init()
 {
     log(LOG_INFO, "early init complete");
@@ -251,9 +232,6 @@ void kernel_late_init()
 
     read_config();
     debug("read config");
-
-    console_init();
-    debug("console initialised");
 
     debug("all init done. transferring to main");
 

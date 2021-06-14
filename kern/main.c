@@ -402,6 +402,25 @@ void lsdrv(int argc, char** argv)
     driver_foreach(lsdrv_callback);
 }
 
+void display_logo()
+{
+    printf("\n");
+    printf("%-16s           ##                            ##\n", "");
+    printf("%-16s           ##                            ##\n", "");
+    printf("%-16s ##    ##  ########   #######   ####### #####\n", "");
+    printf("%-16s ##    ##  ##    ### ###   ### ###   ### ##\n", "");
+    printf("%-16s ##    ##  ##     ## ##     ## ##     ## ##\n", "");
+    printf("%-16s ##    ##  ###   ### ###   ### ###   ### ##\n", "");
+    printf("%-16s # ####  # ########   #######   #######  #####\n", "");
+    printf("%-16s ##\n", "");
+    printf("%-16s ##\n", "");
+}
+
+void logo(int argc, char** argv)
+{
+    display_logo();
+}
+
 static struct command commands[] = {
     {"exec", exec},
     {"lsmod", lsmod},
@@ -429,7 +448,8 @@ static struct command commands[] = {
     {"setenv", setenv},
     {"poweroff", poweroff},
     {"exit", poweroff},
-    {"help", help}
+    {"help", help},
+    {"logo", logo},
 };
 
 // Invoke a shell-internal function. Returns a non-zero value if a function
@@ -466,6 +486,8 @@ int invoke_external(const char* name, int argc, char** argv)
 void main()
 {
     char cmdbuf[64];
+
+    display_logo();
 
     while (1) {
         puts(env_get(get_rootenv(), "prompt", const char*));
