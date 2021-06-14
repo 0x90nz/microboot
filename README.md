@@ -15,10 +15,13 @@ reduces the complexity to get started.
 
 To use μboot, you'll at the very minimum need some Linux (or possibly Unix if
 you can find the tools) environment, which has the tools `qemu`, `gcc`, `nasm`,
-`losetup`, ext2 tools and `dd` available. Once all the tools are installed, you
-can run `make` to build or `make run` to both build and launch qemu.
+ext2 tools and `dd` available (some of these are very likely installed on some
+systems already). Note that on some distributions you might have to install a
+package like `gcc-multilib` to get support for compiling in 32-bit mode with
+x86_64 `gcc`.Once all the tools are installed, you can run `make` to build or
+`make run` to both build and launch qemu.
 
-By default a hard disk image is created, 32MiB large (see `mkimg.sh` for more 
+By default a hard disk image is created, 32MiB large (see `mkimg.sh` for more
 details). The bootloader's core image is stored within the space between the MBR
 and the first partition.
 
