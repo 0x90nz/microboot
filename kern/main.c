@@ -1,6 +1,7 @@
 #include "stdlib.h"
 #include "stdint.h"
 #include "sys/interrupts.h"
+#include "io/framebuffer.h"
 #include "io/console.h"
 #include "io/pio.h"
 #include "io/serial.h"
@@ -76,6 +77,43 @@ void setcolour(int argc, char** argv)
 
     console_colour(console, fg | bg << 4);
     console_clear(console);
+}
+
+void setres(int argc, char** argv)
+{
+    if (argc != 4) {
+        printf("Usage: %s xres yres bpp\n", argv[0]);
+        return;
+    }
+
+    int xres = atoi(argv[1]);
+    int yres = atoi(argv[2]);
+    int bpp = atoi(argv[3]);
+
+    struct device* dev = device_get_by_name("vesafb0"); // TODO: get properly
+    if (!dev)
+        return;
+
+    struct fbdev_setres_request req = {
+        .xres = xres,
+        .yres = yres,
+        .bpp = bpp
+    };
+    dev->setparam(dev, FBDEV_SETRES, &req);
+
+    struct device* vga = device_get_by_name("vga0"); // TODO: get properly
+    if (vga)
+        device_deregister(vga);
+
+    struct device* fbcon = device_get_by_name("fbcon0");
+    if (!fbcon)
+        return;
+
+    debugf("fbcon: %p", fbcon);
+    console = device_get_console(fbcon); // TODO: get properly
+    kfree(stdout);
+    stdout = kalloc(sizeof(*stdout));
+    console_get_chardev(console, stdout);
 }
 
 void listcolours(int argc, char** argv)
@@ -344,17 +382,40 @@ void ver(int argc, char** argv)
     printf("%s - %s (built %s)\n", VER_NAME, VER_GIT_REV, VER_BUILD_DATE);
 }
 
+void lsdev_callback(struct device* dev)
+{
+    printf("%s\n", dev->name);
+}
+
+void lsdev(int argc, char** argv)
+{
+    device_foreach(lsdev_callback);
+}
+
+void lsdrv_callback(struct driver* drv)
+{
+    printf("%s\n", drv->name);
+}
+
+void lsdrv(int argc, char** argv)
+{
+    driver_foreach(lsdrv_callback);
+}
+
 static struct command commands[] = {
     {"exec", exec},
     {"lsmod", lsmod},
     {"ldmod", ldmod},
     {"lssym", lssym},
+    {"lsdev", lsdev},
+    {"lsdrv", lsdrv},
     {"uptime", uptime},
     {"mem", mem},
     {"ver", ver},
     {"cpuid", cmd_cpuid},
     {"clear", clear},
     {"clock", clock},
+    {"setres", setres},
     {"setcolour", setcolour},
     {"listcolours", listcolours},
     {"dino", dino},

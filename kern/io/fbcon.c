@@ -1,8 +1,16 @@
 #include "fbcon.h"
-#include "vesa.h"
+#include <export.h>
+#include "framebuffer.h"
+#include "driver.h"
 #include "../alloc.h"
 #include "../res/cherry_font.h"
 #include "../stdlib.h"
+
+typedef struct {
+    fbdev_t* fb;
+    uint32_t fg_colour;
+    uint32_t bg_colour;
+} fbcon_priv_t;
 
 #define CHAR_HEIGHT 13
 #define CHAR_WIDTH 7
@@ -12,16 +20,16 @@ static void fb_putxy(console_t* con, int x_base, int y_base, char c)
     // A mask is theroetically faster than bitshift operations.
     // TODO: check that is actually true
     fbcon_priv_t* priv = con->priv;
-    struct vesa_device* dev = priv->dev;
+    fbdev_t* fb = priv->fb;
     int mask[] = {128, 64, 32, 16, 8, 4, 2, 1};
     int px_x = x_base * CHAR_WIDTH;
     int px_y = y_base * CHAR_HEIGHT;
     for (int y = 0; y < CHAR_HEIGHT; y++) {
         for (int x = 0; x < CHAR_WIDTH; x++) {
             if (font_cherry[(unsigned char)c - 32][y] & mask[x]) {
-                vesa_put_pixel(dev, px_x + x, px_y + y, priv->fg_colour);
+                fb->put_pixel(fb,  px_x + x, px_y + y, priv->fg_colour);
             } else {
-                vesa_put_pixel(dev, px_x + x, px_y + y, priv->bg_colour);
+                fb->put_pixel(fb, px_x + x, px_y + y, priv->bg_colour);
             }
         }
     }
@@ -59,17 +67,18 @@ static void fb_set_colour(console_t* con, uint16_t colour)
 static void fb_scroll(console_t* con)
 {
     fbcon_priv_t* priv = con->priv;
-    struct vesa_device* dev = priv->dev;
+    fbdev_t* fb = priv->fb;
     // TODO: replace with bulk copy?
-    vesa_shift(dev, CHAR_HEIGHT);
+    fb->shift(fb, CHAR_HEIGHT);
     console_clear_row(con, con->y_pos);
 }
 
 static void fb_invalidate(console_t* con, int x, int y, int width, int height)
 {
     fbcon_priv_t* priv = con->priv;
-    vesa_invalidate(
-        priv->dev,
+    fbdev_t* fb = priv->fb;
+    fb->invalidate(
+        fb,
         x * CHAR_WIDTH, y * CHAR_HEIGHT,
         width * CHAR_WIDTH, height * CHAR_HEIGHT
     );
@@ -77,25 +86,78 @@ static void fb_invalidate(console_t* con, int x, int y, int width, int height)
 
 static void fb_null() {}
 
-void fbcon_init(struct vesa_device* dev, console_t* con)
+void fbcon_destroy(struct device* dev)
 {
-    fbcon_priv_t* priv = kalloc(sizeof(fbcon_priv_t));
-    priv->dev = dev;
+    console_t* con = dev->internal_dev;
+    kfree(con->priv);
+    kfree(con);
+    kfree(dev);
+}
+
+static struct device* fbcon_create(fbdev_t* fb)
+{
+    console_t* con = kalloc(sizeof(*con));
+    fbcon_priv_t* priv = kalloc(sizeof(*priv));
+
+    priv->fb = fb;
     priv->fg_colour = 0xffffff;
     priv->bg_colour = 0;
     con->priv = priv;
 
-    con->width = dev->width / CHAR_WIDTH;
-    con->height = dev->height / CHAR_HEIGHT;
+    con->width = fb->width / CHAR_WIDTH;
+    con->height = fb->height / CHAR_HEIGHT;
 
     con->put_xy = fb_putxy;
     con->set_cursor = fb_null;
     con->set_colour = fb_set_colour;
     con->invalidate = fb_invalidate;
     con->scroll = fb_scroll;
+
+    struct device* dev = kalloc(sizeof(*dev));
+    dev->destroy = fbcon_destroy;
+    dev->device_priv = NULL;
+    dev->internal_dev = con;
+    sprintf(dev->name, "fbcon%d", device_get_first_available_suffix("fbcon"));
+    dev->num_subdevices = 0;
+    dev->subdevices = NULL;
+    dev->type = DEVICE_TYPE_CON;
+
+    return dev;
 }
 
-void fbcon_destroy(console_t* con)
+static void fbcon_dev_foreach_callback(struct device* dev)
 {
-    kfree(con->priv);
+    if (dev->type == DEVICE_TYPE_FRAMEBUFFER) {
+        // this dev is already bound to something, so don't bother binding it
+        if (dev->subdevices)
+            return;
+
+        fbdev_t* fb = dev->internal_dev;
+        if (fb->width > 0 && fb->height > 0) {
+            struct device* new_con = fbcon_create(fb);
+            dev->subdevices = kalloc(sizeof(*dev->subdevices) * 1);
+            dev->subdevices[0] = new_con;
+            dev->num_subdevices = 1;
+            device_register(new_con);
+        }
+    }
 }
+
+static void fbcon_probe(struct driver* driver)
+{
+    debug("fbcon probe");
+    device_foreach(fbcon_dev_foreach_callback);
+}
+
+struct driver fbcon_driver = {
+    .name = "Framebuffer console",
+    .probe = fbcon_probe,
+    .type_for = DEVICE_TYPE_CON,
+    .driver_priv = NULL,
+};
+
+static void fbcon_register_driver()
+{
+    driver_register(&fbcon_driver);
+}
+EXPORT_INIT(fbcon_register_driver);

@@ -4,6 +4,8 @@
  * 
  */
 
+#include <export.h>
+#include "driver.h"
 #include "vga.h"
 #include "pio.h"
 #include "console.h"
@@ -133,3 +135,33 @@ console_t* vga_init(uint16_t colour)
 
     return con;
 }
+
+static void vga_probe(struct driver* driver)
+{
+    if (!driver->first_probe)
+        return;
+
+    struct device* dev = kalloc(sizeof(*dev));
+    dev->type = DEVICE_TYPE_CON;
+    sprintf(dev->name, "vga%d", 0);
+    dev->destroy = NULL; // TODO
+    dev->device_priv = NULL;
+
+    console_t* con = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
+    dev->internal_dev = con;
+
+    device_register(dev);
+}
+
+struct driver vga_driver = {
+    .name = "VGA text mode console",
+    .probe = vga_probe,
+    .type_for = DEVICE_TYPE_CON,
+    .driver_priv = NULL,
+};
+
+static void vga_register_driver()
+{
+    driver_register(&vga_driver);
+}
+EXPORT_INIT(vga_register_driver);

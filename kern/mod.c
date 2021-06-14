@@ -23,6 +23,16 @@ void mod_init()
     list_init(&modules);
 }
 
+static void module_sym_add(struct symbol* sym)
+{
+    if (strncmp(EXPORT_MOD_INIT_PREFIX, sym->name, 6) == 0) {
+        void (*fn)() = sym->fn;
+        fn();
+    } else {
+        list_append(&exports, list_node(sym));
+    }
+}
+
 /**
  * @brief Add the kernel symbol table to the list of exports
  * 
@@ -35,7 +45,7 @@ void mod_ksymtab_add(void* symtab, size_t szsymtab)
     struct symbol* sym = symtab;
 
     for (int i = 0; i < num_syms; i++, sym++) {
-        list_append(&exports, list_node(sym));
+        module_sym_add(sym);
     }
 }
 

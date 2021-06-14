@@ -1,3 +1,4 @@
+#include "io/driver.h"
 #include "io/pio.h"
 #include "io/vga.h"
 #include "io/vesa.h"
@@ -227,24 +228,6 @@ static void read_config()
 
 static void console_init()
 {
-    const char* type = env_get(env, "con", const char*);
-    // default to VGA should no entry be present
-    if (!type || strcmp(type, "vga") == 0) {
-        // We've already initialised the VGA console, so we can just do nothing
-        debug("continuing with VGA console");
-    } else if (strcmp(type, "vesa") == 0) {
-        debug("switching to VESA console");
-        struct vesa_device* dev = kalloc(sizeof(*dev));
-        vesa_init(dev, 1024, 768, 32);
-
-        kfree(console);
-        console_t* vesa_con = kalloc(sizeof(*vesa_con));
-        fbcon_init(dev, vesa_con);
-        console = vesa_con;
-
-        console_get_chardev(console, stdout);
-    }
-
     display_logo();
 }
 
@@ -265,10 +248,6 @@ void kernel_late_init()
     fs_init(sinfo.drive_number);
     fs_mount("sys", envfs_init(env));
     debug("fs initialised");
-
-    mod_init();
-    ksyms_init();
-    debug("module system initialised");
 
     read_config();
     debug("read config");
@@ -292,17 +271,20 @@ void kernel_main(struct kstart_info* start_info)
 
     gdt_init();
     init_alloc(start_info->memory_start, start_info->free_memory * 64 * KiB);
+    driver_init();
 
-    struct serial_port* sp0 = kalloc(sizeof(*sp0));
-    serial_init(sp0, SP_COM0_PORT, 115200);
-    dbgout = kalloc(sizeof(*dbgout));
-    serial_get_chardev(sp0, dbgout);
+    mod_init();
+    ksyms_init();
+
+    dbgout = device_get_chardev(device_get_by_name("sp0")); // TODO: get first avail chardev?
+    debug("debug serial up");
+    debug("module system initialised");
 
     interrupts_init();
     debug("interrupts initialised");
 
     // setup a VGA console for early init. will be replaced later if we want
-    console = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
+    console = device_get_console(device_get_by_name("vga0"));
     stdout = kalloc(sizeof(*stdout));
     console_get_chardev(console, stdout);
     debug("early vga console initialised");

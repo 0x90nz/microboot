@@ -15,4 +15,14 @@ void module_init() \
     getexport = SYSCALL1(0, "getmodsym"); \
 }
 
+// Export a symbol that is placed in the symbol table as to be callable by other
+// code, be it in another module or directly within the kernel
 #define EXPORT_SYM(name) struct symbol symbol_ ## name __attribute__((section("exports"))) = { #name, name }
+
+#define EXPORT_MOD_INIT_PREFIX "__init$"
+
+// Export a symbol as an init symnol, that is one which will be called when a
+// module is loaded (before that modules entry point!) or if a kernel symbol, at
+// the initialisation of the module system.
+#define EXPORT_INIT(name) struct symbol symbol_ ## name __attribute__((section("exports"))) = { EXPORT_MOD_INIT_PREFIX #name, name }
+
