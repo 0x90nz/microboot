@@ -1,7 +1,7 @@
 
 GIT_REV=$(shell git describe --match="" --always --dirty)
 GIT_BRANCH=$(shell git symbolic-ref --short HEAD)
-CFLAGS=-m32 -march=i386 -nostdlib -nostdinc -ffreestanding -fno-pie \
+CFLAGS=-m32 -march=i386 -nostdlib -nostdinc -ffreestanding -fno-pie -fno-stack-protector \
  -mgeneral-regs-only -mno-red-zone -msoft-float -Wall -fno-asynchronous-unwind-tables -Ilib \
  -DVER_GIT_REV="\"$(GIT_REV)\"" -DVER_GIT_BRANCH="\"$(GIT_BRANCH)\""
 CC=gcc
