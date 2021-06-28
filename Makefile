@@ -11,6 +11,10 @@ KSRC=$(shell find kern -type f -name "*.c")
 BUILD=build
 KOBJS=$(addprefix $(BUILD)/, $(KSRC:%.c=%.o))
 
+# wrapper so that image gets called by default
+.PHONY: all
+all: image
+
 .PHONY: build_dir
 build_dir:
 	mkdir -p $(BUILD)
