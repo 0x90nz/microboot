@@ -66,15 +66,18 @@ run: image
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap
 
-.PHONY: debug
-debug: CFLAGS += -g
-debug: image debugimage
+.PHONY: gdbdebug
+gdbdebug: CFLAGS += -g
+gdbdebug: image debugimage
 	qemu-system-i386 \
 		-drive format=raw,file=build/microboot.img,index=0 \
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
 		-object filter-dump,id=id,netdev=n1,file=out.pcap -s -S -d cpu_reset &
-	gdb -ex 'target remote localhost:1234' -ex 'symbol-file $(BUILD)/debugimage.elf'
+
+.PHONY: debug
+debug: gdbdebug
+	gdb -d kern -ex 'target remote localhost:1234' -ex 'symbol-file $(BUILD)/debugimage.elf'
 
 .PHONY: clean
 clean:
