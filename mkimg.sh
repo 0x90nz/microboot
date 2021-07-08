@@ -20,8 +20,9 @@ echo "o
     a
     w" | fdisk "$IMAGE" >/dev/null
 
-rm -f "build/rootfs.img"
-mke2fs -L 'microboot' -d rootfs -t ext2 "build/rootfs.img" "$FS_SIZE"
-dd if="build/rootfs.img" of="$IMAGE" bs=512 seek=2048 conv=notrunc
 dd if="build/load.bin" of="$IMAGE" conv=notrunc
 dd if="build/stage2.bin" of="$IMAGE" bs=1 seek=512 conv=notrunc
+
+rm -f "build/rootfs.img"
+mke2fs -b 1024 -L 'microboot' -d rootfs -t ext2 "build/rootfs.img" "$FS_SIZE"
+dd if="build/rootfs.img" of="$IMAGE" bs=512 seek=2048 conv=notrunc
