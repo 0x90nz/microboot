@@ -86,7 +86,7 @@ static struct device* serial_new_dev(uint16_t iobase, uint32_t baudrate)
     return dev;
 }
 
-static void serial_probe(struct driver* driver)
+void serial_probe(struct driver* driver)
 {
     if (!driver->first_probe)
         return;
@@ -107,5 +107,4 @@ static void serial_register_driver()
 {
     driver_register(&serial_driver);
 }
-EXPORT_INIT(serial_register_driver);
-
+EXPORT_EARLY_INIT(serial_register_driver);

@@ -13,6 +13,7 @@
 static struct list exports;
 static struct list modules;
 
+
 /**
  * @brief Initialise the module system
  * 
@@ -25,33 +26,53 @@ void mod_init()
 
 static void module_sym_add(struct symbol* sym)
 {
-    if (strncmp(EXPORT_MOD_INIT_PREFIX, sym->name, 6) == 0) {
-        void (*fn)() = sym->fn;
-        fn();
-    } else {
-        list_append(&exports, list_node(sym));
+    list_append(&exports, list_node(sym));
+}
+
+/**
+ * @brief Do early init for exported symbols with the early init prefix.
+ *
+ * @param symtab the symbol table
+ * @param symtab_size the size of the symbol table (in bytes)
+ */
+void mod_ksymtab_early_init(void* symtab, size_t symtab_size)
+{
+    int num_syms = symtab_size / sizeof(struct symbol);
+    struct symbol* sym = symtab;
+
+    for (int i = 0; i < num_syms; i++, sym++) {
+        if (strncmp(EXPORT_MOD_EARLY_INIT_PREFIX, sym->name, strlen(EXPORT_MOD_EARLY_INIT_PREFIX)) == 0) {
+            void (*fn)() = sym->fn;
+            fn();
+        }
     }
 }
 
 /**
- * @brief Add the kernel symbol table to the list of exports
- * 
+ * @brief Add the kernel symbol table to the list of exports and initialise late
+ * init exports.
+ *
  * @param symtab the symbol table
- * @param szsymtab the size of the symbol table (in bytes)
+ * @param symtab_size the size of the symbol table (in bytes)
  */
-void mod_ksymtab_add(void* symtab, size_t szsymtab)
+void mod_ksymtab_add(void* symtab, size_t symtab_size)
 {
-    int num_syms = szsymtab / sizeof(struct symbol);
+    int num_syms = symtab_size / sizeof(struct symbol);
     struct symbol* sym = symtab;
 
     for (int i = 0; i < num_syms; i++, sym++) {
-        module_sym_add(sym);
+        if (strncmp(EXPORT_MOD_INIT_PREFIX, sym->name, strlen(EXPORT_MOD_INIT_PREFIX)) == 0) {
+            void (*fn)() = sym->fn;
+            fn();
+        } else {
+            module_sym_add(sym);
+        }
     }
 }
 
 /**
  * @brief Add a symbol table from a module to the list of exports
- * 
+ *
  * @param base the base address of the module
  * @param symtab the symbol table
  * @param szsymtab the size of the symbol table (in bytes)

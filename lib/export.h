@@ -26,3 +26,6 @@ void module_init() \
 // the initialisation of the module system.
 #define EXPORT_INIT(name) struct symbol symbol_ ## name __attribute__((section("exports"))) = { EXPORT_MOD_INIT_PREFIX #name, name }
 
+#define EXPORT_MOD_EARLY_INIT_PREFIX "__einit$"
+
+#define EXPORT_EARLY_INIT(name) struct symbol symbol_ ## name __attribute__((section("exports"))) = { EXPORT_MOD_EARLY_INIT_PREFIX #name, name }

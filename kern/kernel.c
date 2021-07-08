@@ -176,15 +176,6 @@ void it_handle(int i, struct list_node* item)
     printf("%d: %s\n", i, item->value);
 }
 
-extern int _kexp_start, _kexp_end;
-void ksyms_init()
-{
-    void* ksymtab = &_kexp_start;
-    size_t ksymtab_size = (void*)&_kexp_end - (void*)&_kexp_start;
-    mod_ksymtab_add(ksymtab, ksymtab_size);
-}
-
-
 // Sets the timer reload value for IRQ0
 static void set_timer_reload(uint16_t reload)
 {
@@ -241,6 +232,7 @@ void kernel_late_init()
     hang();
 }
 
+extern int _kexp_start, _kexp_end;
 void kernel_main(struct kstart_info* start_info)
 {
     stdout = NULL;
@@ -249,13 +241,19 @@ void kernel_main(struct kstart_info* start_info)
 
     gdt_init();
     init_alloc(start_info->memory_start, start_info->free_memory * 64 * KiB);
-    driver_init();
 
+    driver_init();
     mod_init();
-    ksyms_init();
+
+    void* ksymtab = &_kexp_start;
+    size_t ksymtab_size = (void*)&_kexp_end - (void*)&_kexp_start;
+    mod_ksymtab_early_init(ksymtab, ksymtab_size);
 
     dbgout = device_get_chardev(device_get_by_name("sp0")); // TODO: get first avail chardev?
     debug("debug serial up");
+
+    mod_ksymtab_add(ksymtab, ksymtab_size);
+
     debug("module system initialised");
 
     interrupts_init();
