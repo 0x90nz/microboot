@@ -287,18 +287,19 @@ struct ext2_fs* ext2_init(uint8_t drive_num, uint32_t start_lba, uint32_t num_se
 
     fs->drive_num = drive_num;
     fs->start_lba = start_lba;
-    fs->sb = kalloc(1024);
-    
+    fs->sb = kallocz(1024);
+
     // Temp value so we can read
     fs->block_size = 1024;
 
     // Read in the superblock, and initialise fields from that
     read_block(fs, 1, fs->sb);
+    ASSERT(fs->sb->magic == 0xEF53, "Invalid EXT2 magic");
+    ASSERT(fs->sb->revision_level >= 1, "EXT2 FS with incompatible version");
+
     fs->block_size = (1 << 10) << fs->sb->log_block_size;
     fs->blocks_per_group = fs->sb->blocks_per_group;
     fs->inodes_per_group = fs->sb->inodes_per_group;
-
-    ASSERT(fs->sb->revision_level >= 1, "EXT2 FS with incompatible version");
 
     // total blocks / blocks per group, rounded up gives the number
     // of groups total
