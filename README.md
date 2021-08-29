@@ -51,7 +51,7 @@ this file for more detail on how symbols are handled.
 ### First Stage Loader
 
 The first stage loader is implemented in `nasm` as it better supports the 16bit
-code that is require when the machine is initialised. It is stored within the
+code that is required when the machine is initialised. It is stored within the
 boot sector of a drive (either a floppy or hard disk image). The first stage
 loader uses BIOS interrupts to load the second stage loader from the disk that
 has been booted.
