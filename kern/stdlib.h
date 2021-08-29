@@ -56,3 +56,7 @@ void _debug_printf(enum log_level level, const char* file, int line, const char*
 #define logf(l, x, ...)     _debug_printf(l, __FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);
 #define debug(x)            _debug_printf(LOG_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, x);
 #define debugf(x, ...)      _debug_printf(LOG_DEBUG, __FILE__, __LINE__, __PRETTY_FUNCTION__, x, __VA_ARGS__);
+
+// use hand-optimised memory operations (e.g. memcpy, memset, etc.)
+#define FAST_MEMOPS
+

@@ -346,27 +346,50 @@ char* strchr(const char* s, int c)
  */
 void memset(void* memory, uint8_t value, size_t len)
 {
+#ifdef FAST_MEMOPS
+    asm volatile(
+            "rep stosb"
+            :
+            : "a" (value), "D" (memory), "c" (len)
+            : "memory"
+    );
+#else
     uint8_t* ptr = memory;
     for (int i = 0; i < len; i++) {
         ptr[i] = value;
     }
+#endif
 }
 
 /**
  * @brief Copy one region of memory to another
- * 
+ *
  * @param dst the destination to copy memory to
  * @param src the area to copy memory from
  * @param len the amount (in bytes) of memory to set
  */
 void memcpy(void* dst, const void* src, size_t len)
 {
-    uint8_t* lsrc = (uint8_t*)src;
-    uint8_t* ldst = (uint8_t*)dst;
-
-    for (size_t i = 0; i < len; i++) {
-        ldst[i] = lsrc[i];
+#ifdef FAST_MEMOPS
+    asm volatile(
+            "rep movsl\n\t"         // move as much as we can long-sized
+            "movl   %3, %%ecx\n\t"  // get the rest of the length
+            "andl   $3, %%ecx\n\t"
+            "jz     1f\n\t"         // perfectly long aligned? done if so
+            "rep movsb\n\t"
+            "1:"
+            :
+            : "S" (src), "D" (dst), "c" (len / 4), "r" (len)
+            : "memory"
+    );
+#else
+    const char* csrc = src;
+    char* cdst = dst;
+    while (len > 0) {
+        *cdst++ = *csrc++;
+        len--;
     }
+#endif
 }
 
 int memcmp(const void* a, const void* b, size_t len)
