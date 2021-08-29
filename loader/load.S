@@ -53,20 +53,19 @@ _start:
 	; ax now contains file size / 512, which is the number of extra
 	; sectors that we need to load
 
-	; Some BIOS' are picky about reading more than 64k at once so here we
-	; limit the number of sectors that we copy to 64k and then copy 64k
-	; chunks until we're done
-
 	; skip over loading additional sectors if we don't need to
 	test	ax, ax
 	jz	.xfer
 
-	; if there's no remainder the image was perfectly aligned,
-	; so no need to read an additional sector
+	; if there's no remainder, the image is perfectly sector-aligned, so we
+	; can not bother adding one to the sector count. otherwise we have to
+	; so that we don't miss the end of the kernel image
 	test    dx, dx
-	jz      .read_sectors
+	jz      .read_setup
 
 	add	ax, 1			; number of sectors left
+
+.read_setup:
 	mov     bx, kimage_start	; current sector number
 	mov     cx, 0x07e0		; sector, offset is always 0
 
