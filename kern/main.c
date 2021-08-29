@@ -17,6 +17,7 @@
 #include "exe/elf.h"
 #include "mod.h"
 #include "version.h"
+#include "selftest.h"
 
 char main_scratch[64];
 char current_dir[256];
@@ -450,6 +451,7 @@ static struct command commands[] = {
     {"exit", poweroff},
     {"help", help},
     {"logo", logo},
+    {"selftest", selftest},
 };
 
 // Invoke a shell-internal function. Returns a non-zero value if a function
