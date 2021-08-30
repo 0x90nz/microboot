@@ -73,6 +73,7 @@ void console_clear(console_t* con)
             con->put_xy(con, x, y, ' ');
         }
     }
+    con->clear(con);
     con->invalidate(con, 0, 0, con->width, con->height);
     con->x_pos = 0;
     con->y_pos = 0;

@@ -6,6 +6,7 @@ typedef uint32_t fbcolour_t;
 typedef struct framebuffer_device fbdev_t;
 
 typedef struct framebuffer_device {
+    // TODO: bulk writes
     void (*put_pixel)(fbdev_t* dev, int x, int y, fbcolour_t colour);
     fbcolour_t (*get_pixel)(fbdev_t* dev, int x, int y);
     void (*invalidate)(fbdev_t* dev, int x, int y, int width, int height);

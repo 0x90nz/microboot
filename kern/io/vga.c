@@ -121,6 +121,7 @@ console_t* vga_init(uint16_t colour)
     con->scroll = vga_scroll;
     con->set_colour = vga_set_colour;
     con->invalidate = vga_null;
+    con->clear = vga_null;
 
     con->width = 80;
     con->height = 25;
@@ -147,7 +148,7 @@ static void vga_probe(struct driver* driver)
     dev->destroy = NULL; // TODO
     dev->device_priv = NULL;
 
-    console_t* con = vga_init(vga_colour(COLOUR_WHITE, COLOUR_BLUE));
+    console_t* con = vga_init(vga_colour(COLOUR_DEFAULT_FG, COLOUR_DEFAULT_BG));
     dev->internal_dev = con;
 
     device_register(dev);

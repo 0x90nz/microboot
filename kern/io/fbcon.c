@@ -36,7 +36,7 @@ static void fb_putxy(console_t* con, int x_base, int y_base, char c)
 }
 
 uint32_t colour_map[] = {
-    0,          // black
+    0x000000,   // black
     0x0000ff,   // blue
     0x00ff00,   // green
     0x008b8b,   // cyan
@@ -84,6 +84,21 @@ static void fb_invalidate(console_t* con, int x, int y, int width, int height)
     );
 }
 
+static void fb_clear(console_t* con)
+{
+    fbcon_priv_t* fbcon_priv = con->priv;
+    fbdev_t* fb = fbcon_priv->fb;
+    int width = fbcon_priv->fb->width;
+    int height = fbcon_priv->fb->height;
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            fb->put_pixel(fb, x, y, fbcon_priv->bg_colour);
+        }
+    }
+    fb->invalidate(fb, 0, 0, width, height);
+}
+
 static void fb_null() {}
 
 void fbcon_destroy(struct device* dev)
@@ -100,8 +115,8 @@ static struct device* fbcon_create(fbdev_t* fb)
     fbcon_priv_t* priv = kalloc(sizeof(*priv));
 
     priv->fb = fb;
-    priv->fg_colour = 0xffffff;
-    priv->bg_colour = 0;
+    priv->fg_colour = colour_map[COLOUR_DEFAULT_FG];
+    priv->bg_colour = colour_map[COLOUR_DEFAULT_BG];
     con->priv = priv;
 
     con->width = fb->width / CHAR_WIDTH;
@@ -111,9 +126,10 @@ static struct device* fbcon_create(fbdev_t* fb)
     con->set_cursor = fb_null;
     con->set_colour = fb_set_colour;
     con->invalidate = fb_invalidate;
+    con->clear = fb_clear;
     con->scroll = fb_scroll;
 
-    struct device* dev = kalloc(sizeof(*dev));
+    struct device* dev = kallocz(sizeof(*dev));
     dev->destroy = fbcon_destroy;
     dev->device_priv = NULL;
     dev->internal_dev = con;
@@ -121,6 +137,8 @@ static struct device* fbcon_create(fbdev_t* fb)
     dev->num_subdevices = 0;
     dev->subdevices = NULL;
     dev->type = DEVICE_TYPE_CON;
+
+    console_clear(con);
 
     return dev;
 }
@@ -161,3 +179,4 @@ static void fbcon_register_driver()
     driver_register(&fbcon_driver);
 }
 EXPORT_INIT(fbcon_register_driver);
+
