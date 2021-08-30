@@ -65,7 +65,10 @@ void mod_ksymtab_add(void* symtab, size_t symtab_size)
             void (*fn)() = sym->fn;
             fn();
         } else {
-            module_sym_add(sym);
+            // only add if this is /not/ an early init symbol. normal init
+            // symbols would have been caught above
+            if (strncmp(EXPORT_MOD_EARLY_INIT_PREFIX, sym->name, strlen(EXPORT_MOD_EARLY_INIT_PREFIX)) != 0)
+                module_sym_add(sym);
         }
     }
 }
