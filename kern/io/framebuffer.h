@@ -19,7 +19,7 @@ typedef struct framebuffer_device {
     void* priv;
 } fbdev_t;
 
-enum vesa_setparam {
+enum fb_setparam {
     FBDEV_SETRES
 };
 

@@ -10,6 +10,7 @@ typedef struct {
     fbdev_t* fb;
     uint32_t fg_colour;
     uint32_t bg_colour;
+    uint32_t colour_map[16];
 } fbcon_priv_t;
 
 #define CHAR_HEIGHT 13
@@ -35,7 +36,7 @@ static void fb_putxy(console_t* con, int x_base, int y_base, char c)
     }
 }
 
-uint32_t colour_map[] = {
+uint32_t base_colour_map[] = {
     0x000000,   // black
     0x0000ff,   // blue
     0x00ff00,   // green
@@ -60,8 +61,8 @@ static void fb_set_colour(console_t* con, uint16_t colour)
     uint8_t bg = (colour >> 4) & 0xf;
 
     fbcon_priv_t* priv = con->priv;
-    priv->bg_colour = colour_map[bg];
-    priv->fg_colour = colour_map[fg];
+    priv->bg_colour = priv->colour_map[bg];
+    priv->fg_colour = priv->colour_map[fg];
 }
 
 static void fb_scroll(console_t* con)
@@ -109,14 +110,29 @@ void fbcon_destroy(struct device* dev)
     kfree(dev);
 }
 
+static void fbcon_setparam(struct device* dev, int param_id, void* aux)
+{
+    console_t* con = device_get_console(dev);
+    fbcon_priv_t* priv = con->priv;
+
+    debugf("%d", sizeof(*priv->colour_map));
+
+    switch (param_id) {
+    case FBCON_SETPARAM_COLOURSCHEME:
+        memcpy(priv->colour_map, aux, 16 * sizeof(uint32_t));
+        break;
+    }
+}
+
 static struct device* fbcon_create(fbdev_t* fb)
 {
     console_t* con = kalloc(sizeof(*con));
     fbcon_priv_t* priv = kalloc(sizeof(*priv));
 
     priv->fb = fb;
-    priv->fg_colour = colour_map[COLOUR_DEFAULT_FG];
-    priv->bg_colour = colour_map[COLOUR_DEFAULT_BG];
+    memcpy(priv->colour_map, base_colour_map, sizeof(base_colour_map));
+    priv->fg_colour = priv->colour_map[COLOUR_DEFAULT_FG];
+    priv->bg_colour = priv->colour_map[COLOUR_DEFAULT_BG];
     con->priv = priv;
 
     con->width = fb->width / CHAR_WIDTH;
@@ -131,6 +147,7 @@ static struct device* fbcon_create(fbdev_t* fb)
 
     struct device* dev = kallocz(sizeof(*dev));
     dev->destroy = fbcon_destroy;
+    dev->setparam = fbcon_setparam;
     dev->device_priv = NULL;
     dev->internal_dev = con;
     sprintf(dev->name, "fbcon%d", device_get_first_available_suffix("fbcon"));

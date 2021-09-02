@@ -3,6 +3,7 @@
 #include "sys/interrupts.h"
 #include "io/framebuffer.h"
 #include "io/console.h"
+#include "io/fbcon.h"
 #include "io/pio.h"
 #include "io/serial.h"
 #include "io/keyboard.h"
@@ -115,6 +116,31 @@ void setres(int argc, char** argv)
     kfree(stdout);
     stdout = kalloc(sizeof(*stdout));
     console_get_chardev(console, stdout);
+}
+
+void setscheme(int argc, char** argv)
+{
+    uint32_t colours[] = {
+        0x1d2021,
+        0xfb4934,
+        0xb8bb26,
+        0xfabd2f,
+        0x83a598,
+        0xd3869b,
+        0x8ec07c,
+        0xd5c4a1,
+        0x665c54,
+        0xfb4934,
+        0xb8bb26,
+        0xfabd2f,
+        0x83a598,
+        0xd3869b,
+        0x8ec07c,
+        0xfbf1c7,
+    };
+
+    struct device* fbcon = device_get_by_name("fbcon0");
+    fbcon->setparam(fbcon, FBCON_SETPARAM_COLOURSCHEME, &colours);
 }
 
 void listcolours(int argc, char** argv)
@@ -452,6 +478,7 @@ static struct command commands[] = {
     {"help", help},
     {"logo", logo},
     {"selftest", selftest},
+    {"setscheme", setscheme},
 };
 
 // Invoke a shell-internal function. Returns a non-zero value if a function
