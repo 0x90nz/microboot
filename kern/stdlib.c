@@ -4,6 +4,7 @@
 #include "io/serial.h"
 #include "io/keyboard.h"
 #include "kernel.h"
+#include "alloc.h"
 
 static int should_echo = 1;
 static enum log_level log_level = DEBUG_LEVEL;
@@ -336,6 +337,21 @@ char* strchr(const char* s, int c)
     return NULL;
 }
 
+/**
+ * @brief Return a pointer to a new string, having the contents os the given
+ * string. Memory for the string is obtained with `kalloc`.
+ *
+ * @param s the string to duplicate
+ * @return pointer to the newly duplicated string
+ */
+char* strdup(const char* s)
+{
+    size_t size = strlen(s) + 1;
+    char* str = kalloc(size);
+    if (str)
+        memcpy(str, s, size);
+    return str;
+}
 
 /**
  * @brief Set a region of memory to a specific value

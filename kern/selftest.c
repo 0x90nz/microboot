@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "stdlib.h"
 #include "alloc.h"
+#include "htbl.h"
 
 #define TEST_LOG(msg) debug(msg); printf("%s\n", msg);
 #define TEST_LOGF(msg, ...) debugf(msg, __VA_ARGS__); printf(msg "\n", __VA_ARGS__);
@@ -102,10 +103,67 @@ cleanup:
     kfree(buf);
 }
 
+void test_htbl()
+{
+    htbl_t* table = htbl_create();
+    htbl_put(table, "foo", "value 1");
+    htbl_put(table, "bar", "value 2");
+
+    const char* k1_res = htbl_get(table, "foo");
+    const char* k2_res = htbl_get(table, "bar");
+
+    debugf("k1_res: %p, k2_res: %p", k1_res, k2_res);
+
+    if (k1_res == NULL || k2_res == NULL) {
+        TEST_FAIL("htbl_get", "returned NULL mapping for present key");
+        goto cleanup;
+    }
+
+    if (strcmp(k1_res, "value 1") != 0 || strcmp(k2_res, "value 2") != 0) {
+        TEST_FAIL("htbl_get", "returned incorrect mapping for key");
+        goto cleanup;
+    }
+
+    TEST_PASS("htbl");
+
+cleanup:
+    htbl_destroy(table);
+}
+
+void test_htbl_expand()
+{
+    htbl_t* table = htbl_create();
+
+    // fill the table up to such a point that it will need to expand at least
+    // once to fit everything
+    for (int i = 0; i < 100; i++) {
+        char buf[64];
+        sprintf(buf, "key_%d", i);
+        htbl_put(table, buf, (void*)i);
+    }
+
+    for (int i = 0; i < 100; i++) {
+        char buf[64];
+        sprintf(buf, "key_%d", i);
+        void* v = htbl_get(table, buf);
+        if ((int)v != i) {
+            TEST_FAIL("htbl_expand", "key mapped to incorrect value");
+            goto cleanup;
+        }
+    }
+
+    TEST_PASS("htbl_expand");
+
+cleanup:
+    htbl_destroy(table);
+}
+
 void selftest(int argc, char** argv)
 {
     test_memcpy();
     test_memset();
     test_kallocz();
+    test_htbl();
+    test_htbl_expand();
 }
 
