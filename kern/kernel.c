@@ -20,6 +20,7 @@
 #include "env.h"
 #include "list.h"
 #include "mod.h"
+#include "config.h"
 
 char* debug_names[] = {
     "FATAL",
@@ -215,7 +216,6 @@ void kernel_late_init()
     debug("timer initialised");
 
     env = env_init();
-    env_put(env, "prompt", "# ");
 
     fs_init(sinfo.drive_number);
     fs_mount("sys", envfs_init(env));
@@ -223,6 +223,8 @@ void kernel_late_init()
 
     read_config();
     debug("read config");
+    config_newns("sys");
+    config_setstr("sys:prompt", "# ");
 
     debug("all init done. transferring to main");
 
@@ -244,6 +246,7 @@ void kernel_main(struct kstart_info* start_info)
 
     driver_init();
     mod_init();
+    config_init();
 
     void* ksymtab = &_kexp_start;
     size_t ksymtab_size = (void*)&_kexp_end - (void*)&_kexp_start;

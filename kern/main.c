@@ -19,6 +19,7 @@
 #include "mod.h"
 #include "version.h"
 #include "selftest.h"
+#include "config.h"
 
 char main_scratch[64];
 char current_dir[256];
@@ -404,6 +405,44 @@ void setenv(int argc, char** argv)
     env_put(get_rootenv(), argv[1], buf);
 }
 
+void setconf(int argc, char** argv)
+{
+    if (argc < 2) {
+        printf("Usage: %s namespace:key \"value\"\n", argv[0]);
+        return;
+    }
+
+    size_t bufsz = 0;
+    for (int i = 2; i < argc; i++) {
+        bufsz += strlen(argv[i]) + 1;
+    }
+
+    char* buf = kallocz(bufsz);
+    for (int i = 2; i < argc - 1; i++) {
+        strcat(buf, argv[i]);
+        strcat(buf, " ");
+    }
+    strcat(buf, argc[argv - 1]);
+
+    if (buf[0] != '"') {
+        printf("value must start with quote\n");
+        kfree(buf);
+        return;
+    }
+
+    if (buf[bufsz - 2] != '"') {
+        printf("value must end with quote\n");
+        kfree(buf);
+        return;
+    }
+
+    buf[bufsz - 2] = '\0';
+
+    config_setstr(argv[1], buf + 1);
+    kfree(buf); // string is duplicated so we're safe to free this
+}
+
+
 void ver(int argc, char** argv)
 {
     printf("%s - %s (built %s)\n", VER_NAME, VER_GIT_REV, VER_BUILD_DATE);
@@ -473,6 +512,7 @@ static struct command commands[] = {
     {"pwd", pwd},
     {"echo", echo},
     {"setenv", setenv},
+    {"setconf", setconf},
     {"poweroff", poweroff},
     {"exit", poweroff},
     {"help", help},
@@ -519,7 +559,7 @@ void main()
     display_logo();
 
     while (1) {
-        puts(env_get(get_rootenv(), "prompt", const char*));
+        puts(config_getstrns("sys", "prompt"));
         gets(cmdbuf);
 
         if (*cmdbuf) {
