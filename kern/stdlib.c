@@ -5,6 +5,7 @@
 #include "io/keyboard.h"
 #include "kernel.h"
 #include "alloc.h"
+#include "backtrace.h"
 
 static int should_echo = 1;
 static enum log_level log_level = DEBUG_LEVEL;
@@ -447,6 +448,8 @@ void _assert(const char* expr_str, const char* file, int line, const char* func,
         char* assert_fmt = "ASSERT(%s) failed!\n%s() @ %s:%d\n: %s";
         printf(assert_fmt, expr_str, func, file, line, message);
         logf(LOG_FATAL, assert_fmt, expr_str, func, file, line, message);
+
+	backtrace();
 
         hang();
     }

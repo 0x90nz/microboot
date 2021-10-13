@@ -1,8 +1,13 @@
 
 GIT_REV=$(shell git describe --match="" --always --dirty)
 GIT_BRANCH=$(shell git symbolic-ref --short HEAD)
+
+# we disable the frame-address warning as we only use it for backtrace when debugging
+# so the possiblility of unstable behaviour doesn't concern us, as the system has already
+# crashed!
 CFLAGS=-m32 -march=i386 -nostdlib -nostdinc -ffreestanding -fno-pie -fno-stack-protector \
- -mgeneral-regs-only -mno-red-zone -msoft-float -Wall -fno-asynchronous-unwind-tables -Ilib \
+ -mgeneral-regs-only -mno-red-zone -msoft-float -Wall -Wno-frame-address \
+ -fno-asynchronous-unwind-tables -Ilib \
  -DVER_GIT_REV="\"$(GIT_REV)\"" -DVER_GIT_BRANCH="\"$(GIT_BRANCH)\""
 CC=gcc
 QEMU="qemu-system-x86_64"
