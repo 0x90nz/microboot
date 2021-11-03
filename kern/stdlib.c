@@ -25,7 +25,7 @@ void reverse(char* buffer, int i, int j)
 
 /**
  * @brief Convert an integer to an ascii value
- * 
+ *
  * @param value the integer value
  * @param buffer the buffer to place the result in
  * @param base the base to output the number in
@@ -38,8 +38,7 @@ void itoa(int value, char* buffer, int base)
     int n = value < 0 ? -value : value;
 
     int i = 0;
-    while (n)
-    {
+    while (n) {
         int rem = n % base;
         if (rem >= 10)
             buffer[i++] = 'A' + (rem - 10);
@@ -53,7 +52,7 @@ void itoa(int value, char* buffer, int base)
 
     if (value < 0 && base == 10)
         buffer[i++] = '-';
-    
+
     buffer[i] = '\0';
 
     reverse(buffer, 0, i - 1);
@@ -61,9 +60,9 @@ void itoa(int value, char* buffer, int base)
 
 /**
  * @brief Convert an ASCII string which is a base 10 number into its integer
- * representation. If the string contains non-digit characters, the behaviour 
+ * representation. If the string contains non-digit characters, the behaviour
  * is undefined.
- * 
+ *
  * @param str the string to convert
  * @return int the integer result
  */
@@ -79,13 +78,13 @@ int atoi(const char* str)
 
     while (*str != '\0')
         n = 10 * n - (*str++ - '0');
-    
+
     return neg_flag ? n : -n;
 }
 
 /**
  * @brief Tokenise a string
- * 
+ *
  * @param str pointer to the string, may be null on subsequent calls
  * @param delim a string containing all possible delimiters
  * @return char* the pointer to the next token
@@ -99,15 +98,15 @@ char* strtok(char* str, const char* delim)
 
     char *ret = buf, *b;
     const char *d;
- 
+
     for(b = buf; *b !='\0'; b++) {
         for(d = delim; *d != '\0'; d++) {
             if(*b == *d) {
                 *b = '\0';
                 buf = b+1;
-                if(b == ret) { 
-                    ret++; 
-                    continue; 
+                if(b == ret) {
+                    ret++;
+                    continue;
                 }
                 return ret;
             }
@@ -120,7 +119,7 @@ char* strtok(char* str, const char* delim)
 
 /**
  * @brief Determine the length of a given string
- * 
+ *
  * @param str the string
  * @return size_t the length of the string
  */
@@ -133,10 +132,9 @@ size_t strlen(const char* str)
 
 /**
  * @brief Concatenate two strings together
- * 
+ *
  * @param dst the destination
  * @param src the source
- * @return char* 
  */
 void strcat(char* dst, const char* src)
 {
@@ -149,7 +147,7 @@ void strcat(char* dst, const char* src)
 
 /**
  * @brief Print a string
- * 
+ *
  * @param str the string to print
  */
 void puts(const char* str)
@@ -162,7 +160,7 @@ EXPORT_SYM(printf);
 
 /**
  * @brief Print a single character
- * 
+ *
  * @param c the character to print
  */
 void putc(char c)
@@ -176,7 +174,7 @@ EXPORT_SYM(putc);
 
 /**
  * @brief Get a single character. Blocks awaiting input
- * 
+ *
  * @return char the character
  */
 char getc()
@@ -187,7 +185,7 @@ EXPORT_SYM(getc);
 
 /**
  * @brief Print a single character to the debug output
- * 
+ *
  * @param c the character
  * @param ignore a pointer to nothing, which is ignored. Used for compatability
  * with the printf library
@@ -203,7 +201,7 @@ void debug_putc(char c, void* ignore)
 /**
  * @brief Set whether input is echoed back to the user. A non-zero indicates
  * input should be echoed while a zero value indicates it should not
- * 
+ *
  * @param echo the value to set echo as
  */
 void set_echo(int echo)
@@ -245,7 +243,7 @@ EXPORT_SYM(gets);
 /**
  * @brief Compare two strings. A non-zero return value indicates that the strings
  * differ in at least one location
- * 
+ *
  * @param a the first string
  * @param b the second string
  * @return int zero if identical, non-zero otherwise
@@ -260,7 +258,7 @@ int strcmp(const char* a, const char* b)
 
 /**
  * @brief Compare two strings for a given number of characters
- * 
+ *
  * @param a the first string
  * @param b the second string
  * @param n the number of characters to compare
@@ -268,25 +266,22 @@ int strcmp(const char* a, const char* b)
  */
 int strncmp(const char* a, const char* b, size_t n)
 {
-    while (n && *a && (*a == *b) )
-    {
+    while (n && *a && (*a == *b)){
         ++a;
         ++b;
         --n;
     }
-    if (n == 0)
-    {
+
+    if (n == 0) {
         return 0;
-    }
-    else
-    {
+    } else {
         return (*(const unsigned char *)a - *(unsigned char *)b);
     }
 }
 
 /**
  * @brief Copy a string to the location pointed to by dst
- * 
+ *
  * @param dst where to copy the string to
  * @param src where to copy the string from
  * @return char* where the string was copied to
@@ -302,10 +297,10 @@ char* strcpy(char* dst, const char* src)
 /**
  * @brief Find the start of the first occurence of a given substring within
  * a larger string
- * 
- * @param haystack the string to search within 
+ *
+ * @param haystack the string to search within
  * @param needle the substring to search for
- * @return const char* pointer to the start of the substring within 
+ * @return const char* pointer to the start of the substring within
  * the larger string
  */
 const char* strstr(const char* haystack, const char* needle)
@@ -356,7 +351,7 @@ char* strdup(const char* s)
 
 /**
  * @brief Set a region of memory to a specific value
- * 
+ *
  * @param memory a pointer to the start of the memory to set
  * @param value the value to set the region of memory to
  * @param len the amount of memory (in bytes) to set
@@ -365,10 +360,10 @@ void memset(void* memory, uint8_t value, size_t len)
 {
 #ifdef FAST_MEMOPS
     asm volatile(
-            "rep stosb"
-            :
-            : "a" (value), "D" (memory), "c" (len)
-            : "memory"
+        "rep stosb"
+        :
+        : "a" (value), "D" (memory), "c" (len)
+        : "memory"
     );
 #else
     uint8_t* ptr = memory;
@@ -389,15 +384,15 @@ void memcpy(void* dst, const void* src, size_t len)
 {
 #ifdef FAST_MEMOPS
     asm volatile(
-            "rep movsl\n\t"         // move as much as we can long-sized
-            "movl   %3, %%ecx\n\t"  // get the rest of the length
-            "andl   $3, %%ecx\n\t"
-            "jz     1f\n\t"         // perfectly long aligned? done if so
-            "rep movsb\n\t"
-            "1:"
-            :
-            : "S" (src), "D" (dst), "c" (len / 4), "r" (len)
-            : "memory"
+        "rep movsl\n\t"         // move as much as we can long-sized
+        "movl   %3, %%ecx\n\t"  // get the rest of the length
+        "andl   $3, %%ecx\n\t"
+        "jz     1f\n\t"         // perfectly long aligned? done if so
+        "rep movsb\n\t"
+        "1:"
+        :
+        : "S" (src), "D" (dst), "c" (len / 4), "r" (len)
+        : "memory"
     );
 #else
     const char* csrc = src;
@@ -424,7 +419,7 @@ int memcmp(const void* a, const void* b, size_t len)
 
 /**
  * @brief Set the debug log level
- * 
+ *
  * @param level the level to set
  */
 void set_log_level(enum log_level level)
@@ -434,7 +429,7 @@ void set_log_level(enum log_level level)
 
 /**
  * @brief Get the current debug log level
- * 
+ *
  * @return enum log_level the current log level
  */
 enum log_level get_log_level()
@@ -449,8 +444,7 @@ void _assert(const char* expr_str, const char* file, int line, const char* func,
         printf(assert_fmt, expr_str, func, file, line, message);
         logf(LOG_FATAL, assert_fmt, expr_str, func, file, line, message);
 
-	backtrace();
-
+        backtrace();
         hang();
     }
 }
