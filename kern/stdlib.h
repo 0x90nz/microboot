@@ -29,6 +29,7 @@ int memcmp(const void* a, const void* b, size_t len);
 // More specific OS functions
 void cpuid(int i, uint32_t* regs);
 void debug_putc(char c, void* ignore);
+void dprintf_raw(const char* fmt, ...);
 void set_log_level(enum log_level level);
 enum log_level get_log_level();
 

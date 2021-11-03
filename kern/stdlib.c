@@ -461,3 +461,12 @@ void _debug_printf(enum log_level level, const char* file, int line, const char*
     debug_putc('\n', NULL);
     va_end(va);
 }
+
+void dprintf_raw(const char* fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    vfctprintf(debug_putc, NULL, fmt, va);
+    va_end(va);
+}
+
