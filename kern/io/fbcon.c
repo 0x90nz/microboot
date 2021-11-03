@@ -110,7 +110,7 @@ void fbcon_destroy(struct device* dev)
     kfree(dev);
 }
 
-static void fbcon_setparam(struct device* dev, int param_id, void* aux)
+static int fbcon_setparam(struct device* dev, int param_id, void* aux)
 {
     console_t* con = device_get_console(dev);
     fbcon_priv_t* priv = con->priv;
@@ -122,6 +122,7 @@ static void fbcon_setparam(struct device* dev, int param_id, void* aux)
         memcpy(priv->colour_map, aux, 16 * sizeof(uint32_t));
         break;
     }
+    return 0;
 }
 
 static struct device* fbcon_create(fbdev_t* fb)
