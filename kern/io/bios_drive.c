@@ -13,52 +13,21 @@ struct bdrive_priv {
     uint8_t drive_nr;
 };
 
-/*
-void bdrive_read(uint8_t drive_num, uint16_t num_sectors, uint64_t lba, void* buffer)
-{
-    ASSERT(num_sectors * 512 <= 4096, "Size would overflow low memory buffer");
-
-    memset(&low_mem_disk_addr, 0, sizeof(struct disk_addr));
-    low_mem_disk_addr.size = 16;
-    low_mem_disk_addr.num_sectors = num_sectors;
-    low_mem_disk_addr.low_lba = lba & 0xffffffff;
-    low_mem_disk_addr.high_lba = lba >> 32;
-    low_mem_disk_addr.buffer = (uint32_t)&low_mem_buffer;
-
-    struct int_regs regs;
-    memset(&regs, 0, sizeof(struct int_regs));
-
-    regs.eax = 0x4200;
-
-    regs.esi = OFFOF((uint32_t)&low_mem_disk_addr);
-    regs.ds = SEGOF((uint32_t)&low_mem_disk_addr);
-
-    regs.edx = drive_num & 0xff;
-
-    // debugf("addr of struct %04x:%04x", SEGOF((uint32_t)&low_mem_disk_addr), OFFOF((uint32_t)&low_mem_disk_addr));
-    // debugf("addr of low buffer: %04x:%04x", SEGOF((uint32_t)&low_mem_buffer), OFFOF((uint32_t)&low_mem_buffer));
-
-    bios_interrupt(0x13, &regs);
-
-    ASSERT(!(regs.flags & EFL_CF), "Error reading from disk");
-
-    memcpy(buffer, &low_mem_buffer, num_sectors * 512);
-}
-*/
-
 int bdrive_read(blkdev_t* dev, uint64_t lba, size_t blocks, void* buffer)
 {
     // TODO: do this in multiple reads?
-    ASSERT(blocks * 512 <= 4096, "Read would have overflowed");
+    ASSERT(blocks * dev->block_size <= 4096, "Read would have overflowed");
 
     struct bdrive_priv* priv = dev->priv;
 
-    memset(&low_mem_disk_addr, 0, sizeof(low_mem_disk_addr));
+    memset(&low_mem_disk_addr, 0, sizeof(struct disk_addr));
     low_mem_disk_addr.size = 16;
     low_mem_disk_addr.num_sectors = blocks;
     low_mem_disk_addr.low_lba = lba & 0xffffffff;
     low_mem_disk_addr.high_lba = lba >> 32;
-    low_mem_disk_addr.buffer = (uint32_t)&low_mem_buffer;
+    uint16_t buf_seg = SEGOF((uint32_t)&low_mem_buffer);
+    uint16_t buf_off = OFFOF((uint32_t)&low_mem_buffer);
+    low_mem_disk_addr.buffer = buf_off | buf_seg << 16;
 
     struct int_regs regs;
     memset(&regs, 0, sizeof(regs));
@@ -67,6 +36,7 @@ int bdrive_read(blkdev_t* dev, uint64_t lba, size_t blocks, void* buffer)
     regs.esi = OFFOF((uint32_t)&low_mem_disk_addr);
     regs.ds = SEGOF((uint32_t)&low_mem_disk_addr);
     regs.edx = priv->drive_nr;
+    debugf("%d", priv->drive_nr);
 
     // TODO: this should probably retry on failure?
     bios_interrupt(0x13, &regs);
@@ -80,7 +50,7 @@ int bdrive_read(blkdev_t* dev, uint64_t lba, size_t blocks, void* buffer)
 int bdrive_write(blkdev_t* dev, uint64_t lba, size_t blocks, const void* buffer)
 {
     // TODO: do this in multiple writes?
-    ASSERT(blocks * 512 <= 4096, "Write would have overflowed");
+    ASSERT(blocks * 512 <= dev->block_size, "Write would have overflowed");
 
     struct bdrive_priv* priv = dev->priv;
 
@@ -89,7 +59,9 @@ int bdrive_write(blkdev_t* dev, uint64_t lba, size_t blocks, const void* buffer)
     low_mem_disk_addr.num_sectors = blocks;
     low_mem_disk_addr.low_lba = lba & 0xffffffff;
     low_mem_disk_addr.high_lba = lba >> 32;
-    low_mem_disk_addr.buffer = (uint32_t)&low_mem_buffer;
+    uint16_t buf_seg = SEGOF((uint32_t)&low_mem_buffer);
+    uint16_t buf_off = OFFOF((uint32_t)&low_mem_buffer);
+    low_mem_disk_addr.buffer = buf_off | buf_seg << 16;
 
     memcpy(&low_mem_buffer, buffer, blocks * dev->block_size);
 
@@ -141,6 +113,17 @@ static struct device* bdrive_create(uint8_t drive_nr)
     return dev;
 }
 
+static void bdrive_reset(uint8_t drive_nr)
+{
+    struct int_regs regs;
+    memset(&regs, 0, sizeof(regs));
+
+    regs.eax = 0x0000;
+    regs.edx = drive_nr;
+
+    bios_interrupt(0x13, &regs);
+}
+
 static void bdrive_probe(struct driver* driver)
 {
     if (!driver->first_probe)
@@ -149,24 +132,30 @@ static void bdrive_probe(struct driver* driver)
     struct int_regs regs;
 
     for (int i = 0; i < 4; i++) {
+        uint8_t drive_nr = 0x80 | i;
+
         memset(&regs, 0, sizeof(regs));
 
         regs.eax = 0x0800; // read drive parameters
-        regs.edx = 0x80 | i;
-        // es:di = 0000:0000 for buggy BIOS'
+        regs.edx = drive_nr;
         regs.es = 0;
         regs.edi = 0;
 
         bios_interrupt(0x13, &regs);
         // give up on on this drive if the call errored out
-        if (regs.flags & EFL_CF)
+        if (regs.flags & EFL_CF) {
+            bdrive_reset(drive_nr);
             continue;
+        }
 
-        debugf("[drive %02x] nr_hdds=%d", 0x80 | i, regs.edx & 0xff);
+        debugf("[drive %02x] nr_hdds=%d", drive_nr, regs.edx & 0xff);
         if (regs.edx & 0xff > 0) {
-            device_register(bdrive_create(0x80 | i));
+            device_register(bdrive_create(drive_nr));
         }
     }
+
+    // do one last reset just in case something weird happened detecting drives
+    bdrive_reset(0x80);
 }
 
 struct driver bdrive_driver = {

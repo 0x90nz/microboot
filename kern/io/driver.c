@@ -250,3 +250,10 @@ console_t* device_get_console(struct device* dev)
     ASSERT(dev->type == DEVICE_TYPE_CON, "Device must be a console");
     return dev->internal_dev;
 }
+
+blkdev_t* device_get_blkdev(struct device* dev)
+{
+    ASSERT(dev->type == DEVICE_TYPE_BLOCK, "Device must be a block device");
+    return dev->internal_dev;
+}
+
