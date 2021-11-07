@@ -241,6 +241,7 @@ void kernel_main(struct kstart_info* start_info)
     dbgout = NULL;
     console = NULL;
 
+    interrupts_init();
     gdt_init();
     init_alloc(start_info->memory_start, start_info->free_memory * 64 * KiB);
 
@@ -258,9 +259,6 @@ void kernel_main(struct kstart_info* start_info)
     mod_ksymtab_add(ksymtab, ksymtab_size);
 
     debug("module system initialised");
-
-    interrupts_init();
-    debug("interrupts initialised");
 
     // setup a VGA console for early init. will be replaced later if we want
     console = device_get_console(device_get_by_name("vga0"));
