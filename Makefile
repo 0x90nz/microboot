@@ -74,7 +74,7 @@ run: image
 .PHONY: gdbdebug
 gdbdebug: CFLAGS += -g
 gdbdebug: image debugimage
-	qemu-system-i386 \
+	$(QEMU) \
 		-drive format=raw,file=build/microboot.img,index=0 \
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
