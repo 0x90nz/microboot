@@ -23,6 +23,5 @@ echo "o
 dd if="build/load.bin" of="$IMAGE" conv=notrunc
 dd if="build/stage2.bin" of="$IMAGE" bs=1 seek=512 conv=notrunc
 
-rm -f "build/rootfs.img"
-mke2fs -b 1024 -L 'microboot' -d rootfs -t ext2 "build/rootfs.img" "$FS_SIZE"
-dd if="build/rootfs.img" of="$IMAGE" bs=512 seek=2048 conv=notrunc
+mkfs.fat -F16 --offset 2048 -S512 -n MICROBOOT build/microboot.img
+mcopy -Q -i build/microboot.img@@1M rootfs/* ::

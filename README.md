@@ -15,7 +15,7 @@ reduces the complexity to get started.
 
 To use μboot, you'll at the very minimum need some Linux (or possibly Unix if
 you can find the tools) environment, which has the tools `qemu`, `gcc`, `nasm`,
-ext2 tools and `dd` available (some of these are very likely installed on some
+`mtools` and `dd` available (some of these are very likely installed on some
 systems already). Note that on some distributions you might have to install a
 package like `gcc-multilib` to get support for compiling in 32-bit mode with
 x86_64 `gcc`.Once all the tools are installed, you can run `make` to build or
