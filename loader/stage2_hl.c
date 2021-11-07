@@ -30,7 +30,6 @@ BSCODE static void memset(void* memory, uint8_t value, uint32_t len)
     );
 }
 
-
 struct kstart_info info;
 
 BSCODE void stage2_hl(struct startup_info* start_info)

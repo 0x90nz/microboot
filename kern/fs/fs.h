@@ -38,7 +38,7 @@ typedef struct fs_ops {
     void (*destroy)(fs_t*, fs_file_priv_t);
 } fs_ops_t;
 
-void fs_init(uint8_t drive_num);
+void fs_init();
 fs_file_t fs_open(const char* name);
 void fs_flist(fs_file_t file);
 uint32_t fs_fsize(fs_file_t file);

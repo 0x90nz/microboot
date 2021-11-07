@@ -217,7 +217,7 @@ void kernel_late_init()
 
     env = env_init();
 
-    fs_init(sinfo.drive_number);
+    fs_init();
     fs_mount("sys", envfs_init(env));
     debug("fs initialised");
 

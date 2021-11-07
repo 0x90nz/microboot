@@ -6,7 +6,6 @@
 #include <export.h>
 #include "fs.h"
 #include "mbr.h"
-#include "ext2.h"
 #include "../alloc.h"
 #include "../io/bios_drive.h"
 
@@ -84,7 +83,7 @@ const static fs_file_priv_t fs_traverse(fs_t* fs, const char* path)
 
         if (current != root && fs->ops->destroy)
             fs->ops->destroy(fs, current);
-        
+
         if (new_dir) {
             current = new_dir;
         } else {
@@ -101,44 +100,24 @@ const static fs_file_priv_t fs_traverse(fs_t* fs, const char* path)
 
 
 /**
- * @brief Initialise a filesystem. Currently only supports one ext2 partition
- * 
+ * @brief Initialise any available FS drivers for each partition.
  * @param drive_num the drive number to search for the filesystem on
  */
-void fs_init(uint8_t drive_num)
+void fs_init()
 {
     mounts = env_init();
 
-    struct mbr_sector* bootsect = kalloc(512);
-    bdrive_read(drive_num, 1, 0, bootsect);
-    struct fs* fs = kalloc(sizeof(struct fs));
-
-    fs->type = FS_INVALID;
-
-    for (int i = 0; i < 4; i++) {
-        if (bootsect->partitions[i].drive_attributes == 0x83) {
-            struct ext2_fs* efs = ext2_init(
-                drive_num, 
-                bootsect->partitions[i].start_lba, 
-                bootsect->partitions[i].num_sectors
-            );
-
-            fs->type = FS_EXT2;
-            fs->fs_priv = efs;
-            fs->ops = ext2_get_ops();
-            rootfs = fs;
-            env_put(mounts, "hd", fs);
-        }
-    }
-    
-    kfree(bootsect);
+    // struct mbr_sector* bootsect = kalloc(512);
+    // bdrive_read(drive_num, 1, 0, bootsect);
+    // struct fs* fs = kalloc(sizeof(struct fs));
+    // fs->type = FS_INVALID;
 }
 
 /**
  * @brief Open a file. Files may be either directly specified by a path
  * relative to the default driver, or with a descriptor. A descriptor can
  * be prepended to a path with a '$' symbol, e.g. "hd$test.txt"
- * 
+ *
  * @param name the path to the file
  * @return fs_file_t file on success, FS_FILE_INVALID on failure
  */
@@ -150,7 +129,7 @@ fs_file_t fs_open(const char* name)
 
     fs_t* fs = NULL;
 
-    // find if we have a descriptor before the path. 
+    // find if we have a descriptor before the path.
     const char* path = strstr(name, "$");
     if (path) {
         char drive[64];
@@ -181,7 +160,7 @@ EXPORT_SYM(fs_open);
 
 /**
  * @brief List the contents of the provided directory
- * 
+ *
  * @param dir the directory to list
  */
 void fs_flist(fs_file_t dir)
@@ -194,7 +173,7 @@ EXPORT_SYM(fs_flist);
 
 /**
  * @brief Get the size (in bytes) of a given file
- * 
+ *
  * @param file the file
  * @return uint32_t the size of the file in bytes
  */
@@ -209,7 +188,7 @@ EXPORT_SYM(fs_fsize);
 
 /**
  * @brief Read data from a given file
- * 
+ *
  * @param file the file to read from
  * @param offset the offset (in bytes) from the start of the file at which
  * reading should begin
@@ -228,7 +207,7 @@ EXPORT_SYM(fs_fread);
 
 /**
  * @brief Destroy a file reference
- * 
+ *
  * @param file the file to destroy
  */
 void fs_fdestroy(fs_file_t file)
@@ -236,14 +215,14 @@ void fs_fdestroy(fs_file_t file)
     struct fs_file_entry* ent = &oftable[file];
     if (ent->fs->ops->destroy)
         ent->fs->ops->destroy(ent->fs, ent->priv);
-    
+
     oftable[file].state &= ~OFTABLE_OPEN;
 }
 EXPORT_SYM(fs_fdestroy);
 
 /**
  * @brief Mount a filesystem
- * 
+ *
  * @param name the name of the filesystem
  * @param fs the filesystem
  */

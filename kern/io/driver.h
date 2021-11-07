@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include "chardev.h"
+#include "blkdev.h"
 #include "console.h"
 
 enum device_type {
@@ -72,4 +73,5 @@ void driver_probe_for(enum device_type type);
 struct device* device_get_by_name(const char* name);
 chardev_t* device_get_chardev(struct device* dev);
 console_t* device_get_console(struct device* dev);
-// TODO: get_blockdev & blockdev itself
+blkdev_t* device_get_blkdev(struct device* dev);
+

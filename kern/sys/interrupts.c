@@ -1,7 +1,9 @@
 #include "interrupts.h"
 #include "../kernel.h"
 #include "../stdlib.h"
+#include "../io/ansi_colours.h"
 #include "../io/pio.h"
+#include "../backtrace.h"
 
 idt_entry_t idt[INTR_COUNT] __attribute__((aligned(8)));
 
@@ -61,14 +63,18 @@ void dump_regs(intr_frame_t* frame)
     printf("cs: %04x ss: %04x ds: %04x\n", frame->cs, frame->ss, frame->ds);
     printf("es: %04x fs: %04x gs: %04x\n", frame->es, frame->fs, frame->gs);
 
-    debugf("eax: %08x ebx: %08x", frame->eax, frame->ebx);
-    debugf("ecx: %08x edx: %08x", frame->ecx, frame->edx);
-    debugf("esi: %08x edi: %08x", frame->esi, frame->edi);
-    debugf("eip: %08x efl: %08x", frame->eip, frame->eflags);
-    debugf("esp: %08x", frame->esp);
+    dprintf_raw(ANSI_COLOR_RED "\nregister dump:\n");
+    dprintf_raw("eax: %08x ebx: %08x\n", frame->eax, frame->ebx);
+    dprintf_raw("ecx: %08x edx: %08x\n", frame->ecx, frame->edx);
+    dprintf_raw("esi: %08x edi: %08x\n", frame->esi, frame->edi);
+    dprintf_raw("eip: %08x efl: %08x\n", frame->eip, frame->eflags);
+    dprintf_raw("esp: %08x\n", frame->esp);
 
-    debugf("cs: %04x ss: %04x ds: %04x", frame->cs, frame->ss, frame->ds);
-    debugf("es: %04x fs: %04x gs: %04x", frame->es, frame->fs, frame->gs);
+    dprintf_raw("cs: %04x ss: %04x ds: %04x\n", frame->cs, frame->ss, frame->ds);
+    dprintf_raw("es: %04x fs: %04x gs: %04x\n", frame->es, frame->fs, frame->gs);
+    dprintf_raw(ANSI_COLOR_RESET);
+
+    backtrace();
 }
 
 // Simple panic function that we bind by default
