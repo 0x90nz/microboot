@@ -63,7 +63,7 @@ image: build_dir user stage2 loader
 debugimage: build_dir stage2 loader $(BUILD)/debugimg.elf
 
 .PHONY: run
-run: CLFAGS += -O3
+run: CLFAGS += -O2
 run: image
 	$(QEMU) \
 		-drive format=raw,file=build/microboot.img,index=0 \
