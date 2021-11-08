@@ -8,7 +8,6 @@
 #include "io/console.h"
 #include "io/keyboard.h"
 #include "fs/fs.h"
-#include "fs/envfs.h"
 #include "sys/interrupts.h"
 #include "sys/gdt.h"
 #include "sys/bios.h"
@@ -191,6 +190,7 @@ static void irq0_handle(uint32_t int_no, uint32_t err_no)
 
 static void read_config()
 {
+    /* 
     fs_file_t file = fs_open("config.txt");
     if (file == FS_FILE_INVALID)
         return;
@@ -202,6 +202,7 @@ static void read_config()
     env_kvp_lines_add(env, file_contents);
 
     fs_fdestroy(file);
+    */
 }
 
 void kernel_late_init()
@@ -217,8 +218,7 @@ void kernel_late_init()
 
     env = env_init();
 
-    fs_init();
-    fs_mount("sys", envfs_init(env));
+    // fs_init();
     debug("fs initialised");
 
     read_config();

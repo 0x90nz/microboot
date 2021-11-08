@@ -12,4 +12,3 @@ struct disk_addr {
     uint32_t high_lba;
 } __attribute__((packed));
 
-// void bdrive_read(uint8_t drive_num, uint16_t num_sectors, uint64_t lba, void* buffer);

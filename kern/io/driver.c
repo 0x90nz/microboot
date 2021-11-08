@@ -25,6 +25,14 @@ void device_register(struct device* device)
 {
     debugf("registering device %s", device->name);
     list_append(&devices, list_node(device));
+
+    LIST_FOREACH(current, &drivers) {
+        struct driver* drv = list_value(current);
+        if (drv->depends_on != DEVICE_TYPE_NONE && drv->depends_on == device->type) {
+            ASSERT(drv->probe_directed, "Device defining depends_on must define probe_directed");
+            drv->probe_directed(drv, device);
+        }
+    }
 }
 
 /**
@@ -83,10 +91,25 @@ bool device_deregister_subdevices(struct device* device)
  */
 void driver_register(struct driver* driver)
 {
+    debugf("registering driver %s", driver->name);
+
     list_append(&drivers, list_node(driver));
-    ASSERT(driver->probe, "Driver must define probe");
+    ASSERT(driver->probe || driver->probe_directed, "Driver must define probe");
     driver->first_probe = true;
-    driver->probe(driver);
+    if (driver->probe) {
+        driver->probe(driver);
+    } else {
+        if (driver->depends_on != DEVICE_TYPE_NONE) {
+            LIST_FOREACH(current, &devices) {
+                struct device* current_dev = list_value(current);
+                if (current_dev->type == driver->depends_on) {
+                    driver->probe_directed(driver, current_dev);
+                }
+            }
+        } else {
+            driver->probe_directed(driver, NULL);
+        }
+    }
     driver->first_probe = false;
 }
 
@@ -214,13 +237,17 @@ int device_get_first_available_suffix(const char* prefix)
  *
  * @param type the type of device to probe for.
  */
-void driver_probe_for(enum device_type type)
+void driver_probe_for(enum device_type type, struct device* invoker)
 {
     debugf("starting re-probe for type %d", type);
     LIST_FOREACH(current, &drivers) {
         struct driver* driver = list_value(current);
         if (driver->type_for == type) {
-            driver->probe(driver);
+            if (driver->probe) {
+                driver->probe(driver);
+            } else {
+                driver->probe_directed(driver, invoker);
+            }
         }
     }
 }

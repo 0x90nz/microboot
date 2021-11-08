@@ -150,7 +150,8 @@ static void bdrive_probe(struct driver* driver)
 
         debugf("[drive %02x] nr_hdds=%d", drive_nr, regs.edx & 0xff);
         if (regs.edx & 0xff > 0) {
-            device_register(bdrive_create(drive_nr));
+            struct device* dev = bdrive_create(drive_nr);
+            device_register(dev);
         }
     }
 

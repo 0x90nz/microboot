@@ -376,7 +376,7 @@ int vesa_setparam(struct device* dev, int paramid, void* aux)
         fbdev->bpp = priv->bits_per_pixel;
 
         // we got rid of any users so bring them back with a probe
-        driver_probe_for(DEVICE_TYPE_CON);
+        driver_probe_for(DEVICE_TYPE_CON, dev);
         return 0;
     }
 

@@ -7,6 +7,8 @@
 #include "common.h"
 
 MODULE(hexdump);
+
+/*
 USE(printf);
 USE(fs_open);
 USE(fs_fread);
@@ -62,3 +64,6 @@ void main(int argc, char** argv)
         printf("No such file: %s\n", argv[1]);
     }
 }
+
+*/
+

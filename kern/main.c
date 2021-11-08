@@ -238,12 +238,14 @@ void brk(int argc, char** argv)
 
 void ls(int argc, char** argv)
 {
+    /*
     fs_file_t dir = fs_open(argc > 1 ? argv[1] : "");
     if (dir != FS_FILE_INVALID)
         fs_flist(dir);
     else
         printf("Invalid directory\n");
     fs_fdestroy(dir);
+    */
 }
 
 void pwd(int argc, char** argv)
@@ -257,7 +259,7 @@ void cat(int argc, char** argv)
         printf("Usage: %s file_name\n", argv[0]);
         return;
     }
-
+    /*
     fs_file_t file = fs_open(argv[1]);
     if (file != FS_FILE_INVALID) {
         uint32_t fsize = fs_fsize(file);
@@ -269,6 +271,7 @@ void cat(int argc, char** argv)
     } else {
         printf("No such file: %s\n", argv[1]);
     }
+    */
 }
 
 void echo(int argc, char** argv)
@@ -304,6 +307,7 @@ void ldmod(int argc, char** argv)
         return;
     }
 
+    /*
     fs_file_t file = fs_open(argv[1]);
     if (file != FS_FILE_INVALID) {
         uint32_t fsize = fs_fsize(file);
@@ -317,8 +321,10 @@ void ldmod(int argc, char** argv)
     } else {
         printf("No such file: %s\n", argv[1]);
     }
+    */
 }
 
+/*
 void fexec(fs_file_t file, int argc, char** argv)
 {
     uint32_t fsize = fs_fsize(file);
@@ -330,6 +336,7 @@ void fexec(fs_file_t file, int argc, char** argv)
     kfree(c);
     fs_fdestroy(file);
 }
+*/
 
 void exec(int argc, char** argv)
 {
@@ -338,12 +345,14 @@ void exec(int argc, char** argv)
         return;
     }
 
+    /*
     fs_file_t file = fs_open(argv[1]);
     if (file != FS_FILE_INVALID) {
         fexec(file, argc, argv);
     } else {
         printf("No such file: %s\n", argv[1]);
     }
+    */
 }
 
 void lsmod(int argc, char** argv)
@@ -543,6 +552,7 @@ int invoke_external(const char* name, int argc, char** argv)
     strcat(bin_name, name);
     strcat(bin_name, ".elf");
 
+    /*
     fs_file_t file = fs_open(bin_name);
     if (file != FS_FILE_INVALID) {
         fexec(file, argc, argv);
@@ -550,6 +560,7 @@ int invoke_external(const char* name, int argc, char** argv)
     } else {
         return 0;
     }
+    */
 }
 
 void main()

@@ -18,6 +18,8 @@ echo "o
     2048
     +$FS_SIZE
     a
+    t
+    0e
     w" | fdisk "$IMAGE" >/dev/null
 
 dd if="build/load.bin" of="$IMAGE" conv=notrunc

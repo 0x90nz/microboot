@@ -9,6 +9,7 @@
 
 enum device_type {
     DEVICE_TYPE_UNKNOWN = -1,
+    DEVICE_TYPE_NONE = 0,
     // Console device
     DEVICE_TYPE_CON = 1,
     // Framebuffer device
@@ -17,6 +18,8 @@ enum device_type {
     DEVICE_TYPE_CHAR,
     // Block device
     DEVICE_TYPE_BLOCK,
+    // Filesystem device
+    DEVICE_TYPE_FS,
 };
 
 // Defines a device. And function pointer MAY be null to indicate that the
@@ -47,11 +50,23 @@ struct device {
 
 struct driver {
     char name[64];
-    // Probe MUST be defined for any driver. Proble may be called multiple times
-    // for instance, if another device that would enable some other class to
-    // work has been found.
+    // A probe MUST be defined for any driver. Probe may be called multiple
+    // times for instance, if another device that would enable some other class
+    // to work has been found.
+    //
+    // If probe_directed is defined, then probe may be left undefined, and
+    // vice-versa.
     void (*probe)(struct driver* driver);
+    // A version of probe in which the invoking driver is passed in (useful for
+    // devices which would be sub-devices). If no invoking device exists (for
+    // instance on the initial probe), invoker will be NULL.
+    void (*probe_directed)(struct driver* driver, struct device* invoker);
+    // The type of device this driver is for
     enum device_type type_for;
+    // The type (if any) of device that this driver depends on (for instance a
+    // framebuffer console might depend on a framebuffer). If this is defined,
+    // probe_directed MUST be used instead of probe.
+    enum device_type depends_on;
     bool first_probe;
     void* driver_priv;
 };
@@ -68,7 +83,7 @@ void device_foreach(void (*fn)(struct device*));
 void driver_foreach(void (*fn)(struct driver*));
 struct device* device_firstmatch(bool (*pred)(const struct device*));
 
-void driver_probe_for(enum device_type type);
+void driver_probe_for(enum device_type type, struct device* invoker);
 
 struct device* device_get_by_name(const char* name);
 chardev_t* device_get_chardev(struct device* dev);
