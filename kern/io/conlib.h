@@ -34,10 +34,3 @@ void cl_box(char corner, char v_edge, char h_edge, int width, const char* conten
  */
 void cl_repeat(char c, int n);
 
-/**
- * @brief Set the device to which all output will be written
- *
- * @param chardev the character device to write to
- */
-void cl_set_output(chardev_t** chardev);
-

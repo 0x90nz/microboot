@@ -227,10 +227,10 @@ void kernel_late_init()
     debug("read config");
     config_newns("sys");
     config_setstr("sys:prompt", "# ");
+    config_setobj("sys:&stdout", &stdout);
+    config_setobj("sys:&stdin", &stdin);
 
     debug("all init done. transferring to main");
-
-    cl_set_output(&stdout);
 
     extern int main();
     main();

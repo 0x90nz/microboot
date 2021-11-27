@@ -1,18 +1,13 @@
 #include "conlib.h"
 #include <stddef.h>
 #include "chardev.h"
-
-static chardev_t** chardev = NULL;
-
-void cl_set_output(chardev_t** new_chardev)
-{
-    chardev = new_chardev;
-}
+#include "../config.h"
 
 void cl_repeat(char c, int n)
 {
+    chardev_t* output = *(chardev_t**)config_getobj("sys:&stdout");
     while (n > 0) {
-        (*chardev)->putc(*chardev, c);
+        output->putc(output, c);
         n--;
     }
 }
@@ -22,7 +17,7 @@ void cl_box(char corner, char v_edge, char h_edge, int width, const char* conten
     // the number of chars available for text output (we keep one padding on either side,
     // and one box char on each side as well)
     const int nr_textchr = width - 4;
-    chardev_t* output = *chardev;
+    chardev_t* output = *(chardev_t**)config_getobj("sys:&stdout");
 
     output->putc(output, corner);
     cl_repeat(h_edge, nr_textchr + 2);
