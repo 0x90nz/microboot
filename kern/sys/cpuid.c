@@ -94,6 +94,15 @@ int cpuid_get_max_id()
     return res[0];
 }
 
+void cpuid_get_brand(char* brand_string)
+{
+    uint32_t* brand = (uint32_t*)brand_string;
+    // mildly reckless! we should probably check max cpuid at some point
+    cpuid(0x80000002, brand);
+    cpuid(0x80000003, brand + 4);
+    cpuid(0x80000004, brand + 8);
+}
+
 /**
  * @brief Dump the full info obtained from cpuinfo
  * 
@@ -108,6 +117,9 @@ void cpuid_verbose_dump()
     printf("processor type %d\n", (res[0] >> 12) & 0x03);
     printf("ext. model     %d\n", (res[0] >> 16) & 0x0f);
     printf("ext. family id %d\n", (res[0] >> 20) & 0xff);
+    char brand[49];
+    cpuid_get_brand(brand);
+    printf("brand          %s\n", brand);
 
     for (int i = 0; i < 32; i++) {
         if (res[3] & (1 << i)) {
