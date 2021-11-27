@@ -20,6 +20,7 @@
 #include "version.h"
 #include "selftest.h"
 #include "config.h"
+#include "io/conlib.h"
 
 char main_scratch[64];
 char current_dir[256];
@@ -491,9 +492,28 @@ void display_logo()
     printf("%-16s ##\n", "");
 }
 
+void display_sysinfo()
+{
+    char infobuf[255];
+    snprintf(infobuf, 255,
+        "SYSTEM SUMMARY " VER_NAME "\n\n"
+        "branch        " VER_GIT_BRANCH "\n"
+        "commit-id     " VER_GIT_REV "\n"
+        "build-date    " VER_BUILD_DATE "\n"
+    );
+
+    cl_box('*', '*', '*', 80, infobuf, CL_NONE);
+}
+
+
 void logo(int argc, char** argv)
 {
     display_logo();
+}
+
+void sysinfo(int argc, char** argv)
+{
+    display_sysinfo();
 }
 
 static struct command commands[] = {
@@ -526,6 +546,7 @@ static struct command commands[] = {
     {"exit", poweroff},
     {"help", help},
     {"logo", logo},
+    {"sysinfo", sysinfo},
     {"selftest", selftest},
     {"setscheme", setscheme},
 };
@@ -568,6 +589,7 @@ void main()
     char cmdbuf[64];
 
     display_logo();
+    display_sysinfo();
 
     while (1) {
         puts(config_getstrns("sys", "prompt"));

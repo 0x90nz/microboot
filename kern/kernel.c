@@ -21,6 +21,8 @@
 #include "mod.h"
 #include "config.h"
 
+#include "io/conlib.h"
+
 char* debug_names[] = {
     "FATAL",
     "ERROR",
@@ -227,6 +229,8 @@ void kernel_late_init()
     config_setstr("sys:prompt", "# ");
 
     debug("all init done. transferring to main");
+
+    cl_set_output(&stdout);
 
     extern int main();
     main();
