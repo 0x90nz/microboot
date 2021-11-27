@@ -23,6 +23,21 @@ void config_init();
 void config_newns(const char* name);
 
 /**
+ * For all of the following "ns" variants, they are identical in all behaviour
+ * to the below documented non-"ns" variants, except for the fact that they key
+ * parameter is instead split into the individual components of "namespace"
+ * (ns) and the actual qualified key.
+ */
+
+void config_setstrns(const char* ns, const char* key, const char* value);
+void config_setintns(const char* ns, const char* key, int value);
+void config_setobjns(const char* ns, const char* key, void* value);
+const char* config_getstrns(const char* ns, const char* key);
+int config_getintns(const char* ns, const char* key);
+void* config_getobjns(const char* ns, const char* key);
+int config_existsns(const char* ns, const char* key);
+
+/**
  * @brief Create a new config entry for the given string
  *
  * @param key the key to create the entry for
@@ -30,11 +45,19 @@ void config_newns(const char* name);
  */
 void config_setstr(const char* key, const char* value);
 
-void config_setstrns(const char* ns, const char* key, const char* value);
-void config_setintns(const char* ns, const char* key, int value);
-const char* config_getstrns(const char* ns, const char* key);
-int config_getintns(const char* ns, const char* key);
-int config_existsns(const char* ns, const char* key);
+/**
+ * @brief Create a new config entry for the given void pointer
+ *
+ * Important note! Because of the nature of a void*, usage of this is prone to
+ * error, especially if it is in any way unclear what they type of the value
+ * would be. Thus, if you are simply mapping something like a string or integer
+ * value it is STRONGLY preferable to use the specific functions provided for
+ * this.
+ *
+ * @param key the key to create the entry for
+ * @param value the pointer to map the entry to
+ */
+void config_setobj(const char* key, void* value);
 
 /**
  * @brief Create a new config entry for the given integer value
@@ -51,6 +74,15 @@ void config_setint(const char* key, int value);
  * @return the string value mapping of the key if it exists, NULL otherwise
  */
 const char* config_getstr(const char* key);
+
+/**
+ * @brief Get the void pointer value for the given configuration key
+ *
+ * @param key the key to get the pointer from
+ * @return the pointer mapping of the key if it exists, and is a pointer, NULL
+ * otherwise
+ */
+void* config_getobj(const char* key);
 
 /**
  * @brief Get the integer value of a configuration key

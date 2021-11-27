@@ -6,6 +6,7 @@
 enum config_type {
     CONFIG_TYPE_INT = 1,
     CONFIG_TYPE_STR,
+    CONFIG_TYPE_OBJ,
 };
 
 struct config_value {
@@ -13,6 +14,7 @@ struct config_value {
     union {
         int ival;
         const char* sval;
+        void* oval;
     };
 };
 
@@ -76,6 +78,14 @@ void config_setstrns(const char* ns, const char* key, const char* value)
     config_set_common(ns, key, conf_value);
 }
 
+void config_setobjns(const char* ns, const char* key, void* value)
+{
+    struct config_value* conf_value = kalloc(sizeof(*conf_value));
+    conf_value->type = CONFIG_TYPE_OBJ;
+    conf_value->oval = value;
+    config_set_common(ns, key, conf_value);
+}
+
 void config_setintns(const char* ns, const char* key, int value)
 {
     struct config_value* conf_value = kalloc(sizeof(*conf_value));
@@ -90,6 +100,14 @@ const char* config_getstrns(const char* ns, const char* key)
     if (!conf_value || conf_value->type != CONFIG_TYPE_STR)
         return NULL;
     return conf_value->sval;
+}
+
+void* config_getobjns(const char* ns, const char* key)
+{
+    struct config_value* conf_value = config_get_common(ns, key);
+    if (!conf_value || conf_value->type != CONFIG_TYPE_OBJ)
+        return NULL;
+    return conf_value->oval;
 }
 
 int config_getintns(const char* ns, const char* key)
@@ -130,6 +148,21 @@ void config_setint(const char* key, int value)
     kfree((void*)ns_key);
 }
 
+void config_setobj(const char* key, void* value)
+{
+    const char* ns;
+    const char* ns_key;
+    if (!config_parse_key(key, &ns, &ns_key))
+        return;
+    if (!ns || !ns_key)
+        return;
+
+    config_setobjns(ns, ns_key, value);
+
+    kfree((void*)ns);
+    kfree((void*)ns_key);
+}
+
 const char* config_getstr(const char* key)
 {
     const char* ns;
@@ -140,6 +173,23 @@ const char* config_getstr(const char* key)
         return NULL;
 
     const char* ret = config_getstrns(ns, ns_key);
+
+    kfree((void*)ns);
+    kfree((void*)ns_key);
+
+    return ret;
+}
+
+void* config_getobj(const char* key)
+{
+    const char* ns;
+    const char* ns_key;
+    if (!config_parse_key(key, &ns, &ns_key))
+        return NULL;
+    if (!ns || !ns_key)
+        return NULL;
+
+    void* ret = config_getobjns(ns, ns_key);
 
     kfree((void*)ns);
     kfree((void*)ns_key);
