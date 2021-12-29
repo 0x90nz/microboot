@@ -90,14 +90,14 @@ void dump_memory(void* input_buffer, size_t length)
     uint8_t buffer[8];
 
     for(size_t i = 0; i < length; i += 8) {
-        printf("0x%08x: ", (int)(startaddr + i));
+        dprintf_raw("0x%08x: ", (int)(startaddr + i));
         for(int j = 0; j < 8; j++) {
             buffer[j] = *(uint8_t*)(startaddr + i + j);
-			printf("%02x ", buffer[j]);
+			dprintf_raw("%02x ", buffer[j]);
             if((j + 1) % 4 == 0)
-                printf(" ");
+                dprintf_raw(" ");
         }
-        printf("   |");
+        dprintf_raw("   |");
         char charbuf[2];
         charbuf[1] = '\0';
         for(int j = 0; j < 8; j++) {
@@ -106,12 +106,12 @@ void dump_memory(void* input_buffer, size_t length)
             } else {
                 charbuf[0] = '.';
             }
-            
-            printf(charbuf);
+
+            dprintf_raw(charbuf);
         }
-        printf("|\n");
+        dprintf_raw("|\n");
     }
-    printf("\n");
+    dprintf_raw("\n");
 }
 
 /**

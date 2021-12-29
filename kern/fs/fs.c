@@ -30,7 +30,7 @@ filehandle_t* fs_open(const char* path)
         tmp += strlen(tmp) + 1;
     }
 
-    file_t* file = fs->open(fs, parts, pathlen);
+    file_t* file = fs->open(fs, (const char**)parts, pathlen);
     filehandle_t* handle = NULL;
     if (file) {
         handle = kalloc(sizeof(*handle));
@@ -42,6 +42,17 @@ filehandle_t* fs_open(const char* path)
     kfree(parts);
 
     return handle;
+}
+
+int fs_read(filehandle_t* handle, void* buf, size_t count)
+{
+    if (!handle)
+        return 0;
+
+    if (!handle->fs->read)
+        return 0;
+
+    return handle->fs->read(handle->fs, handle->file, count, buf);
 }
 
 void fs_close(filehandle_t* handle)

@@ -46,6 +46,16 @@ enum log_level get_log_level();
 // Object-oriented(ish) call on a struct with function pointer members with no arguments
 #define OOCALL0(o, m) o->m(o)
 
+#define MAX(a, b) \
+    ({ __typeof__(a) _a = (a); \
+       __typeof__(b) _b = (b); \
+       _a > _b ? _a : _b; })
+
+#define MIN(a, b) \
+    ({ __typeof__(a) _a = (a); \
+       __typeof__(b) _b = (b); \
+       _a < _b ? _a : _b; })
+
 
 // Assertions. Note that we use a ternary to force evaluation as an if, from which return an int
 // to be used in the actual __assert function

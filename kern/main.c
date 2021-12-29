@@ -262,10 +262,17 @@ void cat(int argc, char** argv)
     }
 
     filehandle_t* file = fs_open(argv[1]);
-    printf("%x\n", file);
 
-    if (file)
+    if (file) {
+        char buf[513];
+        memset(buf, 0, 513);
+        int rc;
+        while ((rc = fs_read(file, buf, 512)) > 0) {
+            printf("%s", buf);
+            memset(buf, 0, 513);
+        }
         fs_close(file);
+    }
 }
 
 void echo(int argc, char** argv)

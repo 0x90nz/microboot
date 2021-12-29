@@ -95,9 +95,16 @@ struct fat_priv {
     uint32_t nr_root_dir_sectors;
 
     struct fat_mbr mbr;
-    uint8_t fat_table[512];
 
     blkdev_t* blkdev;
+};
+
+struct fat_file {
+    // the cluster that this file starts on
+    uint32_t start_cluster;
+    uint32_t current_cluster;
+    uint32_t current_offset;
+    uint32_t size;
 };
 
 #define FAT_CLUSTER_END     0xfff8
@@ -118,24 +125,26 @@ int read_cluster(fsdev_t* dev, uint32_t cluster, void* dst)
 {
     struct fat_priv* priv = dev->priv;
     blkdev_t* blkdev = priv->blkdev;
+    uint32_t sector = priv->start_lba + sector_of_cluster(priv, cluster);
+    uint32_t sectors = priv->mbr.bpb.sectors_per_cluster;
 
-    return blkdev->read(
-        blkdev,
-        priv->start_lba + sector_of_cluster(priv, cluster),
-        priv->mbr.bpb.sectors_per_cluster,
-        dst
-    );
+    return blkdev->read(blkdev, sector, sectors, dst);
 }
 
 // given a current cluster number, determine the next cluster in the cluster chain.
 uint32_t next_cluster(fsdev_t* dev, uint32_t current_cluster)
 {
     struct fat_priv* priv = dev->priv;
+    blkdev_t* blkdev = priv->blkdev;
 
-    uint32_t offset = current_cluster * 2;
-    uint32_t ent_offset = offset % priv->bytes_per_sector;
-    uint16_t next_cluster = *(uint16_t*)&priv->fat_table[ent_offset];
+    uint8_t fat_table[priv->bytes_per_sector];
+    uint32_t fat_offset = current_cluster * 2;
+    uint32_t fat_sector = priv->fat_start_sector + (fat_offset / priv->bytes_per_sector);
+    uint32_t ent_offset = fat_offset % priv->bytes_per_sector;
 
+    blkdev->read(blkdev, priv->start_lba + fat_sector, 1, fat_table);
+
+    uint16_t next_cluster = *(uint16_t*)&fat_table[ent_offset];
     return next_cluster;
 }
 
@@ -157,10 +166,8 @@ enum find_dir_cluster_flag {
 // Find an entry within a directory. Will parse 8.3 names, as well as 11 char
 // directory names. Flag is set depending on the outcome of the search.
 //
-// if the end of the buffer is reached, then a non-zero value is returned.
-// if the end of the directory chain is reached, a zero value is returned
 // if flag is non-null, then sets flag to one of the above specified flags
-uint32_t find_dir_cluster(const char* name, uint8_t* buf, size_t bufsz, uint8_t* flag)
+struct fat_dir* find_dir_cluster(const char* name, uint8_t* buf, size_t bufsz, uint8_t* flag)
 {
     ASSERT(sizeof(struct fat_dir) == 32, "bad FAT dir size");
 
@@ -199,16 +206,16 @@ uint32_t find_dir_cluster(const char* name, uint8_t* buf, size_t bufsz, uint8_t*
                     *flag |= FDIR_FILE;
                 }
             }
-            return dir->cluster_low;
+            return dir;
         }
 
         // move onto the next entry, and if required get the next cluster
         // and follow it (or quit if it doesn't exist)
         dir++;
-        if ((void*)dir > (buf + bufsz)) {
+        if ((void*)dir > (void*)(buf + bufsz)) {
             if (flag)
                 *flag = FDIR_WANTMORE | FDIR_NOTFOUND;
-            return 0;
+            return NULL;
         }
     }
 
@@ -217,7 +224,7 @@ uint32_t find_dir_cluster(const char* name, uint8_t* buf, size_t bufsz, uint8_t*
     if (flag) {
         *flag = FDIR_NOTEXIST;
     }
-    return 0;
+    return NULL;
 }
 
 file_t* fat_open(fsdev_t* dev, const char** path, size_t pathlen)
@@ -228,9 +235,7 @@ file_t* fat_open(fsdev_t* dev, const char** path, size_t pathlen)
     size_t rootdir_size = priv->bytes_per_sector * priv->nr_root_dir_sectors;
     // allocate enough space for both the root directory, and individual
     // clusters to fit.
-    size_t clsize = rootdir_size > priv->bytes_per_cluster
-        ? rootdir_size
-        : priv->bytes_per_cluster;
+    size_t clsize = MAX(rootdir_size, priv->bytes_per_cluster);
     uint8_t* cldata = kallocz(clsize);
     blkdev_t* blkdev = priv->blkdev;
 
@@ -243,10 +248,10 @@ file_t* fat_open(fsdev_t* dev, const char** path, size_t pathlen)
 
     uint32_t cluster = 0;
     uint8_t flag = 0;
-    uint32_t ret = 0;
+    struct fat_dir* dir;
 
     for (int i = 0; i < pathlen; i++) {
-        uint32_t newclus = find_dir_cluster(path[i], cldata, clsize, &flag);
+        dir = find_dir_cluster(path[i], cldata, clsize, &flag);
 
         // loop again for the same path to try find the entry
         if (flag & FDIR_WANTMORE) {
@@ -257,28 +262,145 @@ file_t* fat_open(fsdev_t* dev, const char** path, size_t pathlen)
         }
 
         if (flag & FDIR_NOTEXIST) {
-            ret = 0;
-            goto end;
+            kfree(cldata);
+            return 0;
         }
 
         if (flag & (FDIR_DIR | FDIR_FILE)) {
-                cluster = newclus;
-                // if this isn't the final cluster (i.e. the first data cluster),
-                // then we want to read it in.
-                if (i + 1 != pathlen) {
-                    read_cluster(dev, cluster, cldata);
-                }
+            cluster = dir->cluster_low;
+            // if this isn't the final cluster (i.e. the first data cluster),
+            // then we want to read it in.
+            if (i + 1 != pathlen) {
+                read_cluster(dev, cluster, cldata);
+            }
         }
     }
-    ret = cluster;
-end:
+
+    struct fat_file* file = kalloc(sizeof(*file));
+    file->start_cluster = cluster;
+    file->current_cluster = cluster;
+    file->current_offset = 0;
+    file->size = dir->size;
+
     kfree(cldata);
-    return (void*)ret;
+    return (file_t*)file;
 }
 
-// there's not really anything to close with this fs
+int fat_seek(fsdev_t* dev, file_t* file, int mode, int32_t offset)
+{
+    return 0;
+
+    // XXX: NOT IMPLEMENTED YET
+    struct fat_priv* priv = dev->priv;
+    struct fat_file* ffile = (struct fat_file*)file;
+    uint32_t clbytes = priv->bytes_per_cluster;
+    uint32_t reloffset;
+
+    switch (mode) {
+    default:
+    case FSEEK_BEGIN:
+        reloffset = 0;
+        break;
+    case FSEEK_CURRENT:
+        reloffset = ffile->current_offset;
+        break;
+    }
+
+    // offset within the current cluster
+    uint32_t cloffset = reloffset - (ffile->current_cluster * clbytes);
+    uint32_t newcloffset = cloffset + offset;
+
+    // if the offset is within the current cluster, there's no work we
+    // need to do apart from just adjusting the offset
+    if (newcloffset >= 0 && newcloffset <= clbytes && cloffset < ffile->size) {
+        ffile->current_offset += offset;
+        return 0;
+    }
+
+    // just follow the whole cluster chain from the start.
+    //
+    // it would definitely be more efficient here to somehow figure out if the
+    // new offset was past the current one, and just follow the cluster chain
+    // from that point. however, this way is easier.
+    uint32_t clus = ffile->start_cluster;
+    uint32_t maxclus = (reloffset + offset) / clbytes;
+    for (uint32_t i = 0; i < maxclus; i++) {
+        clus = next_cluster(dev, clus);
+        if (clus >= FAT_CLUSTER_END) {
+            return -1;
+        }
+    }
+
+    ffile->current_cluster = clus;
+    ffile->current_offset = reloffset + offset;
+    return 0;
+}
+
+int fat_read(fsdev_t* dev, file_t* file, size_t size, void* buf)
+{
+    struct fat_priv* priv = dev->priv;
+    struct fat_file* ffile = (struct fat_file*)file;
+    const uint32_t clbytes = priv->bytes_per_cluster;
+    uint32_t clus = ffile->current_cluster;
+    uint8_t clbuf[priv->bytes_per_cluster];
+    const size_t full_size = MIN(size, ffile->size - ffile->current_offset);
+    size_t remaining = full_size;
+
+    debugf("full_size=%d, clus=%d, current_offset=%d, size=%d", full_size, clus, ffile->current_offset, ffile->size);
+
+    if (full_size <= 0) {
+        return 0;
+    }
+
+    // read the first cluster (may not be full)
+    if (read_cluster(dev, clus, clbuf) != priv->mbr.bpb.sectors_per_cluster) {
+        return -1;
+    }
+
+    uint32_t clus_off = ffile->current_offset % clbytes;
+    size_t firstclus_cnt = MIN(clbytes - clus_off, remaining);
+    memcpy(buf, clbuf + clus_off, firstclus_cnt);
+    buf += firstclus_cnt;
+    remaining -= firstclus_cnt;
+
+    // only move to the next cluster if this read moves out of it
+    if (firstclus_cnt == clbytes - clus_off) {
+        clus = next_cluster(dev, clus);
+    }
+
+    // read the rest of the full clusters
+    while (remaining > clbytes) {
+        if (clus >= FAT_CLUSTER_END) {
+            ffile->current_cluster = clus;
+            ffile->current_offset += size - remaining;
+            return size - remaining;
+        }
+
+        read_cluster(dev, clus, clbuf);
+        memcpy(buf, clbuf, clbytes);
+        buf += clbytes;
+        remaining -= clbytes;
+        clus = next_cluster(dev, clus);
+        debugf("remaining: %d, clbytes: %d", remaining, clbytes);
+    }
+
+    // read the final partial cluster (if there is one)
+    if (remaining > 0) {
+        read_cluster(dev, clus, clbuf);
+        size_t lastclus_cnt = MIN(clbytes, remaining);
+        memcpy(buf, clbuf, lastclus_cnt);
+        remaining -= lastclus_cnt;
+    }
+
+    ffile->current_cluster = clus;
+    ffile->current_offset += full_size - remaining;
+
+    return full_size - remaining;
+}
+
 void fat_close(fsdev_t* dev, file_t* file)
 {
+    kfree(file);
 }
 
 static struct device* fat_create(struct device* invoker, blkdev_t* blkdev, uint32_t start_lba, uint32_t num_sectors)
@@ -289,6 +411,7 @@ static struct device* fat_create(struct device* invoker, blkdev_t* blkdev, uint3
 
     fsdev->open = fat_open;
     fsdev->close = fat_close;
+    fsdev->read = fat_read;
     dev->device_priv = priv;
     fsdev->priv = priv;
 

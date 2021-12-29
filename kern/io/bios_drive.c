@@ -15,7 +15,6 @@ struct bdrive_priv {
 
 int bdrive_read4k(blkdev_t* dev, uint64_t lba, size_t blocks, void* buffer)
 {
-    // TODO: do this in multiple reads?
     ASSERT(blocks * dev->block_size <= 4096, "Read would have overflowed");
 
     struct bdrive_priv* priv = dev->priv;
@@ -36,7 +35,6 @@ int bdrive_read4k(blkdev_t* dev, uint64_t lba, size_t blocks, void* buffer)
     regs.esi = OFFOF((uint32_t)&low_mem_disk_addr);
     regs.ds = SEGOF((uint32_t)&low_mem_disk_addr);
     regs.edx = priv->drive_nr;
-    debugf("%d", priv->drive_nr);
 
     // TODO: this should probably retry on failure?
     bios_interrupt(0x13, &regs);
@@ -49,14 +47,14 @@ int bdrive_read4k(blkdev_t* dev, uint64_t lba, size_t blocks, void* buffer)
 
 int bdrive_read(blkdev_t* dev, uint64_t lba, size_t blocks, void* buffer)
 {
-    uint32_t blocks_left = blocks;
+    int32_t blocks_left = blocks;
     uint32_t max_blocks = 4096 / dev->block_size;
     void* cursor = buffer;
     uint32_t offset = 0;
 
     while (blocks_left > 0) {
-        uint32_t nr_blocks = blocks_left > max_blocks ? max_blocks : blocks_left;
-        if (!bdrive_read4k(dev, lba + offset, nr_blocks, cursor)) {
+        uint32_t nr_blocks = MIN(blocks_left, max_blocks);
+        if (bdrive_read4k(dev, lba + offset, nr_blocks, cursor)) {
             return -1;
         }
 
@@ -108,12 +106,12 @@ int bdrive_write(blkdev_t* dev, uint64_t lba, size_t blocks, const void* buffer)
 {
     uint32_t blocks_left = blocks;
     uint32_t max_blocks = 4096 / dev->block_size;
-    void* cursor = buffer;
+    const void* cursor = buffer;
     uint32_t offset = 0;
 
     while (blocks_left > 0) {
-        uint32_t nr_blocks = blocks_left > max_blocks ? max_blocks : blocks_left;
-        if (!bdrive_write4k(dev, lba + offset, nr_blocks, cursor)) {
+        uint32_t nr_blocks = MIN(blocks_left, max_blocks);
+        if (bdrive_write4k(dev, lba + offset, nr_blocks, cursor)) {
             return -1;
         }
 
