@@ -284,3 +284,9 @@ blkdev_t* device_get_blkdev(struct device* dev)
     return dev->internal_dev;
 }
 
+fsdev_t* device_get_fs(struct device* dev)
+{
+    ASSERT(dev->type == DEVICE_TYPE_FS, "Device must be a FS device");
+    return dev->internal_dev;
+}
+

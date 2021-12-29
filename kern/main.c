@@ -260,19 +260,12 @@ void cat(int argc, char** argv)
         printf("Usage: %s file_name\n", argv[0]);
         return;
     }
-    /*
-    fs_file_t file = fs_open(argv[1]);
-    if (file != FS_FILE_INVALID) {
-        uint32_t fsize = fs_fsize(file);
-        char* c = kallocz(fsize + 1);
-        fs_fread(file, 0, fsize, c);
-        printf("%s\n", c);
-        kfree(c);
-        fs_fdestroy(file);
-    } else {
-        printf("No such file: %s\n", argv[1]);
-    }
-    */
+
+    filehandle_t* file = fs_open(argv[1]);
+    printf("%x\n", file);
+
+    if (file)
+        fs_close(file);
 }
 
 void echo(int argc, char** argv)

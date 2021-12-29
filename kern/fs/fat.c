@@ -96,6 +96,8 @@ struct fat_priv {
 
     struct fat_mbr mbr;
     uint8_t fat_table[512];
+
+    blkdev_t* blkdev;
 };
 
 #define FAT_CLUSTER_END     0xfff8
@@ -112,10 +114,10 @@ uint32_t cluster_of_sector(struct fat_priv* priv, uint32_t sector)
     return ((sector - priv->data_start_sector) / priv->mbr.bpb.sectors_per_cluster) + 2;
 }
 
-int read_cluster(struct device* dev, uint32_t cluster, void* dst)
+int read_cluster(fsdev_t* dev, uint32_t cluster, void* dst)
 {
-    struct fat_priv* priv = dev->device_priv;
-    blkdev_t* blkdev = dev->internal_dev;
+    struct fat_priv* priv = dev->priv;
+    blkdev_t* blkdev = priv->blkdev;
 
     return blkdev->read(
         blkdev,
@@ -126,9 +128,9 @@ int read_cluster(struct device* dev, uint32_t cluster, void* dst)
 }
 
 // given a current cluster number, determine the next cluster in the cluster chain.
-uint32_t next_cluster(struct device* dev, uint32_t current_cluster)
+uint32_t next_cluster(fsdev_t* dev, uint32_t current_cluster)
 {
-    struct fat_priv* priv = dev->device_priv;
+    struct fat_priv* priv = dev->priv;
 
     uint32_t offset = current_cluster * 2;
     uint32_t ent_offset = offset % priv->bytes_per_sector;
@@ -137,11 +139,28 @@ uint32_t next_cluster(struct device* dev, uint32_t current_cluster)
     return next_cluster;
 }
 
-// read all the directory entries from a given buffer
+enum find_dir_cluster_flag {
+    // the specified name was found, as a directory
+    FDIR_DIR        = (1 << 0),
+    // the specified name was found, as a file
+    FDIR_FILE       = (1 << 1),
+    // the specified file/directory was not found. it either may not
+    // have occured yet in the search, or does not exist
+    FDIR_NOTFOUND   = (1 << 3),
+    // the specified file/directory does not exist
+    FDIR_NOTEXIST   = (1 << 4),
+    // the end of the directory has not been encountered,
+    // and so a search may continue if subsequent data is provided
+    FDIR_WANTMORE   = (1 << 5),
+};
+
+// Find an entry within a directory. Will parse 8.3 names, as well as 11 char
+// directory names. Flag is set depending on the outcome of the search.
 //
 // if the end of the buffer is reached, then a non-zero value is returned.
 // if the end of the directory chain is reached, a zero value is returned
-int read_directory_buffer(uint8_t* buf, size_t bufsz)
+// if flag is non-null, then sets flag to one of the above specified flags
+uint32_t find_dir_cluster(const char* name, uint8_t* buf, size_t bufsz, uint8_t* flag)
 {
     ASSERT(sizeof(struct fat_dir) == 32, "bad FAT dir size");
 
@@ -150,56 +169,140 @@ int read_directory_buffer(uint8_t* buf, size_t bufsz)
         if (dir->dir_name[0] == 0)
             break;
 
-        if (dir->attrs & FAT_ATTR_DIR) {
-            char namebuf[32];
-            memset(namebuf, 0, sizeof(namebuf));
-            memcpy(namebuf, dir->dir_name, 11);
-            debugf("%s", namebuf);
+        // copy either the full dir name, or the name and extension to
+        // a temp buffer, as they would be found in a file.
+        char namebuf[12];
+        memset(namebuf, ' ', 11);
+        namebuf[11] = '\0';
+
+        char* strdotpos = strchr(name, '.');
+        if (strdotpos != NULL) {
+            char* ext = strdotpos + 1;
+            memcpy(namebuf, name, strdotpos - name);
+            memcpy(namebuf + 8, ext, strlen(ext));
+        } else {
+            memcpy(namebuf, name, strlen(name));
+        }
+
+        // get the actual name into a null-terminated buffer so we can use
+        // stricmp to compare case-inensitive
+        char actual_namebuf[12];
+        memcpy(actual_namebuf, dir->dir_name, 11);
+        actual_namebuf[11] = '\0';
+
+        if (stricmp(namebuf, actual_namebuf) == 0) {
+            if (flag) {
+                *flag = 0;
+                if (dir->attrs & FAT_ATTR_DIR) {
+                    *flag |= FDIR_DIR;
+                } else {
+                    *flag |= FDIR_FILE;
+                }
+            }
+            return dir->cluster_low;
         }
 
         // move onto the next entry, and if required get the next cluster
         // and follow it (or quit if it doesn't exist)
         dir++;
         if ((void*)dir > (buf + bufsz)) {
-            return 1;
+            if (flag)
+                *flag = FDIR_WANTMORE | FDIR_NOTFOUND;
+            return 0;
         }
+    }
+
+    // at this point, we've reached the end of the dir chain, so we're sure
+    // that what we're searching for doesn't exist
+    if (flag) {
+        *flag = FDIR_NOTEXIST;
     }
     return 0;
 }
 
-// simple debug read for root directory
-void d_read_directory(struct device* dev)
+file_t* fat_open(fsdev_t* dev, const char** path, size_t pathlen)
 {
-    struct fat_priv* priv = dev->device_priv;
+    struct fat_priv* priv = dev->priv;
 
+    // read the root directory in
     size_t rootdir_size = priv->bytes_per_sector * priv->nr_root_dir_sectors;
-    uint8_t rootdir[rootdir_size];
-    blkdev_t* blkdev = dev->internal_dev;
+    // allocate enough space for both the root directory, and individual
+    // clusters to fit.
+    size_t clsize = rootdir_size > priv->bytes_per_cluster
+        ? rootdir_size
+        : priv->bytes_per_cluster;
+    uint8_t* cldata = kallocz(clsize);
+    blkdev_t* blkdev = priv->blkdev;
 
     blkdev->read(
         blkdev,
         priv->start_lba + priv->root_dir_sector,
         priv->nr_root_dir_sectors,
-        rootdir
+        cldata
     );
-    debugf("rc=%d", read_directory_buffer(rootdir, rootdir_size));
+
+    uint32_t cluster = 0;
+    uint8_t flag = 0;
+    uint32_t ret = 0;
+
+    for (int i = 0; i < pathlen; i++) {
+        uint32_t newclus = find_dir_cluster(path[i], cldata, clsize, &flag);
+
+        // loop again for the same path to try find the entry
+        if (flag & FDIR_WANTMORE) {
+            cluster = next_cluster(dev, cluster);
+            read_cluster(dev, cluster, cldata);
+            i--;
+            continue;
+        }
+
+        if (flag & FDIR_NOTEXIST) {
+            ret = 0;
+            goto end;
+        }
+
+        if (flag & (FDIR_DIR | FDIR_FILE)) {
+                cluster = newclus;
+                // if this isn't the final cluster (i.e. the first data cluster),
+                // then we want to read it in.
+                if (i + 1 != pathlen) {
+                    read_cluster(dev, cluster, cldata);
+                }
+        }
+    }
+    ret = cluster;
+end:
+    kfree(cldata);
+    return (void*)ret;
+}
+
+// there's not really anything to close with this fs
+void fat_close(fsdev_t* dev, file_t* file)
+{
 }
 
 static struct device* fat_create(struct device* invoker, blkdev_t* blkdev, uint32_t start_lba, uint32_t num_sectors)
 {
     struct device* dev = kallocz(sizeof(*dev));
+    struct fat_priv* priv = kalloc(sizeof(*priv));
+    fsdev_t* fsdev = kallocz(sizeof(*fsdev));
+
+    fsdev->open = fat_open;
+    fsdev->close = fat_close;
+    dev->device_priv = priv;
+    fsdev->priv = priv;
+
+    dev->internal_dev = fsdev;
+    dev->type = DEVICE_TYPE_FS;
 
     // the name of a partition is the blkdev suffixed with a partition index
     char prefix[64];
     sprintf(prefix, "%sp", invoker->name);
     sprintf(dev->name, "%s%d", prefix, device_get_first_available_suffix(prefix));
-    dev->internal_dev = blkdev;
-
-    struct fat_priv* priv = kalloc(sizeof(*priv));
-    dev->device_priv = priv;
 
     priv->start_lba = start_lba;
     priv->num_sectors = num_sectors;
+    priv->blkdev = blkdev;
 
     ASSERT(sizeof(struct fat_mbr) == 512, "bad FAT MBR size");
     blkdev->read(blkdev, start_lba, 1, &priv->mbr);
@@ -232,7 +335,6 @@ static struct device* fat_create(struct device* invoker, blkdev_t* blkdev, uint3
         priv->root_dir_sector
     );
 
-    d_read_directory(dev);
     return dev;
 }
 

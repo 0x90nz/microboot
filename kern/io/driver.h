@@ -6,6 +6,7 @@
 #include "chardev.h"
 #include "blkdev.h"
 #include "console.h"
+#include "fsdev.h"
 
 enum device_type {
     DEVICE_TYPE_UNKNOWN = -1,
@@ -89,4 +90,5 @@ struct device* device_get_by_name(const char* name);
 chardev_t* device_get_chardev(struct device* dev);
 console_t* device_get_console(struct device* dev);
 blkdev_t* device_get_blkdev(struct device* dev);
+fsdev_t* device_get_fs(struct device* dev);
 

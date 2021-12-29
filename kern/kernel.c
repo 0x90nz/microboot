@@ -229,6 +229,7 @@ void kernel_late_init()
     config_setstr("sys:prompt", "# ");
     config_setobj("sys:&stdout", &stdout);
     config_setobj("sys:&stdin", &stdin);
+    config_setstr("sys:def_fs", "hd0p0");
 
     debug("all init done. transferring to main");
 
