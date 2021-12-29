@@ -257,6 +257,38 @@ int strcmp(const char* a, const char* b)
 }
 
 /**
+ * @Brief Compare two strings without regard for the case of the characters. A
+ * non-zero return value indicates that the strings differn in at least one
+ * location
+ *
+ * @param a the first string
+ * @param b the second string
+ * @return int zero if identical (apart from case), non-zero otherwise
+ */
+int stricmp(const char* a, const char* b)
+{
+    while (*a && (tolower((unsigned char)*a) == tolower((unsigned char)*b))) {
+        a++; b++;
+    }
+    return (unsigned char)*a - (unsigned char)*b;
+}
+
+/**
+ * @brief Convert a character to lowercase. If the character is not a letter, or
+ * is already lowercase, it will be returned as-is
+ *
+ * @param ch the character to make lowercase
+ * @return int the lowercase character
+ */
+int tolower(int ch)
+{
+    if (ch >= 'A' && ch <= 'Z')
+        return ch ^ 0x20;
+    else
+        return ch;
+}
+
+/**
  * @brief Compare two strings for a given number of characters
  *
  * @param a the first string
