@@ -452,6 +452,35 @@ void setconf(int argc, char** argv)
     kfree(buf); // string is duplicated so we're safe to free this
 }
 
+void getconf(int argc, char** argv)
+{
+    if (argc < 1) {
+        printf("Usage: %s namespace:key\n", argv[0]);
+        return;
+    }
+
+    int type = config_gettype(argv[1]);
+    switch (type) {
+    case 0:
+        printf("Key does not exist\n");
+        break;
+    case CONFIG_TYPE_INT:
+        int ival = config_getint(argv[1]);
+        printf("INT     %s = %d (hex %x)\n", argv[1], ival, ival);
+        break;
+    case CONFIG_TYPE_STR:
+        const char* sval = config_getstr(argv[1]);
+        printf("STRING  %s = \"%s\"\n", argv[1], sval);
+        break;
+    case CONFIG_TYPE_OBJ:
+        void* oval = config_getobj(argv[1]);
+        printf("OBJECT  %s = %p\n", argv[1], oval);
+        break;
+    default:
+        printf("Unknown type %d", type);
+        break;
+    }
+}
 
 void ver(int argc, char** argv)
 {
@@ -542,6 +571,7 @@ static struct command commands[] = {
     {"echo", echo},
     {"setenv", setenv},
     {"setconf", setconf},
+    {"getconf", getconf},
     {"poweroff", poweroff},
     {"exit", poweroff},
     {"help", help},

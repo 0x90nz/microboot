@@ -9,6 +9,13 @@
  * already exists.
  */
 
+enum config_type {
+    CONFIG_TYPE_INT = 1,
+    CONFIG_TYPE_STR,
+    CONFIG_TYPE_OBJ,
+};
+
+
 /**
  * @brief Initialise the config system
  *
@@ -36,6 +43,7 @@ const char* config_getstrns(const char* ns, const char* key);
 int config_getintns(const char* ns, const char* key);
 void* config_getobjns(const char* ns, const char* key);
 int config_existsns(const char* ns, const char* key);
+int config_gettypens(const char* ns, const char* key);
 
 /**
  * @brief Create a new config entry for the given string
@@ -99,4 +107,15 @@ int config_getint(const char* key);
  * @return non-zero if the key is present, zero otherwise
  */
 int config_exists(const char* key);
+
+/**
+ * @brief Check for the presence of a given key, and return it's type if it was
+ * found.
+ *
+ * @param key the key to check
+ * @return non-zero type corresponding to
+ * config_type enumeration if the key is present. If not, then zero is
+ * returned. Note that zero is not a valid config_type.
+ */
+int config_gettype(const char* key);
 

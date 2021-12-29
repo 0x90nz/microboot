@@ -3,12 +3,6 @@
 #include "stdlib.h"
 #include "alloc.h"
 
-enum config_type {
-    CONFIG_TYPE_INT = 1,
-    CONFIG_TYPE_STR,
-    CONFIG_TYPE_OBJ,
-};
-
 struct config_value {
     uint8_t type;
     union {
@@ -217,5 +211,47 @@ int config_getint(const char* key)
 int config_existsns(const char* ns, const char* key)
 {
     return config_get_common(ns, key) != NULL;
+}
+
+int config_exists(const char* key)
+{
+    const char* ns;
+    const char* ns_key;
+    if (!config_parse_key(key, &ns, &ns_key))
+        return 0;
+    if (!ns || !ns_key)
+        return 0;
+
+    int ret = config_existsns(ns, ns_key);
+
+    kfree((void*)ns);
+    kfree((void*)ns_key);
+
+    return ret;
+}
+
+int config_gettypens(const char* ns, const char* key)
+{
+    struct config_value* value = config_get_common(ns, key);
+    if (value == NULL)
+        return 0;
+    return value->type;
+}
+
+int config_gettype(const char* key)
+{
+    const char* ns;
+    const char* ns_key;
+    if (!config_parse_key(key, &ns, &ns_key))
+        return 0;
+    if (!ns || !ns_key)
+        return 0;
+
+    int ret = config_gettypens(ns, ns_key);
+
+    kfree((void*)ns);
+    kfree((void*)ns_key);
+
+    return ret;
 }
 
