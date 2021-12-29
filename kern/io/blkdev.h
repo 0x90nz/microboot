@@ -13,6 +13,9 @@ typedef struct blockdev blkdev_t;
  *
  * `blocks` is the number of blocks to transfer. Each block is `block_size`
  * large, and will be placed (or read from) the given buffer
+ *
+ * The return value is either the number of blocks written (which must be
+ * a positive number), or an error code, which must be negative.
  */
 typedef int (*block_write_t)(blkdev_t* dev, uint64_t lba, size_t blocks, const void* buffer);
 typedef int (*block_read_t)(blkdev_t* dev, uint64_t lba, size_t blocks, void* buffer);
