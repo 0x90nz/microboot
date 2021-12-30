@@ -201,8 +201,7 @@ void help(int argc, char** argv)
     puts("listcolours - list all available colours\n");
     puts("scancode    - display raw scancodes\n");
     puts("verb        - set log verbosity\n");
-    puts("ls          - list the current directory [WIP]\n");
-    puts("cat         - print out the contents of a file [WIP]\n");
+    puts("read        - print out the contents of a file or directory\n");
     puts("poweroff    - shut down the computer\n");
     puts("exit        - alias to poweroff\n");
     puts("help        - this help message\n");
@@ -237,24 +236,12 @@ void brk(int argc, char** argv)
 	asm("int $3");
 }
 
-void ls(int argc, char** argv)
-{
-    /*
-    fs_file_t dir = fs_open(argc > 1 ? argv[1] : "");
-    if (dir != FS_FILE_INVALID)
-        fs_flist(dir);
-    else
-        printf("Invalid directory\n");
-    fs_fdestroy(dir);
-    */
-}
-
 void pwd(int argc, char** argv)
 {
     printf("%s\n", current_dir);
 }
 
-void cat(int argc, char** argv)
+void read(int argc, char** argv)
 {
     if (argc != 2) {
         printf("Usage: %s file_name\n", argv[0]);
@@ -272,6 +259,8 @@ void cat(int argc, char** argv)
             memset(buf, 0, 513);
         }
         fs_close(file);
+    } else {
+        printf("No such file or directory\n");
     }
 }
 
@@ -308,21 +297,19 @@ void ldmod(int argc, char** argv)
         return;
     }
 
-    /*
-    fs_file_t file = fs_open(argv[1]);
-    if (file != FS_FILE_INVALID) {
-        uint32_t fsize = fs_fsize(file);
-        char* c = kallocz(fsize + 1);
-        fs_fread(file, 0, fsize, c);
-
-        mod_load(c);
-
-        kfree(c);
-        fs_fdestroy(file);
-    } else {
-        printf("No such file: %s\n", argv[1]);
+    filehandle_t* handle = fs_open(argv[1]);
+    if (!handle) {
+        printf("No such file\n");
+        return;
     }
-    */
+
+    size_t size;
+    void* module = fs_read_full(handle, &size);
+
+    mod_load(module);
+
+    fs_close(handle);
+    kfree(module);
 }
 
 /*
@@ -565,8 +552,7 @@ static struct command commands[] = {
     {"scancode", scancode},
     {"verb", verb},
     {"brk", brk},
-    {"ls", ls},
-    {"cat", cat},
+    {"read", read},
     {"pwd", pwd},
     {"echo", echo},
     {"setenv", setenv},

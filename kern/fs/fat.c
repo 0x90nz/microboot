@@ -102,9 +102,16 @@ struct fat_priv {
 struct fat_file {
     // the cluster that this file starts on
     uint32_t start_cluster;
+    // the current cluster that is being read
     uint32_t current_cluster;
+    // the current offset into the file (absolute, in bytes)
     uint32_t current_offset;
+    // the size of the file
     uint32_t size;
+
+    // if the file is a directory, this will contain the listing
+    // of that directory.
+    char* dir_contents;
 };
 
 #define FAT_CLUSTER_END     0xfff8
@@ -148,26 +155,39 @@ uint32_t next_cluster(fsdev_t* dev, uint32_t current_cluster)
     return next_cluster;
 }
 
-enum find_dir_cluster_flag {
-    // the specified name was found, as a directory
-    FDIR_DIR        = (1 << 0),
-    // the specified name was found, as a file
-    FDIR_FILE       = (1 << 1),
-    // the specified file/directory was not found. it either may not
-    // have occured yet in the search, or does not exist
-    FDIR_NOTFOUND   = (1 << 3),
-    // the specified file/directory does not exist
-    FDIR_NOTEXIST   = (1 << 4),
-    // the end of the directory has not been encountered,
-    // and so a search may continue if subsequent data is provided
-    FDIR_WANTMORE   = (1 << 5),
-};
+void* read_cluster_chain(fsdev_t* dev, uint32_t start_cluster, size_t* size)
+{
+    struct fat_priv* priv = dev->priv;
+    size_t asize = 0;
+    size_t offset = 0;
+    void* data = kalloc(asize);
+
+    uint32_t cluster = start_cluster;
+    while (cluster > 0 && cluster <= FAT_CLUSTER_END) {
+        asize += priv->bytes_per_cluster;
+        void* ndata = krealloc(data, asize);
+        if (!ndata) {
+            kfree(data);
+            return NULL;
+        }
+        data = ndata;
+
+        read_cluster(dev, cluster, data + offset);
+        offset += priv->bytes_per_cluster;
+        cluster = next_cluster(dev, cluster);
+    }
+
+    if (size)
+        *size = asize;
+    return data;
+}
 
 // Find an entry within a directory. Will parse 8.3 names, as well as 11 char
 // directory names. Flag is set depending on the outcome of the search.
 //
-// if flag is non-null, then sets flag to one of the above specified flags
-struct fat_dir* find_dir_cluster(const char* name, uint8_t* buf, size_t bufsz, uint8_t* flag)
+// If the directory is not found, NULL is returned. Otherwise, a reference
+// to the directory found within the buffer is returned.
+struct fat_dir* find_dir_ent(const char* name, uint8_t* buf, size_t bufsz)
 {
     ASSERT(sizeof(struct fat_dir) == 32, "bad FAT dir size");
 
@@ -198,14 +218,6 @@ struct fat_dir* find_dir_cluster(const char* name, uint8_t* buf, size_t bufsz, u
         actual_namebuf[11] = '\0';
 
         if (stricmp(namebuf, actual_namebuf) == 0) {
-            if (flag) {
-                *flag = 0;
-                if (dir->attrs & FAT_ATTR_DIR) {
-                    *flag |= FDIR_DIR;
-                } else {
-                    *flag |= FDIR_FILE;
-                }
-            }
             return dir;
         }
 
@@ -213,31 +225,22 @@ struct fat_dir* find_dir_cluster(const char* name, uint8_t* buf, size_t bufsz, u
         // and follow it (or quit if it doesn't exist)
         dir++;
         if ((void*)dir > (void*)(buf + bufsz)) {
-            if (flag)
-                *flag = FDIR_WANTMORE | FDIR_NOTFOUND;
             return NULL;
         }
     }
 
-    // at this point, we've reached the end of the dir chain, so we're sure
-    // that what we're searching for doesn't exist
-    if (flag) {
-        *flag = FDIR_NOTEXIST;
-    }
     return NULL;
 }
 
-file_t* fat_open(fsdev_t* dev, const char** path, size_t pathlen)
+struct fat_dir* find_dir(fsdev_t* dev, const char** path, size_t pathlen)
 {
     struct fat_priv* priv = dev->priv;
+    blkdev_t* blkdev = priv->blkdev;
 
     // read the root directory in
     size_t rootdir_size = priv->bytes_per_sector * priv->nr_root_dir_sectors;
-    // allocate enough space for both the root directory, and individual
-    // clusters to fit.
-    size_t clsize = MAX(rootdir_size, priv->bytes_per_cluster);
-    uint8_t* cldata = kallocz(clsize);
-    blkdev_t* blkdev = priv->blkdev;
+    uint8_t* cldata = kallocz(rootdir_size);
+    size_t clsize = rootdir_size;
 
     blkdev->read(
         blkdev,
@@ -246,43 +249,142 @@ file_t* fat_open(fsdev_t* dev, const char** path, size_t pathlen)
         cldata
     );
 
-    uint32_t cluster = 0;
-    uint8_t flag = 0;
+    // special case for the root directory
+    if (pathlen == 1 && path[0][0]== '\0') {
+        struct fat_dir* ret = kalloc(sizeof(*ret));
+        memcpy(ret, cldata, sizeof(*ret));
+        kfree(cldata);
+        return ret;
+    }
+
     struct fat_dir* dir;
-
     for (int i = 0; i < pathlen; i++) {
-        dir = find_dir_cluster(path[i], cldata, clsize, &flag);
+        dir = find_dir_ent(path[i], cldata, clsize);
 
-        // loop again for the same path to try find the entry
-        if (flag & FDIR_WANTMORE) {
-            cluster = next_cluster(dev, cluster);
-            read_cluster(dev, cluster, cldata);
-            i--;
-            continue;
-        }
-
-        if (flag & FDIR_NOTEXIST) {
-            kfree(cldata);
-            return 0;
-        }
-
-        if (flag & (FDIR_DIR | FDIR_FILE)) {
-            cluster = dir->cluster_low;
-            // if this isn't the final cluster (i.e. the first data cluster),
-            // then we want to read it in.
+        if (dir) {
             if (i + 1 != pathlen) {
-                read_cluster(dev, cluster, cldata);
+                kfree(cldata);
+                read_cluster_chain(dev, dir->cluster_low, &clsize);
             }
+        } else {
+            kfree(cldata);
+            return NULL;
         }
     }
 
-    struct fat_file* file = kalloc(sizeof(*file));
-    file->start_cluster = cluster;
-    file->current_cluster = cluster;
-    file->current_offset = 0;
-    file->size = dir->size;
-
+    // copy just this single directory entry
+    struct fat_dir* ret = kalloc(sizeof(*ret));
+    memcpy(ret, dir, sizeof(*ret));
     kfree(cldata);
+    return ret;
+}
+
+char* get_dir_contents(fsdev_t* dev, struct fat_dir* pdir, int is_root)
+{
+    struct fat_priv* priv = dev->priv;
+    blkdev_t* blkdev = priv->blkdev;
+    uint8_t* cldata;
+    size_t clsize;
+
+    // root is a special case because there's no dirent as such which points
+    // to it, so we just have to manually load it in
+    if (is_root) {
+        size_t rootdir_size = priv->bytes_per_sector * priv->nr_root_dir_sectors;
+        cldata = kallocz(rootdir_size);
+        clsize = rootdir_size;
+
+        blkdev->read(
+            blkdev,
+            priv->start_lba + priv->root_dir_sector,
+            priv->nr_root_dir_sectors,
+            cldata
+        );
+    } else {
+        cldata = read_cluster_chain(dev, pdir->cluster_low, &clsize);
+    }
+
+    struct fat_dir* dir = (struct fat_dir*)cldata;
+
+    const size_t recsize = 20;
+    size_t bufsize = 0;
+    size_t bufoffset = 0;
+    char* resbuf = kalloc(recsize);
+
+    while ((void*)dir < (void*)(cldata + clsize) && dir->dir_name[0] != 0) {
+        char namebuf[recsize];
+        memset(namebuf, ' ', recsize - 1);
+        namebuf[recsize - 1] = '\n';
+
+        if (dir->attrs & FAT_ATTR_DIR) {
+            memcpy(namebuf, dir->dir_name, 11);
+            memcpy(namebuf + 13, "<DIR>", 5);
+        } else if (dir->attrs & FAT_ATTR_VOLID) {
+            memcpy(namebuf, dir->dir_name, 11);
+            memcpy(namebuf + 13, "<VOL>", 5);
+        } else {
+            memcpy(namebuf, dir->file_name, 8);
+            memcpy(namebuf + 9, dir->file_ext, 3);
+        }
+
+        bufsize += recsize;
+        char* nresbuf = krealloc(resbuf, bufsize);
+        if (!nresbuf) {
+            kfree(resbuf);
+            return NULL;
+        }
+        resbuf = nresbuf;
+
+        memcpy(resbuf + bufoffset, namebuf, recsize);
+        bufoffset += recsize;
+        dir++;
+    }
+
+    char* nresbuf = krealloc(resbuf, bufsize + 1);
+    if (!nresbuf) {
+        kfree(resbuf);
+        return NULL;
+    }
+    resbuf = nresbuf;
+    resbuf = krealloc(resbuf, bufsize + 1);
+    resbuf[bufsize] = '\0';
+    kfree(cldata);
+
+    return resbuf;
+}
+
+file_t* fat_open(fsdev_t* dev, const char** path, size_t pathlen)
+{
+    struct fat_priv* priv = dev->priv;
+
+    struct fat_dir* dir = find_dir(dev, path, pathlen);
+
+    if (!dir)
+        return NULL;
+
+    struct fat_file* file = kalloc(sizeof(*file));
+
+    if (!(dir->attrs & (FAT_ATTR_DIR | FAT_ATTR_VOLID))) {
+        file->start_cluster = dir->cluster_low;
+        file->current_cluster = dir->cluster_low;
+        file->current_offset = 0;
+        file->size = dir->size;
+        file->dir_contents = NULL;
+    } else {
+        // just in case any cluster ops are tried
+        file->start_cluster = FAT_CLUSTER_END;
+        file->current_cluster = FAT_CLUSTER_END;
+        char* contents = get_dir_contents(dev, dir, dir->attrs & FAT_ATTR_VOLID);
+        if (!contents) {
+            kfree(file);
+            file = NULL;
+        } else {
+            file->current_offset = 0;
+            file->dir_contents = contents;
+            file->size = strlen(contents);
+        }
+    }
+
+    kfree(dir);
     return (file_t*)file;
 }
 
@@ -336,6 +438,19 @@ int fat_seek(fsdev_t* dev, file_t* file, int mode, int32_t offset)
     return 0;
 }
 
+int read_contents(file_t* file, size_t size, void* buf)
+{
+    struct fat_file* ffile = (struct fat_file*)file;
+
+    if (ffile->current_offset >= ffile->size)
+        return 0;
+
+    size_t to_read = MIN(ffile->size - ffile->current_offset, size);
+    memcpy(buf, ffile->dir_contents + ffile->current_offset, to_read);
+    ffile->current_offset += to_read;
+    return to_read;
+}
+
 int fat_read(fsdev_t* dev, file_t* file, size_t size, void* buf)
 {
     struct fat_priv* priv = dev->priv;
@@ -346,10 +461,12 @@ int fat_read(fsdev_t* dev, file_t* file, size_t size, void* buf)
     const size_t full_size = MIN(size, ffile->size - ffile->current_offset);
     size_t remaining = full_size;
 
-    debugf("full_size=%d, clus=%d, current_offset=%d, size=%d", full_size, clus, ffile->current_offset, ffile->size);
-
     if (full_size <= 0) {
         return 0;
+    }
+
+    if (ffile->dir_contents) {
+        return read_contents(file, size, buf);
     }
 
     // read the first cluster (may not be full)
@@ -400,6 +517,10 @@ int fat_read(fsdev_t* dev, file_t* file, size_t size, void* buf)
 
 void fat_close(fsdev_t* dev, file_t* file)
 {
+    struct fat_file* ffile = (struct fat_file*)file;
+    if (ffile->dir_contents)
+        kfree(ffile->dir_contents);
+
     kfree(file);
 }
 

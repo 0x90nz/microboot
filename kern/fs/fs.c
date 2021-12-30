@@ -55,6 +55,30 @@ int fs_read(filehandle_t* handle, void* buf, size_t count)
     return handle->fs->read(handle->fs, handle->file, count, buf);
 }
 
+void* fs_read_full(filehandle_t* handle, size_t* count)
+{
+    const size_t chunk_size = 2048;
+
+    void* buf = kalloc(chunk_size);
+    size_t offset = 0;
+    size_t size = chunk_size;
+    while (1) {
+        size_t read = fs_read(handle, buf + offset, 2048);
+        if (read <= 0)
+            break;
+
+        size += read;
+        offset += read;
+        buf = krealloc(buf, size + chunk_size);
+    }
+
+    buf = krealloc(buf, offset);
+
+    if (count)
+        *count = offset;
+    return buf;
+}
+
 void fs_close(filehandle_t* handle)
 {
     if (!handle)
