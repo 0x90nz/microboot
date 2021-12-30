@@ -33,7 +33,7 @@ loader:
 	nasm -f bin -o build/load.bin loader/load.S
 
 .PHONY: user
-user: rootfs_dir user/info.elf user/dino.elf user/hexdump.elf
+user: rootfs_dir user/dino.elf
 
 .PHONY: stage2
 stage2: $(KOBJS)

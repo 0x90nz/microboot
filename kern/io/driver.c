@@ -1,4 +1,5 @@
 #include "driver.h"
+#include <export.h>
 #include "../stdlib.h"
 #include "../alloc.h"
 #include "../list.h"
@@ -34,6 +35,7 @@ void device_register(struct device* device)
         }
     }
 }
+EXPORT_SYM(device_register);
 
 /**
  * @brief Deregister a single device, and all of its subdevices (if there are any).
@@ -60,6 +62,7 @@ bool device_deregister(struct device* device)
     }
     return 0;
 }
+EXPORT_SYM(device_deregister);
 
 /**
  * @brief Deregister any subdevices this device might have.
@@ -83,6 +86,7 @@ bool device_deregister_subdevices(struct device* device)
     device->num_subdevices = 0;
     return true;
 }
+EXPORT_SYM(device_deregister_subdevices);
 
 /**
  * @brief Register a driver.
@@ -112,6 +116,7 @@ void driver_register(struct driver* driver)
     }
     driver->first_probe = false;
 }
+EXPORT_SYM(driver_register);
 
 /**
  * @brief Deregister a driver.
@@ -130,6 +135,7 @@ bool driver_deregister(struct driver* driver)
     }
     return false;
 }
+EXPORT_SYM(driver_deregister);
 
 /**
  * @brief Iterate over all of the devices.
@@ -143,6 +149,7 @@ void device_foreach(void (*fn)(struct device*))
         fn(dev);
     }
 }
+EXPORT_SYM(device_foreach);
 
 /**
  * @brief Get the first matching device from a given function pointer predicate.
@@ -159,6 +166,7 @@ struct device* device_firstmatch(bool (*pred)(const struct device*))
     }
     return NULL;
 }
+EXPORT_SYM(device_firstmatch);
 
 /**
  * @brief Iterate over all the drivers.
@@ -172,6 +180,7 @@ void driver_foreach(void (*fn)(struct driver*))
         fn(dev);
     }
 }
+EXPORT_SYM(driver_foreach);
 
 /**
  * @brief Get a device by its name.
@@ -190,6 +199,7 @@ struct device* device_get_by_name(const char* name)
     }
     return NULL;
 }
+EXPORT_SYM(device_get_by_name);
 
 /**
  * @brief For a device name, get the first available suffix for a given prefix.
@@ -228,6 +238,7 @@ int device_get_first_available_suffix(const char* prefix)
     // Should never reach here, but as an insurance policy
     return 512;
 }
+EXPORT_SYM(device_get_first_available_suffix);
 
 /**
  * @brief Re-probe for a specific type of device.
@@ -251,6 +262,7 @@ void driver_probe_for(enum device_type type, struct device* invoker)
         }
     }
 }
+EXPORT_SYM(driver_probe_for);
 
 /**
  * @brief Get a chardev for the given device.
@@ -264,6 +276,7 @@ chardev_t* device_get_chardev(struct device* dev)
     ASSERT(dev->type == DEVICE_TYPE_CHAR, "Device must be a chardev");
     return dev->internal_dev;
 }
+EXPORT_SYM(device_get_chardev);
 
 /**
  * @brief Get a console for the given device.
@@ -277,16 +290,19 @@ console_t* device_get_console(struct device* dev)
     ASSERT(dev->type == DEVICE_TYPE_CON, "Device must be a console");
     return dev->internal_dev;
 }
+EXPORT_SYM(device_get_console);
 
 blkdev_t* device_get_blkdev(struct device* dev)
 {
     ASSERT(dev->type == DEVICE_TYPE_BLOCK, "Device must be a block device");
     return dev->internal_dev;
 }
+EXPORT_SYM(device_get_blkdev);
 
 fsdev_t* device_get_fs(struct device* dev)
 {
     ASSERT(dev->type == DEVICE_TYPE_FS, "Device must be a FS device");
     return dev->internal_dev;
 }
+EXPORT_SYM(device_get_fs);
 

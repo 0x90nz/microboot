@@ -312,20 +312,6 @@ void ldmod(int argc, char** argv)
     kfree(module);
 }
 
-/*
-void fexec(fs_file_t file, int argc, char** argv)
-{
-    uint32_t fsize = fs_fsize(file);
-    char* c = kallocz(fsize + 1);
-    fs_fread(file, 0, fsize, c);
-
-    elf_run(c, argc, argv);
-
-    kfree(c);
-    fs_fdestroy(file);
-}
-*/
-
 void exec(int argc, char** argv)
 {
     if (argc != 2) {
@@ -333,14 +319,19 @@ void exec(int argc, char** argv)
         return;
     }
 
-    /*
-    fs_file_t file = fs_open(argv[1]);
-    if (file != FS_FILE_INVALID) {
-        fexec(file, argc, argv);
-    } else {
-        printf("No such file: %s\n", argv[1]);
+    filehandle_t* handle = fs_open(argv[1]);
+    if (!handle) {
+        printf("No such file\n");
+        return;
     }
-    */
+
+    size_t size;
+    void* module = fs_read_full(handle, &size);
+
+    elf_run(module, argc - 1, argv + 1);
+
+    fs_close(handle);
+    kfree(module);
 }
 
 void lsmod(int argc, char** argv)
@@ -589,15 +580,21 @@ int invoke_external(const char* name, int argc, char** argv)
     strcat(bin_name, name);
     strcat(bin_name, ".elf");
 
-    /*
-    fs_file_t file = fs_open(bin_name);
-    if (file != FS_FILE_INVALID) {
-        fexec(file, argc, argv);
-        return 1;
-    } else {
+    filehandle_t* handle = fs_open(bin_name);
+
+    if (!handle) {
         return 0;
     }
-    */
+
+    size_t size;
+    void* module = fs_read_full(handle, &size);
+    debugf("@%p, %d", module, size);
+
+    elf_run(module, argc, argv);
+
+    fs_close(handle);
+    kfree(module);
+    return 1;
 }
 
 void main()

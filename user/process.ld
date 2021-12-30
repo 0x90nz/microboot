@@ -5,7 +5,7 @@ SECTIONS
 {
     .text : { *(.text) }
     .rodata :  { *(.rodata) }
-	.data : { *(.data) }
+    .data : { *(.data) }
     exports : { *(exports.start) *(exports) }
-	.bss : { *(COMMON) *(.bss) }
+    .bss : { *(COMMON) *(.bss) }
 }
