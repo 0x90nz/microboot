@@ -315,6 +315,11 @@ char* get_dir_contents(fsdev_t* dev, struct fat_dir* pdir, int is_root)
         memset(namebuf, ' ', recsize - 1);
         namebuf[recsize - 1] = '\n';
 
+        if (dir->attrs & (FAT_ATTR_HIDDEN | FAT_ATTR_SYSTEM)) {
+            dir++;
+            continue;
+        }
+
         if (dir->attrs & FAT_ATTR_DIR) {
             memcpy(namebuf, dir->dir_name, 11);
             memcpy(namebuf + 13, "<DIR>", 5);
