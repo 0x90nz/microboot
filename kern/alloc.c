@@ -163,6 +163,37 @@ void kfree(void* ptr)
 EXPORT_SYM(kfree);
 
 /**
+ * @brief Check the validity of a memory address.
+ *
+ * The memory check can be performed either by means of a bounds check
+ * (quick=1), or by means of a search of the entire chunk chain (quick=0).
+ * Caution must be exercised with quick=1, because it could feasibly be fooled
+ * into thinking a pointer is valid, when it is not. Conversely, with a system
+ * having a large number of allocations, quick=0 can easily become quite slow.
+ *
+ * @param ptr the address to check for validity
+ * @param quick whether to perform only a bounds check, or perform an
+ * exhaustive search
+ * @return int non-zero indicates valid, zero indicates invalid
+ */
+int alloc_valid_addr(void* ptr, int quick)
+{
+    if (ptr < mem_start || ptr > mem_start + mem_size) return 0;
+
+    if (quick) {
+        mem_block_t* block = ptr - sizeof(mem_block_t);
+        return block->magic == MEM_BLOCK_MAGIC;
+    }
+
+    for (mem_block_t* current = head; current; current = current->next) {
+        if (current->addr == ptr) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/**
  * @brief Get the currently used amount of memory
  * 
  * @param all a non-zero value indicates that freed memory should also 

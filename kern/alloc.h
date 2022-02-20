@@ -9,6 +9,7 @@ void* kallocz(size_t size);
 void kfree(void* ptr);
 void kdumpmm();
 void kmmcritical(void* ptr);
+int alloc_valid_addr(void* ptr, int quick);
 void* krealloc(void* ptr, size_t new_size);
 size_t alloc_total();
 size_t alloc_used(int all);
@@ -34,3 +35,4 @@ enum mem_flags {
     MEM_NONE = 0,
     MEM_CRITICAL = 1 << 0
 };
+
