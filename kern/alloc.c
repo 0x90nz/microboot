@@ -30,6 +30,7 @@ void init_alloc(void* start, size_t size)
     head->size = 0;
     head->state = MEM_STATE_USED;
     head->magic = MEM_BLOCK_MAGIC;
+    head->flags = MEM_CRITICAL;
 }
 
 /*
@@ -70,6 +71,7 @@ void* kalloc(size_t size)
             debugf("Reused memory at %08x", (void*)current + sizeof(mem_block_t));
 #endif
             current->addr = (void*)current + sizeof(mem_block_t);
+            current->flags = 0;
             return current->addr;
         }
 
@@ -86,6 +88,7 @@ void* kalloc(size_t size)
     next->next = NULL;
     next->state = MEM_STATE_USED;
     next->magic = MEM_BLOCK_MAGIC;
+    next->flags = 0;
     next->addr = (void*)next + sizeof(mem_block_t);
     current->next = next;
 
@@ -111,7 +114,9 @@ void* krealloc(void* ptr, size_t new_size)
 {
     ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to realloc invalid address");
     mem_block_t* block = ptr - sizeof(mem_block_t);
-    
+    ASSERT(block->state == MEM_STATE_USED, "Tried to realloc unused block");
+    ASSERT(block->magic == MEM_BLOCK_MAGIC, "Tried to realloc corrupted block");
+
     if (new_size < block->size) {
         block->size = new_size;
         return ptr;
