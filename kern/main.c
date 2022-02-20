@@ -120,6 +120,42 @@ void setres(int argc, char** argv)
     console_get_chardev(console, stdout);
 }
 
+void setfnt(int argc, char** argv) {
+    if (argc != 2) {
+        printf("Usage: %s font.fnt\n", argv[0]);
+        return;
+    }
+
+    struct device* dev = device_get_by_name("fbcon0");
+    if (!dev)
+        return;
+
+    filehandle_t* file = fs_open(argv[1]);
+    struct fbcon_font* font = kalloc(sizeof(*font));
+
+    if (file) {
+        size_t size;
+        void* data = fs_read_full(file, &size);
+        if (!data || size == 0) {
+            printf("Unable to read font\n");
+            fs_close(file);
+            return;
+        }
+
+        debugf("read %d, data@%p", size, data);
+        font->char_width = *(uint8_t*)data;
+        font->char_height = *(uint8_t*)(data + 1);
+        font->char_width_bytes = font->char_width / 8 + (font->char_width % 8 != 0);
+        font->data = data + 4; // skip over header
+        dev->setparam(dev, FBCON_SETPARAM_FONT, font);
+
+        // for some reason fs close is borked
+        // fs_close(file);
+    } else {
+        printf("No such file or directory\n");
+    }
+}
+
 void setscheme(int argc, char** argv)
 {
     uint32_t colours[] = {
@@ -537,6 +573,7 @@ static struct command commands[] = {
     {"clear", clear},
     {"clock", clock},
     {"setres", setres},
+    {"setfnt", setfnt},
     {"setcolour", setcolour},
     {"listcolours", listcolours},
     {"dino", dino},

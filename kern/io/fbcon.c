@@ -130,15 +130,16 @@ static int fbcon_setparam(struct device* dev, int param_id, void* aux)
     console_t* con = device_get_console(dev);
     fbcon_priv_t* priv = con->priv;
 
-    debugf("%d", sizeof(*priv->colour_map));
-
     switch (param_id) {
     case FBCON_SETPARAM_COLOURSCHEME:
         memcpy(priv->colour_map, aux, 16 * sizeof(uint32_t));
         break;
     case FBCON_SETPARAM_FONT:
-        priv->font = *(struct fbcon_font*)aux;
-        break;
+       priv->font = *(struct fbcon_font*)aux;
+       con->width = priv->fb->width / priv->font.char_width;
+       con->height = priv->fb->height / priv->font.char_height;
+       console_clear(con);
+       break;
     }
     return 0;
 }
