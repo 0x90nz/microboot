@@ -16,9 +16,18 @@ KSRC=$(shell find kern -type f -name "*.c")
 BUILD=build
 KOBJS=$(addprefix $(BUILD)/, $(KSRC:%.c=%.o))
 
+.PHONY: .FORCE
+.FORCE:
+
+
 # wrapper so that image gets called by default
 .PHONY: all
 all: image
+
+# XXX: not great - force main to be rebuilt so version string gets updated
+#      this should eventually be changed to use function calls to get version
+#      so that just something like version.c can be forced to be rebuilt #38
+build/kern/main.o: .FORCE
 
 .PHONY: build_dir
 build_dir:
