@@ -150,7 +150,7 @@ void setfnt(int argc, char** argv) {
         dev->setparam(dev, FBCON_SETPARAM_FONT, font);
 
         // for some reason fs close is borked
-        // fs_close(file);
+        fs_close(file);
     } else {
         printf("No such file or directory\n");
     }
@@ -559,6 +559,8 @@ void sysinfo(int argc, char** argv)
     display_sysinfo();
 }
 
+
+
 static struct command commands[] = {
     {"exec", exec},
     {"lsmod", lsmod},
@@ -634,10 +636,71 @@ int invoke_external(const char* name, int argc, char** argv)
     return 1;
 }
 
+void process_command_string(char* cmdbuf)
+{
+    int argc = 1;
+    char* token = strtok(cmdbuf, " ");
+    while (strtok(NULL, " ") != NULL) { argc++; }
+
+    char** argv = kalloc(sizeof(char*) * argc);
+
+    char* tmp = token;
+    for (int i = 0; i < argc; i++) {
+        argv[i] = tmp;
+        tmp += strlen(tmp) + 1;
+    }
+
+    if (
+        !invoke_internal(token, argc, argv)
+        && !invoke_external(token, argc, argv)
+    ) {
+        printf("? %s\n", cmdbuf);
+    }
+
+    kfree(argv);
+}
+
+void process_autorun()
+{
+    filehandle_t* file = fs_open("autorun.esh");
+
+    if (file) {
+        size_t size;
+        void* data = fs_read_full(file, &size);
+        if (!data || size == 0) {
+            printf("Unable to read autorun\n");
+            fs_close(file);
+            return;
+        }
+        data = krealloc(data, size + 1);
+        ((uint8_t*)data)[size] = '\0';
+
+        // NOTE: reentrant strtok is ESSENTIAL! we use strtok within a function called
+        // from here, so w/out it we'd clobber the current state.
+        char* saveptr;
+        char* tok = strtok_r(data, "\n", &saveptr);
+        while (tok) {
+            // NOTE: we need to duplicate cmd here because processing the
+            // cmd string modifies it, and that would mess with strtok.
+            char* cmd = strdup(tok);
+            process_command_string(cmd);
+            kfree(cmd);
+
+            debugf("cmd: \"%s\"", tok);
+            tok = strtok_r(NULL, "\n", &saveptr);
+        }
+
+        kfree(data);
+    } else {
+        debug("autorun not present");
+    }
+}
+
 void main()
 {
-    char cmdbuf[64];
+    char cmdbuf[256];
 
+    process_autorun();
     display_logo();
     display_sysinfo();
 
@@ -646,26 +709,7 @@ void main()
         gets(cmdbuf);
 
         if (*cmdbuf) {
-            int argc = 1;
-            char* token = strtok(cmdbuf, " ");
-            while (strtok(NULL, " ") != NULL) { argc++; }
-
-            char** argv = kalloc(sizeof(char*) * argc);
-
-            char* tmp = token;
-            for (int i = 0; i < argc; i++) {
-                argv[i] = tmp;
-                tmp += strlen(tmp) + 1;
-            }
-
-            if (
-                !invoke_internal(token, argc, argv)
-                && !invoke_external(token, argc, argv)
-            ) {
-                printf("? %s\n", cmdbuf);
-            }
-
-            kfree(argv);
+            process_command_string(cmdbuf);
         }
     }
 }
