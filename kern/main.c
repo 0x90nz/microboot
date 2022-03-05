@@ -701,8 +701,6 @@ void main()
     char cmdbuf[256];
 
     process_autorun();
-    display_logo();
-    display_sysinfo();
 
     while (1) {
         puts(config_getstrns("sys", "prompt"));
