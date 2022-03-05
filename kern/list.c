@@ -56,7 +56,7 @@ struct list_node* list_node(void* data)
  * @param item the item to get the value for
  * @return void* the value associated with the item
  */
-void* list_value(struct list_node* item)
+void* list_value(const struct list_node* item)
 {
     return item->value;
 }
@@ -96,7 +96,7 @@ void list_insert(struct list_node* before, struct list_node* item)
  * @param item the item to get the next item for
  * @return struct list_node* the next item
  */
-struct list_node* list_next(struct list_node* item)
+struct list_node* list_next(const struct list_node* item)
 {
     return item->next;
 }
@@ -107,7 +107,7 @@ struct list_node* list_next(struct list_node* item)
  * @param item the item to get the previous item for
  * @return struct list_node* the previous item
  */
-struct list_node* list_prev(struct list_node* item)
+struct list_node* list_prev(const struct list_node* item)
 {
     return item->prev;
 }
@@ -145,7 +145,7 @@ void list_enumerate(struct list* list, list_enumerator enumerator)
  * @param list the list to get the head of
  * @return struct list_node* the head of the list
  */
-struct list_node* list_head(struct list* list)
+struct list_node* list_head(const struct list* list)
 {
     return list->head.next;
 }
@@ -156,7 +156,7 @@ struct list_node* list_head(struct list* list)
  * @param list the list to get the tail of
  * @return struct list_node* the tail node of the list
  */
-struct list_node* list_tail(struct list* list)
+struct list_node* list_tail(const struct list* list)
 {
     return list->tail.prev;
 }
