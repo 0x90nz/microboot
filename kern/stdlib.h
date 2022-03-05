@@ -15,6 +15,7 @@ void putc(char c);
 int strcmp(const char* a, const char* b);
 char* strcpy(char* dst, const char* src);
 char* strtok(char* str, const char* delim);
+char* strtok_r(char* str, const char* delim, char** saveptr);
 size_t strlen(const char* str);
 const char* strstr(const char* haystack, const char* needle);
 char* strchr(const char* s, int c);

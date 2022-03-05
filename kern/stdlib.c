@@ -83,6 +83,66 @@ int atoi(const char* str)
 }
 
 /**
+ * @brief Tokenise a string reentrantly
+ *
+ * @param str pointer to the string, may be null on subsequent calls
+ * @param delim a string containing all possible delimiters
+ * @param saveptr used to save the internal state of the strtok_r function across
+ *                multiple calls
+ * @return char* the pointer to the next token
+ */
+// Based on the PDCLib version of strtok
+char* strtok_r(char* str, const char* delim, char** saveptr)
+{
+    if (str != NULL) {
+        // new string
+        *saveptr = str;
+    } else {
+        if (*saveptr == NULL) {
+            // stuck! no new string, nor any old string
+            return NULL;
+        }
+        str = *saveptr;
+    }
+
+    const char* p = delim;
+    while (*p && *str) {
+        if (*str == *p) {
+            // found delim
+            str++;
+            p = delim;
+            continue;
+        }
+
+        p++;
+    }
+
+    if (!*str) {
+        // nothing left
+        *saveptr = str;
+        return NULL;
+    }
+
+    // skip non-delim chrs
+    *saveptr = str;
+
+    while (**saveptr) {
+        p = delim;
+        while (*p) {
+            if (**saveptr == *p++) {
+                // found delim
+                *((*saveptr)++) = '\0';
+                return str;
+            }
+        }
+
+        (*saveptr)++;
+    }
+
+    return str;
+}
+
+/**
  * @brief Tokenise a string
  *
  * @param str pointer to the string, may be null on subsequent calls
@@ -91,30 +151,8 @@ int atoi(const char* str)
  */
 char* strtok(char* str, const char* delim)
 {
-    static char* buf;
-    static int last = 0;
-    if(str != NULL) { buf = str; last = 0; }
-    if(buf == NULL || buf[0] == '\0' || last) return NULL;
-
-    char *ret = buf, *b;
-    const char *d;
-
-    for(b = buf; *b !='\0'; b++) {
-        for(d = delim; *d != '\0'; d++) {
-            if(*b == *d) {
-                *b = '\0';
-                buf = b+1;
-                if(b == ret) {
-                    ret++;
-                    continue;
-                }
-                return ret;
-            }
-        }
-    }
-
-    last = 1;
-    return buf;
+    static char* saveptr;
+    return strtok_r(str, delim, &saveptr);
 }
 
 /**
