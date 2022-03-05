@@ -250,7 +250,7 @@ struct fat_dir* find_dir(fsdev_t* dev, const char** path, size_t pathlen)
     );
 
     // special case for the root directory
-    if (pathlen == 1 && path[0][0]== '\0') {
+    if (pathlen == 1 && !path[0]) {
         struct fat_dir* ret = kalloc(sizeof(*ret));
         memcpy(ret, cldata, sizeof(*ret));
         kfree(cldata);
