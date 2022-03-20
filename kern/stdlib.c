@@ -443,6 +443,40 @@ void memset(void* memory, uint8_t value, size_t len)
 #endif
 }
 
+
+/**
+ * @brief Copy a rectangle of data from one region to another in memory.
+ *
+ * @param dst destination buffer
+ * @param src source buffer
+ * @param bufwidth width of the /entire/ buffer
+ * @param bufheight height of the /entire/ buffer
+ * @param elsize size of a single element within the buffer
+ * @param x the x coordinate from which to start the copy
+ * @param y the y corrdinate from which to start the copy
+ * @param width the width of the region to copy
+ * @param height the height of the region to copy
+ */
+void memblit(void* dst, const void* src,
+                    size_t bufwidth, size_t bufheight, size_t elsize,
+                    size_t x, size_t y,
+                    size_t width, size_t height)
+{
+    size_t stride = bufwidth * elsize;
+    // offset into the buffer each line copy begins
+    size_t offset = (x * elsize) + (y * stride);
+    // length in bytes of each line to copy
+    size_t len = width * elsize;
+
+    void* psrc = src + offset;
+    void* pdst = dst + offset;
+    for (int i = 0; i < height; i++) {
+      memcpy(pdst, psrc, len);
+      psrc += stride;
+      pdst += stride;
+    }
+}
+
 /**
  * @brief Copy one region of memory to another
  *
@@ -453,6 +487,47 @@ void memset(void* memory, uint8_t value, size_t len)
 void memcpy(void* dst, const void* src, size_t len)
 {
 #ifdef FAST_MEMOPS
+    if (len > 128) {
+        int tmp[3];
+        asm volatile(
+            "loop1:\n\t"
+            "prefetchnta 64(%%esi)\n\t"
+            "prefetchnta 96(%%esi)\n\t"
+
+            "movq  0(%%esi), %%mm1\n\t"
+            "movq  8(%%esi), %%mm2\n\t"
+            "movq 16(%%esi), %%mm3\n\t"
+            "movq 24(%%esi), %%mm4\n\t"
+            "movq 32(%%esi), %%mm5\n\t"
+            "movq 40(%%esi), %%mm6\n\t"
+            "movq 48(%%esi), %%mm7\n\t"
+            "movq 56(%%esi), %%mm0\n\t"
+
+            "movntq %%mm1,  0(%%edi)\n\t"
+            "movntq %%mm2,  8(%%edi)\n\t"
+            "movntq %%mm3, 16(%%edi)\n\t"
+            "movntq %%mm4, 24(%%edi)\n\t"
+            "movntq %%mm5, 32(%%edi)\n\t"
+            "movntq %%mm6, 40(%%edi)\n\t"
+            "movntq %%mm7, 48(%%edi)\n\t"
+            "movntq %%mm0, 56(%%edi)\n\t"
+
+            "add $64, %%esi\n\t"
+            "add $64, %%edi\n\t"
+            "dec %%ecx\n\t"
+            "jnz loop1\n\t"
+
+            "emms\n\t"
+            : "=S" (tmp[0]), "=D" (tmp[1]), "=c" (tmp[2])
+            : "S" (src), "D" (dst), "c" (len >> 6)
+            : "memory"
+        );
+        size_t copied = len & ~0x3f;
+        len -= copied;
+        src += copied;
+        dst += copied;
+    }
+
     asm volatile(
         "rep movsl\n\t"         // move as much as we can long-sized
         "movl   %3, %%ecx\n\t"  // get the rest of the length

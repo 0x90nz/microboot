@@ -331,12 +331,10 @@ void vesa_invalidate(fbdev_t* dev, int x_start, int y_start, int width, int heig
     default:
     case 24:
     case 32:
-        for (int y = y_start; y < (y_start + height); y++) {
-            for (int x = x_start; x < (x_start + width); x++) {
-                int offset = (x * device->bytes_per_pixel) + device->pitch * y;
-                *(uint32_t*)&device->framebuffer[offset] = *(uint32_t*)&device->backbuffer[offset];
-            }
-        }
+        memblit(device->framebuffer, device->backbuffer,
+                        device->width, device->height, device->bytes_per_pixel,
+                        x_start, y_start,
+                        width, height);
         break;
     }
 }

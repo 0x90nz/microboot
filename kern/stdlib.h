@@ -27,6 +27,10 @@ char* strdup(const char* s);
 void memset(void* memory, uint8_t value, size_t len);
 void memcpy(void* dst, const void* src, size_t len);
 int memcmp(const void* a, const void* b, size_t len);
+void memblit(void* dst, const void* src,
+                    size_t bufwidth, size_t bufheight, size_t elsize,
+                    size_t x, size_t y,
+                    size_t width, size_t height);
 
 
 // More specific OS functions
