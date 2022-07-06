@@ -1,5 +1,6 @@
 #include "console.h"
 #include "stddef.h"
+#include "../stdlib.h"
 
 /**
  * @brief Write a single character to the console device
@@ -33,7 +34,7 @@ void console_putc(console_t* con, char c)
     con->invalidate(con, con->x_pos, con->y_pos, 1, 1);
     con->x_pos++;
 
-    if (con->x_pos > con->width) {
+    if (con->x_pos >= con->width) {
         con->x_pos = 0;
         con->y_pos++;
         if (con->y_pos >= con->height) {
@@ -48,16 +49,19 @@ void console_putc(console_t* con, char c)
 
 void console_erase(console_t* con)
 {
-    if (con->x_pos == 0) {
-        if (con->y_pos > 0) {
-            con->y_pos--;
-            con->x_pos = 0;
-        }
-    } else if (con->x_pos > 0) {
+    if (con->x_pos > 0) {
         con->x_pos--;
+        con->put_xy(con, con->x_pos, con->y_pos, ' ');
+        con->invalidate(con, con->x_pos, con->y_pos, 1, 1);
+    } else {
+        ASSERT(con->x_pos == 0, "Negative con->x_pos");
+        ASSERT(con->y_pos > 0, "Zero con->y_pos on erase");
+
+        con->y_pos--;
+        con->x_pos = con->width - 1;
+        con->put_xy(con, con->x_pos, con->y_pos, ' ');
+        con->invalidate(con, con->x_pos, con->y_pos, 1, 1);
     }
-    console_putc(con, ' ');
-    con->x_pos--;
 }
 
 void console_pad(console_t* con, int n)
