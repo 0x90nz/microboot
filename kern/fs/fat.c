@@ -264,7 +264,7 @@ struct fat_dir* find_dir(fsdev_t* dev, const char** path, size_t pathlen)
         if (dir) {
             if (i + 1 != pathlen) {
                 kfree(cldata);
-                read_cluster_chain(dev, dir->cluster_low, &clsize);
+                cldata = read_cluster_chain(dev, dir->cluster_low, &clsize);
             }
         } else {
             kfree(cldata);
