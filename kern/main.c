@@ -158,25 +158,15 @@ void setfnt(int argc, char** argv) {
 
 void setscheme(int argc, char** argv)
 {
-    uint32_t colours[] = {
-        0x1d2021,
-        0xfb4934,
-        0xb8bb26,
-        0xfabd2f,
-        0x83a598,
-        0xd3869b,
-        0x8ec07c,
-        0xd5c4a1,
-        0x665c54,
-        0xfb4934,
-        0xb8bb26,
-        0xfabd2f,
-        0x83a598,
-        0xd3869b,
-        0x8ec07c,
-        0xfbf1c7,
-    };
+    if (argc != 17) {
+        printf("Usage: %s c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16", argv[0]);
+        printf("       where c1-c16 are the 16 colours in order set out by `listcolours`");
+    }
 
+    uint32_t colours[16];
+    for (int i = 0; i < 16; i++) {
+        colours[i] = strtoul(argv[i + 1], NULL, 16);
+    }
     struct device* fbcon = device_get_by_name("fbcon0");
     fbcon->setparam(fbcon, FBCON_SETPARAM_COLOURSCHEME, &colours);
 }
@@ -265,6 +255,19 @@ void verb(int argc, char** argv)
 
     int level = atoi(argv[1]);
     set_log_level(level);
+}
+
+void dumpmem(int argc, char** argv)
+{
+    if (argc != 3) {
+        printf("Usage: %s addr len\n", argv[0]);
+        printf("       addr and len must be in hex, with no '0x' prefix.\n");
+        return;
+    }
+
+    uint32_t addr = strtoul(argv[1], NULL, 16);
+    uint32_t len = strtoul(argv[2], NULL, 16);
+    dump_memory((void*)addr, len);
 }
 
 void brk(int argc, char** argv)
@@ -582,6 +585,7 @@ static struct command commands[] = {
     {"scancode", scancode},
     {"verb", verb},
     {"brk", brk},
+    {"dumpmem", dumpmem},
     {"read", read},
     {"pwd", pwd},
     {"echo", echo},
@@ -638,6 +642,20 @@ int invoke_external(const char* name, int argc, char** argv)
 
 void process_command_string(char* cmdbuf)
 {
+    // if there are any comments, the line ends immediately after them.
+    size_t cmdbuf_len = strlen(cmdbuf);
+    for (size_t i = 0; i < cmdbuf_len; i++) {
+        if (cmdbuf[i] == '#') {
+            cmdbuf[i] = '\0';
+            break;
+        }
+    }
+
+    // it's possible the entire line could be a comment, so just ignore
+    // it if so.
+    if (cmdbuf[0] == '\0')
+        return;
+
     int argc = 1;
     char* token = strtok(cmdbuf, " ");
     while (strtok(NULL, " ") != NULL) { argc++; }
