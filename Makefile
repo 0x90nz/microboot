@@ -11,6 +11,7 @@ CFLAGS=-m32 -march=i386 -nostdlib -nostdinc -ffreestanding -fno-pie -fno-stack-p
  -DVER_GIT_REV="\"$(GIT_REV)\"" -DVER_GIT_BRANCH="\"$(GIT_BRANCH)\""
 CC=gcc
 QEMU="qemu-system-x86_64"
+QEMU_32="qemu-system-i386"
 
 KSRC=$(shell find kern -type f -name "*.c")
 BUILD=build
@@ -83,7 +84,7 @@ run: image
 .PHONY: gdbdebug
 gdbdebug: CFLAGS += -g
 gdbdebug: image debugimage
-	$(QEMU) \
+	$(QEMU_32) \
 		-drive format=raw,file=build/microboot.img,index=0 \
 		-serial mon:stdio \
 		-netdev hubport,hubid=1,id=n1,id=eth -device ne2k_pci,netdev=n1,mac=de:ad:be:ef:c0:fe \
@@ -91,7 +92,7 @@ gdbdebug: image debugimage
 
 .PHONY: debug
 debug: gdbdebug
-	gdb -d kern -ex 'target remote localhost:1234' -ex 'symbol-file $(BUILD)/debugimage.elf'
+	gdb -ex 'target remote localhost:1234' -ex 'symbol-file $(BUILD)/debugimage.elf'
 
 .PHONY: clean
 clean:
