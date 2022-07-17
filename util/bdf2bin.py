@@ -7,16 +7,16 @@ import struct
 
 def convert(infile):
     font = Font(infile)
-    ret = ''
+    ret = b''
+    bbx = font.headers['fbbx']
+    bby = font.headers['fbby']
+
     for i in range(ord(' '), 127):
         glyph = font.glyph(chr(i))
-        hexdata = ''.join(glyph.meta['hexdata'])
-        print(hexdata)
-        print(glyph, '\n')
-        ret += hexdata
+        ret += bytes([0xff ^ b for b in glyph.draw().tobytes('1')])
 
     header = struct.pack('BBxx', font.headers['fbbx'], font.headers['fbby'])
-    return header + bytes.fromhex(ret)
+    return header + ret
 
 def main():
     parser = argparse.ArgumentParser(description='Convert BDF fonts to bin fmt')
