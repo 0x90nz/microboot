@@ -47,7 +47,7 @@ static size_t aligned_size(size_t size)
  * @brief Dynamically allocate some memory. The returned pointer may be for a
  * space larger than that which was requested, but it will *always* be at least
  * as large as the space requested.
- * 
+ *
  * @param size the size to allocate, in bytes
  * @return void* a pointer to the allocated memory
  */
@@ -55,6 +55,9 @@ void* kalloc(size_t size)
 {
     ASSERT(mem_start, "Allocator was used before initialised");
     size_t allocated_size = aligned_size(size);
+
+    if (allocated_size == 0)
+        return NULL;
 
 #ifdef ALLOC_DEBUG
     debugf("Requested allocation of %d bytes (aligned to %d)", size, allocated_size);
@@ -78,7 +81,9 @@ void* kalloc(size_t size)
         if (!current->next)
             break;
     }
-
+#ifdef ALLOC_DEBUG
+    debugf("Magic: %08x", current->magic);
+#endif
     ASSERT(current->magic == MEM_BLOCK_MAGIC, "Memory corruption detected, magic value not present");
 
     mem_block_t* next = (void*)current + sizeof(mem_block_t) + current->size;
@@ -112,6 +117,9 @@ EXPORT_SYM(kalloc);
  */
 void* krealloc(void* ptr, size_t new_size)
 {
+    if (!ptr)
+        return kalloc(new_size);
+
     ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to realloc invalid address");
     mem_block_t* block = ptr - sizeof(mem_block_t);
     ASSERT(block->state == MEM_STATE_USED, "Tried to realloc unused block");
@@ -150,12 +158,12 @@ EXPORT_SYM(kallocz);
  */
 void kfree(void* ptr)
 {
-    // We should only free addresses which we own
-    ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to free invalid address");
-
 #ifdef ALLOC_DEBUG
     debugf("Requested clear at %08x bytes", ptr);
 #endif
+
+    // We should only free addresses which we own
+    ASSERT(ptr >= mem_start && ptr <= mem_start + mem_size, "Tried to free invalid address");
 
     mem_block_t* block = ptr - sizeof(mem_block_t);
 
