@@ -23,6 +23,12 @@ enum device_type {
     DEVICE_TYPE_FS,
 };
 
+enum change_type {
+    // Some parameter of the parent device has changed which affects
+    // subdevices.
+    CHANGE_TYPE_PARAM,
+};
+
 // Defines a device. And function pointer MAY be null to indicate that the
 // function is not supported
 struct device {
@@ -31,6 +37,10 @@ struct device {
     void (*destroy)(struct device*);
     // Set some parameter of the device, implementation specific
     int (*setparam)(struct device*, int param_id, void* aux);
+    // Inform a device of a change that has happened to a parent device
+    // change_type is a generic descriptor defined in driver.h, while id is
+    // specific to the device sending the request.
+    int (*inform)(struct device* self, struct device* sender, enum change_type type, int id, void* aux);
     // Internal device, e.g. for a character device this would be a chardev_t
     void* internal_dev;
     // Private device information
@@ -51,6 +61,9 @@ struct device {
 
 struct driver {
     char name[64];
+    // A short version of name, if a module this should be the same as the module name.
+    // Ideally also the same as the prefix that the driver creates for devices.
+    char modname[8];
     // A probe MUST be defined for any driver. Probe may be called multiple
     // times for instance, if another device that would enable some other class
     // to work has been found.
@@ -69,23 +82,26 @@ struct driver {
     // probe_directed MUST be used instead of probe.
     enum device_type depends_on;
     bool first_probe;
+    // Indicates that a device is disabled. Means that no probes will occur.
+    bool disabled;
     void* driver_priv;
 };
 
 void driver_init();
 void driver_register(struct driver* driver);
 bool driver_deregister(struct driver* driver);
-bool device_deregister(struct device* device);
-bool device_deregister_subdevices(struct device* device);
-void device_register(struct device* device);
-int device_get_first_available_suffix(const char* prefix);
-
-void device_foreach(void (*fn)(struct device*));
+void driver_enable(struct driver* driver);
+struct driver* driver_get_by_modname(const char* modname);
 void driver_foreach(void (*fn)(struct driver*));
-struct device* device_firstmatch(bool (*pred)(const struct device*));
-
 void driver_probe_for(enum device_type type, struct device* invoker);
 
+void device_register(struct device* device);
+bool device_deregister(struct device* device);
+bool device_deregister_subdevices(struct device* device);
+int device_inform_subdevices(struct device* device, enum change_type type, int id, void* aux);
+int device_get_first_available_suffix(const char* prefix);
+void device_foreach(void (*fn)(struct device*));
+struct device* device_firstmatch(bool (*pred)(const struct device*));
 struct device* device_get_by_name(const char* name);
 chardev_t* device_get_chardev(struct device* dev);
 console_t* device_get_console(struct device* dev);

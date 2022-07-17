@@ -89,16 +89,34 @@ bool device_deregister_subdevices(struct device* device)
 EXPORT_SYM(device_deregister_subdevices);
 
 /**
- * @brief Register a driver.
+ * @brief Do an 'inform' on all subdevices.
  *
- * @param driver the driver to register
+ * @param device the device to inform all subdevices on
+ * @param type the type of change
+ * @param id the device-specific type of change
+ * @param aux any additional information to be passed
+ * @return int zero if ok, lowest error code if any of the devices errored on
+ *             running inform
  */
-void driver_register(struct driver* driver)
-{
-    debugf("registering driver %s", driver->name);
+int device_inform_subdevices(struct device* device, enum change_type type, int id, void* aux) {
+    if (!device->subdevices)
+        return 0;
 
-    list_append(&drivers, list_node(driver));
-    ASSERT(driver->probe || driver->probe_directed, "Driver must define probe");
+    int ret = 0;
+    for (int i = 0; i < device->num_subdevices; i++) {
+        struct device* subdevice = device->subdevices[i];
+        if (subdevice->inform) {
+            int tmp = subdevice->inform(subdevice, device, type, id, aux);
+            if (tmp < ret)
+                ret = tmp;
+        }
+    }
+    return ret;
+}
+EXPORT_SYM(device_inform_subdevices);
+
+static void driver_first_probe(struct driver* driver)
+{
     driver->first_probe = true;
     if (driver->probe) {
         driver->probe(driver);
@@ -115,6 +133,24 @@ void driver_register(struct driver* driver)
         }
     }
     driver->first_probe = false;
+}
+
+/**
+ * @brief Register a driver.
+ *
+ * @param driver the driver to register
+ */
+void driver_register(struct driver* driver)
+{
+    debugf("registering driver %s", driver->name);
+
+    list_append(&drivers, list_node(driver));
+    ASSERT(driver->probe || driver->probe_directed, "Driver must define probe");
+
+    // don't probe if the device is disabled
+    if (!driver->disabled) {
+        driver_first_probe(driver);
+    }
 }
 EXPORT_SYM(driver_register);
 
@@ -181,6 +217,37 @@ void driver_foreach(void (*fn)(struct driver*))
     }
 }
 EXPORT_SYM(driver_foreach);
+
+/**
+ * @brief Enable a driver launch a probe.
+ *
+ * @param driver the driver to enable
+ */
+void driver_enable(struct driver* driver)
+{
+    driver->disabled = false;
+    driver_first_probe(driver);
+}
+EXPORT_SYM(driver_enable);
+
+/**
+ * @brief Get a driver by its modname (i.e. short 8 char name)
+ *
+ * @param modname the name to search for
+ * @return struct driver* the first driver which has a matching modname if present,
+ * NULL if no such driver exists
+ */
+struct driver* driver_get_by_modname(const char* modname)
+{
+    LIST_FOREACH(current, &drivers) {
+        struct driver* driver = list_value(current);
+        if (strcmp(modname, driver->modname) == 0) {
+            return driver;
+        }
+    }
+    return NULL;
+}
+EXPORT_SYM(driver_get_by_modname);
 
 /**
  * @brief Get a device by its name.

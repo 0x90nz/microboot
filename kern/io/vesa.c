@@ -359,11 +359,6 @@ int vesa_setparam(struct device* dev, int paramid, void* aux)
     struct vesa_priv* priv = fbdev->priv;
 
     if (paramid == FBDEV_SETRES) {
-        if (device_deregister_subdevices(dev)) {
-            kfree(dev->subdevices);
-            dev->subdevices = NULL;
-        }
-
         struct fbdev_setres_request* req = aux;
         int err = vesa_set_res(priv, req->xres, req->yres, req->bpp);
         if (err < 0)
@@ -373,9 +368,7 @@ int vesa_setparam(struct device* dev, int paramid, void* aux)
         fbdev->height = priv->height;
         fbdev->bpp = priv->bits_per_pixel;
 
-        // we got rid of any users so bring them back with a probe
-        driver_probe_for(DEVICE_TYPE_CON, dev);
-        return 0;
+        return device_inform_subdevices(dev, CHANGE_TYPE_PARAM, FBDEV_CHANGE_RESOLUTION, NULL);
     }
 
     return -ERR_INVALID;
@@ -406,14 +399,29 @@ static void vesa_probe(struct driver* driver)
     dev->device_priv = NULL;
     dev->setparam = vesa_setparam;
 
+    const int width = 800;
+    const int height = 600;
+    const int bpp = 32;
+    int err = vesa_set_res(vesa_priv, width, height, bpp);
+    if (err < 0) {
+        log(LOG_ERROR, "vesa init error!");
+        return;
+    }
+
+    fbdev->width = vesa_priv->width;
+    fbdev->height = vesa_priv->height;
+    fbdev->bpp = vesa_priv->bits_per_pixel;
     device_register(dev);
 }
 
 struct driver vesa_driver = {
     .name = "VBE 3.0 framebuffer",
+    .modname = "vesafb",
     .probe = vesa_probe,
     .type_for = DEVICE_TYPE_FRAMEBUFFER,
     .driver_priv = NULL,
+    // let vga console take priority unless we're specifically asked for
+    .disabled = true,
 };
 
 static void vesa_register_driver()

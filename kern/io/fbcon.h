@@ -5,7 +5,10 @@
 enum fbcon_setparam_id {
     // aux = array of 16 colours per console.h (enum console_colour)
     FBCON_SETPARAM_COLOURSCHEME = 1,
+    // aux = pointer to fbcon_font
     FBCON_SETPARAM_FONT,
+    // aux = NULL
+    FBCON_SETPARAM_RESIZE,
 };
 
 struct fbcon_font {

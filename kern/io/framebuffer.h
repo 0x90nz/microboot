@@ -29,3 +29,7 @@ struct fbdev_setres_request {
     int bpp;
 };
 
+enum fb_changeid {
+    FBDEV_CHANGE_RESOLUTION = 1,
+};
+

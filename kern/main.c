@@ -104,20 +104,6 @@ void setres(int argc, char** argv)
         .bpp = bpp
     };
     dev->setparam(dev, FBDEV_SETRES, &req);
-
-    struct device* vga = device_get_by_name("vga0"); // TODO: get properly
-    if (vga)
-        device_deregister(vga);
-
-    struct device* fbcon = device_get_by_name("fbcon0");
-    if (!fbcon)
-        return;
-
-    debugf("fbcon: %p", fbcon);
-    console = device_get_console(fbcon); // TODO: get properly
-    kfree(stdout);
-    stdout = kalloc(sizeof(*stdout));
-    console_get_chardev(console, stdout);
 }
 
 void setfnt(int argc, char** argv) {
@@ -160,7 +146,7 @@ void setscheme(int argc, char** argv)
 {
     if (argc != 17) {
         printf("Usage: %s c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11 c12 c13 c14 c15 c16", argv[0]);
-        printf("       where c1-c16 are the 16 colours in order set out by `listcolours`");
+        printf("       where c1-c16 are the 16 colours in order set out by `listcolours`\n");
     }
 
     uint32_t colours[16];
@@ -168,7 +154,9 @@ void setscheme(int argc, char** argv)
         colours[i] = strtoul(argv[i + 1], NULL, 16);
     }
     struct device* fbcon = device_get_by_name("fbcon0");
-    fbcon->setparam(fbcon, FBCON_SETPARAM_COLOURSCHEME, &colours);
+    if (fbcon) {
+        fbcon->setparam(fbcon, FBCON_SETPARAM_COLOURSCHEME, &colours);
+    }
 }
 
 void listcolours(int argc, char** argv)
@@ -516,12 +504,33 @@ void lsdev(int argc, char** argv)
 
 void lsdrv_callback(struct driver* drv)
 {
-    printf("%s\n", drv->name);
+    printf("%-32s %-8s %p\n", drv->name, drv->modname, drv);
 }
 
 void lsdrv(int argc, char** argv)
 {
+    printf("%-32s %-8s %s\n", "name", "modname", "ptr");
     driver_foreach(lsdrv_callback);
+}
+
+void endrv(int argc, char** argv)
+{
+    if (argc != 2) {
+        printf("Usage: %s driver_modname\n", argv[0]);
+        return;
+    }
+
+    struct driver* driver = driver_get_by_modname(argv[1]);
+    if (!driver) {
+        printf("No such driver '%s'\n", argv[1]);
+        return;
+    }
+
+    if (!driver->disabled) {
+        printf("Driver '%s' already enabled\n", argv[1]);
+    }
+
+    driver_enable(driver);
 }
 
 void display_logo()
@@ -571,6 +580,7 @@ static struct command commands[] = {
     {"lssym", lssym},
     {"lsdev", lsdev},
     {"lsdrv", lsdrv},
+    {"endrv", endrv},
     {"uptime", uptime},
     {"mem", mem},
     {"ver", ver},
@@ -701,10 +711,10 @@ void process_autorun()
             // NOTE: we need to duplicate cmd here because processing the
             // cmd string modifies it, and that would mess with strtok.
             char* cmd = strdup(tok);
+            debugf("cmd: \"%s\"", tok);
             process_command_string(cmd);
             kfree(cmd);
 
-            debugf("cmd: \"%s\"", tok);
             tok = strtok_r(NULL, "\n", &saveptr);
         }
 
