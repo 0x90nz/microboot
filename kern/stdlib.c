@@ -83,6 +83,151 @@ int atoi(const char* str)
 }
 
 /**
+ * @brief Determine if a character is a space.
+ *
+ * @param c the character to check
+ * @return int non-zero if the character is a space
+ */
+int isspace(int c)
+{
+    return (c == '\t' || c == '\n' || c == '\v' || c == '\f' ||
+        c == '\r' || c == ' ') ? 1 : 0;
+}
+
+/**
+ * @brief Determine if a character is a blank.
+ *
+ * @param c the character to check
+ * @return int non-zero if the character is a space or tab
+ */
+int isblank(int c)
+{
+    return (c == '\t' || c == ' ') ? 1 : 0;
+}
+
+/**
+ * @brief Determine if a character is a digit, 0 through 9.
+ *
+ * @param c the character to check
+ * @return int non-zero if the character is a digit
+ */
+int isdigit(int c)
+{
+    return (c >= '0' && c <= '9') ? 1 : 0;
+}
+
+/**
+ * @brief Determine if a character is an alphabetic character, either
+ * lower or upper case.
+ *
+ * @param c the character to check
+ * @return int non-zero if the character is an alphabetic character
+ */
+int isalpha(int c)
+{
+    return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) ? 1 : 0;
+}
+
+/**
+ * @brief Determine if a character is upper case.
+ *
+ * @param c the character to check
+ * @return int non-zero if the character is upper case
+ */
+int isupper(int c)
+{
+    return (c >= 'A' && c <= 'Z') ? 1 : 0;
+}
+
+/**
+ * @brief Determine if a character is lower case.
+ *
+ * @param c the character to check
+ * @return int non-zero if the character is lower case
+ */
+int islower(int c)
+{
+    return (c > 'a' && c < 'z') ? 1 : 0;
+}
+
+/**
+ * @brief Convert the first numeric part of the string nptr to the given
+ * base, or try to determine the base.
+ *
+ * @param nptr the string which contains the numeric to convert
+ * @param endptr if non-NULL then a pointer to the character following the
+ *               last character of the number
+ * @param base the base of the number to convert, between 2 to 36 specifies
+ *             explicitly the base to convert to. 0 indicates the base is
+ *             detected from the given string
+ * @return unsigned long the converted value
+ */
+unsigned long strtoul(const char* nptr, char** endptr, int base)
+{
+    int neg = 0;
+
+    // skip whitespace
+    const char* p = nptr;
+    while (isspace(*p)) {
+        p++;
+    }
+
+    // do we have a sign?
+    if (*p == '-') {
+        neg = 1;
+        p++;
+    } else if (*p == '+') {
+        p++;
+    }
+
+    // is this hex?
+    char next = *(p + 1);
+    if ((base == 0 || base == 16) && *p == '0' && (next == 'x'  || next == 'X')) {
+        p += 2;
+        base = 16;
+    }
+    // octal or decimal
+    if (base == 0) {
+        base = *p == '0' ? 8 : 10;
+    }
+
+    unsigned long acc = 0;
+    unsigned long cutoff = 0xfffffffful / (unsigned long)base;
+    unsigned long cutlim = 0xfffffffful % (unsigned long)base;
+    int any = 0;
+    for (;; p++) {
+        int c = *p;
+        if (isdigit(c)) {
+            c -= '0';
+        } else if (isalpha(c)) {
+            c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+        } else {
+            break;
+        }
+
+        if (c >= base) {
+            break;
+        }
+        if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim)) {
+            any = -1;
+        } else {
+            any = 1;
+            acc *= base;
+            acc += c;
+        }
+    }
+    if (any < 0) {
+        acc = 0xfffffffful;
+    } else if (neg) {
+        acc = -acc;
+    }
+    if (endptr != 0) {
+        *endptr = (char*)(any ? p - 1 : nptr);
+    }
+    return acc;
+}
+
+/**
  * @brief Tokenise a string reentrantly
  *
  * @param str pointer to the string, may be null on subsequent calls

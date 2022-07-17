@@ -8,6 +8,13 @@
 // Standard library - ish functions
 void itoa(int value, char* buffer, int base);
 int atoi(const char* str);
+int isspace(int c);
+int isblank(int c);
+int isdigit(int c);
+int isalpha(int c);
+int isupper(int c);
+int islower(int c);
+unsigned long strtoul(const char* nptr, char** endptr, int base);
 void gets(char* str);
 char getc();
 void puts(const char* str);
